@@ -1,0 +1,24 @@
+{
+  "_comment": "Declarative Manim math-overlay spec. Scene ids match scenes.json so timing comes from narration via scene_timing.py -> storyboard.json. See references/manim-patterns.md.",
+  "resolution": [1920, 1080],
+  "scenes": [
+    {
+      "id": "s1",
+      "elements": [
+        { "type": "mathtex", "tex": "a^2 + b^2 = c^2", "animation": "write", "position": "center", "scale": 2.0, "color": "WHITE" }
+      ]
+    },
+    {
+      "id": "s2",
+      "elements": [
+        { "type": "tex_transform", "from": "a^2 + b^2 = c^2", "to": "c = \\sqrt{a^2 + b^2}", "position": "center", "scale": 2.0, "color": "YELLOW" }
+      ]
+    },
+    {
+      "id": "s3",
+      "elements": [
+        { "type": "axes_plot", "x_range": [-3, 3, 1], "y_range": [-1, 9, 1], "function": "x*x", "color": "TEAL", "scale": 1.0, "position": "center" }
+      ]
+    }
+  ]
+}

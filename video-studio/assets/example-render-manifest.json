@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "engine": "ffmpeg",
+  "platform": "vertical-short",
+  "canvas": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30
+  },
+  "sources": [
+    {
+      "id": "main",
+      "type": "video",
+      "path": "media/raw/input.mp4"
+    }
+  ],
+  "clips": [
+    {
+      "id": "intro",
+      "source": "main",
+      "start": 0,
+      "end": 8,
+      "timelineStart": 0,
+      "fit": "cover",
+      "crop": "center"
+    },
+    {
+      "id": "point",
+      "source": "main",
+      "start": 12,
+      "end": 22,
+      "timelineStart": 8,
+      "fit": "cover",
+      "crop": "center"
+    }
+  ],
+  "subtitles": {
+    "path": "media/assets/subtitles.srt",
+    "format": "srt",
+    "style": "short-video-bold",
+    "burnIn": true
+  },
+  "overlays": [],
+  "audio": {
+    "keepOriginal": true,
+    "originalVolume": 0.4,
+    "voiceover": "media/audio/voiceover.mp3",
+    "voiceoverVolume": 1,
+    "bgm": "media/audio/bgm.mp3",
+    "bgmVolume": 0.12
+  },
+  "delivery": {
+    "profile": "social"
+  },
+  "output": {
+    "path": "renders/final.mp4",
+    "codec": "h264",
+    "crf": 20,
+    "preset": "fast",
+    "audioBitrate": "128k"
+  },
+  "qa": {
+    "extractFrames": 6,
+    "expectedAudio": true,
+    "expectCaptions": true,
+    "expectBgm": true
+  }
+}

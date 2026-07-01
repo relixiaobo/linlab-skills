@@ -1,0 +1,18 @@
+cases:
+  - id: cjk_csv
+    purpose: Detect encoding and profile CJK CSV files without corrupting text.
+  - id: excel_multisheet
+    purpose: Ask or choose the correct sheet, then profile it.
+  - id: join_fanout
+    purpose: Detect aggregate inflation from one-to-many or many-to-many joins.
+  - id: metric_reconciliation
+    purpose: Explain why two queries produce different values for the same metric.
+  - id: ab_srm
+    purpose: Flag sample ratio mismatch before interpreting experiment results.
+  - id: simpsons_paradox
+    purpose: Avoid reporting only aggregate trends when segments reverse direction.
+  - id: missing_not_random
+    purpose: Detect missingness associated with a segment or outcome.
+  - id: pii_suppression
+    purpose: Mask PII and suppress small groups in user-facing output.
+

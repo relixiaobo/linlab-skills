@@ -1,0 +1,11 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": { "text": "", "subtitle": "" },
+  "data": { "name": "main" },
+  "mark": { "type": "bar", "opacity": 0.75 },
+  "encoding": {
+    "x": { "field": "value", "type": "quantitative", "bin": { "maxbins": 40 }, "title": null },
+    "y": { "aggregate": "count", "type": "quantitative", "title": "count", "stack": null },
+    "color": { "field": "group", "type": "nominal", "title": null }
+  }
+}

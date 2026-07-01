@@ -1,0 +1,46 @@
+# Python dependencies for data-analysis skill scripts.
+# Install everything with: python3 -m pip install -r requirements.txt
+#
+# The list is tiered. The CORE tier is analysis + verification — the skill's
+# reason to exist — and depends only on pandas + duckdb. The OPTIONAL tiers add
+# output layers (reports, charts, tables) and extra file formats. Core analysis
+# and all four verification gates run without any optional package; a script that
+# needs one exits with a clear "X is required: pip install X" message rather than
+# failing obscurely. Install only the tiers you need.
+
+# ── CORE — analysis + verification (always install) ───────────────────────────
+# profile_dataset.py, query_duckdb.py, check_join_fanout.py, triangulate.py,
+# validate_findings.py. This is the trust machinery; it must run everywhere.
+pandas>=2.0
+duckdb>=0.9
+
+# ── OPTIONAL: reports (build_report.py) ───────────────────────────────────────
+# Self-contained HTML report. Without it, you can still deliver findings in chat
+# and as standalone charts/tables.
+jinja2>=3.0
+
+# ── OPTIONAL: charts (render_chart.py) ────────────────────────────────────────
+# Renders Vega-Lite specs to static SVG/PNG or self-contained interactive HTML.
+# Rust binary — no Node or browser needed.
+vl-convert-python>=1.0
+
+# ── OPTIONAL: tables (render_table.py) ────────────────────────────────────────
+# Publication-quality HTML tables with conditional color, heatmaps, and in-cell
+# sparklines. polars backs great_tables' nanoplots.
+great-tables>=0.13
+polars>=1.0
+
+# ── OPTIONAL: extra file formats ──────────────────────────────────────────────
+pyarrow>=12.0      # Parquet
+openpyxl>=3.1      # Excel .xlsx
+
+# ── OPTIONAL: niceties ────────────────────────────────────────────────────────
+# Pretty Markdown tables. The query scripts fall back to a built-in renderer if
+# this is missing, so output never hard-crashes.
+tabulate>=0.9
+
+# ── OPTIONAL: database access (query_database.py — read-only SQL over DATABASE_URL)
+# Uncomment sqlalchemy plus a driver for your engine.
+# sqlalchemy>=2.0
+# psycopg2-binary   # Postgres
+# pymysql           # MySQL

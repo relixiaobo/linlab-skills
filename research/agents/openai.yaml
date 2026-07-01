@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research"
+  short_description: "Source-grounded deep research"
+  default_prompt: "Use $research to research this topic deeply with source discipline and clear uncertainty."

@@ -1,0 +1,18 @@
+# Semantic-layer metric catalog — a REUSABLE, durable definition of a metric,
+# referenced from references/data-access.md → Semantic Layer. Distinct from
+# templates/definition_contract.yaml, which is the per-analysis decision record for
+# ONE question. Use this when you discover or confirm a metric worth documenting for
+# reuse; use the Definition Contract when you are pinning down a specific analysis.
+metrics:
+  example_metric:
+    description: Replace with the business definition.
+    expression: sum(amount)
+    grain: entity_id
+    time_column: created_at
+    filters:
+      - status = 'included'
+    exclusions:
+      - test records
+    owner: unknown
+    source: unknown
+

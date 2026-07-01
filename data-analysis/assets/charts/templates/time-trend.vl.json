@@ -1,0 +1,31 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": { "text": "", "subtitle": "" },
+  "data": { "name": "main" },
+  "encoding": {
+    "x": { "field": "x", "type": "temporal", "title": null }
+  },
+  "layer": [
+    {
+      "mark": { "type": "line" },
+      "encoding": {
+        "y": { "field": "y", "type": "quantitative", "title": null },
+        "color": { "field": "series", "type": "nominal", "title": null }
+      }
+    },
+    {
+      "data": { "name": "annotations" },
+      "mark": { "type": "rule", "strokeDash": [4, 3], "color": "#9CA3AF" },
+      "encoding": { "x": { "field": "at", "type": "temporal" } }
+    },
+    {
+      "data": { "name": "annotations" },
+      "mark": { "type": "text", "align": "left", "baseline": "top", "dx": 5, "dy": 6, "fontSize": 11, "color": "#6B7280" },
+      "encoding": {
+        "x": { "field": "at", "type": "temporal" },
+        "y": { "value": 0 },
+        "text": { "field": "label", "type": "nominal" }
+      }
+    }
+  ]
+}

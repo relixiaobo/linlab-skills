@@ -1,0 +1,21 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": { "text": "", "subtitle": "" },
+  "data": { "name": "main" },
+  "encoding": {
+    "y": {
+      "field": "step",
+      "type": "nominal",
+      "title": null,
+      "sort": { "field": "order", "order": "ascending" }
+    },
+    "x": { "field": "count", "type": "quantitative", "title": null }
+  },
+  "layer": [
+    { "mark": { "type": "bar", "cornerRadiusEnd": 2 } },
+    {
+      "mark": { "type": "text", "align": "left", "dx": 5, "color": "#374151", "fontSize": 11 },
+      "encoding": { "text": { "field": "label", "type": "nominal" } }
+    }
+  ]
+}

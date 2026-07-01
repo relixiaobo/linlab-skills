@@ -1,0 +1,9 @@
+{
+  "_comment": "Narration timeline for the manim-overlay example. Feed to scene_timing.py to produce storyboard.json. Here durations are explicit; in real projects derive them from per-scene audio or a single --voiceover.",
+  "fps": 30,
+  "scenes": [
+    { "id": "s1", "visual": "math-overlay", "narration": "The Pythagorean theorem relates the sides of a right triangle.", "start": 0, "duration": 4 },
+    { "id": "s2", "visual": "math-overlay", "narration": "Rearranged, the hypotenuse equals the square root of a squared plus b squared.", "start": 4, "duration": 5 },
+    { "id": "s3", "visual": "math-overlay", "narration": "More generally, here is the parabola y equals x squared.", "start": 9, "duration": 4 }
+  ]
+}

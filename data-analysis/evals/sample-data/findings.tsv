@@ -1,0 +1,3 @@
+id	claim	computation	evidence	verification	caveat	status
+F001	Paid orders total 400.00 in the sample.	queries/paid_revenue.sql	3 paid orders from 2026-01-01 to 2026-01-04 sum to 400.00.	Cross-check count of paid order ids is 3 and refunded order 1003 is excluded.	Sample data only; not a production period.	verified
+

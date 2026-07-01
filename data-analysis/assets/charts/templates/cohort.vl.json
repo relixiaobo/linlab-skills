@@ -1,0 +1,35 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": { "text": "", "subtitle": "" },
+  "data": { "name": "main" },
+  "width": { "step": 56 },
+  "height": { "step": 40 },
+  "encoding": {
+    "x": { "field": "period", "type": "ordinal", "title": null, "axis": { "grid": false } },
+    "y": { "field": "cohort", "type": "ordinal", "title": null, "axis": { "grid": false } }
+  },
+  "layer": [
+    {
+      "mark": { "type": "rect" },
+      "encoding": {
+        "color": {
+          "field": "value",
+          "type": "quantitative",
+          "title": null,
+          "scale": { "scheme": "tealblues" },
+          "legend": { "format": ".0%" }
+        }
+      }
+    },
+    {
+      "mark": { "type": "text", "fontSize": 10 },
+      "encoding": {
+        "text": { "field": "value", "type": "quantitative", "format": ".0%" },
+        "color": {
+          "condition": { "test": "datum.value >= 0.7", "value": "white" },
+          "value": "#1F2937"
+        }
+      }
+    }
+  ]
+}

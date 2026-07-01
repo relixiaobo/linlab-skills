@@ -1,0 +1,21 @@
+.DS_Store
+.claude/
+
+# Generated evaluation and work artifacts
+*-workspace/
+*.zip
+
+# Runtime/build caches
+__pycache__/
+*.py[cod]
+node_modules/
+.venv/
+venv/
+dist/
+build/
+tmp/
+
+# Local secrets/config
+.env
+.env.*
+!.env.example

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Video Studio Preview</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #111;
+        color: #fff;
+        font-family: Inter, system-ui, sans-serif;
+      }
+
+      #stage {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+      }
+
+      .safe {
+        position: absolute;
+        inset: 144px 144px 320px 48px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 96px;
+        line-height: 1.05;
+      }
+
+      p {
+        margin: 28px 0 0;
+        font-size: 42px;
+        opacity: 0.82;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="stage">
+      <section class="safe">
+        <div id="copy">
+          <h1>Video Studio</h1>
+          <p>Headless web-to-video template</p>
+        </div>
+      </section>
+    </main>
+    <script>
+      window.__seek = async (seconds) => {
+        const copy = document.getElementById("copy");
+        const progress = Math.min(1, Math.max(0, seconds / 2));
+        copy.style.opacity = String(progress);
+        copy.style.transform = `translateY(${(1 - progress) * 40}px)`;
+      };
+    </script>
+  </body>
+</html>

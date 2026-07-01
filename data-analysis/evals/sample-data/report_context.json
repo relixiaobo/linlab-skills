@@ -1,0 +1,29 @@
+{
+  "title": "Sample Orders Analysis",
+  "direct_answer": "Paid orders total 400.00 in the sample.",
+  "sources": "orders.csv, order_lines.csv",
+  "date_range": "2026-01-01 to 2026-01-04",
+  "grain": "order",
+  "filters": "status = 'paid' for paid revenue",
+  "method": "Profiled orders, aggregated revenue by status, and checked order-to-line join fanout.",
+  "findings": [
+    {
+      "id": "F001",
+      "claim": "Paid orders total 400.00 in the sample.",
+      "evidence": "3 paid orders sum to 400.00.",
+      "verification": "Paid order count cross-check excludes refunded order 1003.",
+      "caveat": "Sample data only."
+    }
+  ],
+  "refuted": [
+    "No refuted hypotheses in the smoke test."
+  ],
+  "privacy": "No PII columns were present in the sample.",
+  "plan_path": "analysis_plan.md",
+  "ledger_path": "findings.tsv",
+  "scripts_path": "scripts/",
+  "queries_path": "queries/",
+  "charts_path": "charts/",
+  "limitations": "Tiny smoke-test dataset, not representative of production."
+}
+

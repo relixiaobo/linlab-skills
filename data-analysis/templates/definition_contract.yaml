@@ -1,0 +1,66 @@
+# Definition Contract — fill and CONFIRM before computing (Standard / Rigorous tiers).
+#
+# Gate 1 of specification verification. Recomputing a number a second way checks the
+# math; this checks that the metric, grain, filters, window, and population are the
+# RIGHT ones for the question — the part recomputation can never reach.
+#
+# Discipline (this is the load-bearing part, not the form):
+#   - For every field with more than one defensible reading, list the alternatives
+#     you considered and why you rejected them. Reason in solution space (enumerate
+#     the options), not question space.
+#   - Where a different reading would MATERIALLY change the answer, set
+#     answer_moving: true and either confirm with the user or state it loudly and
+#     proceed. Do NOT ask about ambiguities that don't move the number.
+#   - Do not EXECUTE until every required field is set.
+#
+# Quick tier: skip this file. State the one load-bearing assumption inline in the
+# answer (e.g. "assuming revenue = net of refunds").
+
+question: >                 # the exact question this answers, one sentence
+decision: >                 # what decision the result feeds (sets how hard to protect it)
+
+metric:
+  name:
+  definition: >             # plain language: the construct it is meant to measure
+  expression:               # the exact formula / SQL aggregate (the computed f)
+  alternatives_considered:  # other defensible definitions, and why not them
+    - definition:
+      rejected_because:
+
+grain:
+  unit: >                   # one row = one ___  (entity + period). The #1 silent error.
+  alternatives_considered:
+    - unit:
+      rejected_because:
+
+filters:
+  include:                  # explicit inclusion predicates (defines the dataset D)
+    -
+  exclude:                  # explicit exclusion predicates (test accounts, etc.)
+    -
+
+window:
+  start:                    # ISO date
+  end:                      # ISO date
+  timezone:
+  completeness: >           # full periods only? partial last period? as-of date?
+
+population:
+  universe: >               # who/what is in scope — the denominator
+  excluded: >               # who is deliberately out of scope
+  expected_size:            # approx count expected in the universe (feeds coverage check)
+
+assumptions:                # every field above with >1 reading, surfaced here
+  - field:
+    chosen:
+    alternatives:
+    answer_moving:          # true | false — does the alternative materially change it?
+    action:                 # confirmed_with_user | stated_and_proceeded
+
+# Gate 2 inputs — confirmative checks to run in VALIDATE (see scripts/triangulate.py).
+# These appeal to an INDEPENDENT reference frame, not a second computation.
+triangulation:
+  reconcile_to:             # a known/trusted total this should tie to (finance, prior report, raw COUNT)
+  expected_magnitude:       # an independent Fermi estimate of the answer's size
+  coverage_universe:        # expected universe size, for the coverage check
+  grain_key:                # the key that should be unique at the stated grain

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": { "text": "", "subtitle": "" },
+  "data": { "name": "main" },
+  "encoding": {
+    "x": { "field": "x", "type": "quantitative", "title": null, "scale": { "zero": false } },
+    "y": { "field": "y", "type": "quantitative", "title": null, "scale": { "zero": false } }
+  },
+  "layer": [
+    {
+      "mark": { "type": "point", "filled": true, "opacity": 0.6, "size": 55 },
+      "encoding": {
+        "color": { "field": "group", "type": "nominal", "title": null }
+      }
+    },
+    {
+      "mark": { "type": "line", "color": "#111827", "strokeWidth": 2 },
+      "transform": [{ "regression": "y", "on": "x" }],
+      "encoding": {
+        "x": { "field": "x", "type": "quantitative" },
+        "y": { "field": "y", "type": "quantitative" }
+      }
+    }
+  ]
+}

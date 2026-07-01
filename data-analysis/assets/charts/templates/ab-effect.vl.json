@@ -1,0 +1,33 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": { "text": "", "subtitle": "" },
+  "data": { "name": "main" },
+  "layer": [
+    {
+      "mark": { "type": "rule", "color": "#9CA3AF", "strokeDash": [4, 3], "size": 1.5 },
+      "encoding": { "x": { "datum": 0, "type": "quantitative" } }
+    },
+    {
+      "mark": { "type": "rule", "strokeWidth": 1.5 },
+      "encoding": {
+        "y": { "field": "metric", "type": "nominal", "title": null },
+        "x": { "field": "ci_low", "type": "quantitative", "title": "effect (lift)" },
+        "x2": { "field": "ci_high" }
+      }
+    },
+    {
+      "mark": { "type": "point", "filled": true, "size": 95 },
+      "encoding": {
+        "y": { "field": "metric", "type": "nominal", "title": null },
+        "x": { "field": "effect", "type": "quantitative" },
+        "color": {
+          "condition": {
+            "test": "datum.significant === true || datum.significant === 'true' || datum.significant === 1",
+            "value": "#4F46E5"
+          },
+          "value": "#9CA3AF"
+        }
+      }
+    }
+  ]
+}

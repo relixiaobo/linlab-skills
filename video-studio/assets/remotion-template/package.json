@@ -1,0 +1,24 @@
+{
+  "name": "video-studio-remotion-template",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "remotion studio",
+    "still": "remotion still VideoStudio --frame=30 --scale=0.5 verify/frame-030.png",
+    "render": "remotion render VideoStudio renders/final.mp4 --codec=h264 --crf=20",
+    "render:scenes": "remotion render ScenesVideo renders/final.mp4 --codec=h264 --crf=20 --props=remotion-props.json"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "@remotion/media": "^4.0.0",
+    "@remotion/media-utils": "^4.0.0",
+    "@remotion/transitions": "^4.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title | default("Analysis Report") }}</title>
+<style>
+  :root {
+    --ink: #111827; --muted: #6B7280; --faint: #9CA3AF;
+    --line: #E5E7EB; --bg: #F7F8FA; --card: #FFFFFF;
+    --accent: #4F46E5; --good: #059669; --bad: #DC2626; --warn: #B45309;
+    --good-bg: #ECFDF5; --bad-bg: #FEF2F2; --warn-bg: #FFFBEB; --accent-bg: #EEF0FE;
+    --radius: 12px;
+    --font: Inter, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--font); font-size: 15px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 860px; margin: 0 auto; padding: 56px 28px 96px; }
+
+  /* Header */
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 10px; }
+  h1 { font-size: 32px; line-height: 1.2; font-weight: 700; margin: 0 0 8px;
+    letter-spacing: -.01em; }
+  .subtitle { color: var(--muted); font-size: 15px; margin: 0; }
+
+  /* KPI cards */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px; margin: 32px 0; }
+  .kpi { background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 18px 18px 16px; }
+  .kpi .label { font-size: 12px; color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .04em; }
+  .kpi .value { font-size: 28px; font-weight: 700; margin-top: 6px;
+    letter-spacing: -.01em; }
+  .kpi .delta { font-size: 13px; font-weight: 600; margin-top: 4px; color: var(--faint); }
+  .kpi .delta.good { color: var(--good); }
+  .kpi .delta.bad { color: var(--bad); }
+
+  /* Answer callout */
+  .answer { background: var(--accent-bg); border-radius: var(--radius);
+    padding: 20px 22px; margin: 28px 0; }
+  .answer .label { font-size: 12px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 6px; }
+  .answer p { margin: 0; font-size: 16px; }
+
+  /* Sections */
+  h2 { font-size: 13px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--faint); margin: 48px 0 18px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+
+  /* Findings */
+  .finding { background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 24px; margin: 16px 0; }
+  .finding h3 { font-size: 19px; font-weight: 650; margin: 0 0 8px;
+    letter-spacing: -.005em; }
+  .finding .body { color: #374151; margin: 0 0 16px; }
+  .chart { margin: 16px 0; }
+  .chart svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  .table-wrap { margin: 16px 0; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 12px;
+    text-transform: uppercase; letter-spacing: .03em; }
+
+  /* Finding meta: verification + caveat */
+  .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .chip { font-size: 13px; padding: 8px 12px; border-radius: 8px; flex: 1 1 240px; }
+  .chip .k { font-weight: 700; margin-right: 6px; }
+  .chip.verified { background: var(--good-bg); color: #065F46; }
+  .chip.refuted { background: var(--bad-bg); color: #991B1B; }
+  .chip.followup { background: var(--warn-bg); color: #92400E; }
+  .chip.caveat { background: #F9FAFB; color: #4B5563; border: 1px solid var(--line); }
+
+  /* Definition grid (scope / method) */
+  dl.scope { display: grid; grid-template-columns: 150px 1fr; gap: 8px 16px;
+    margin: 0; background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 20px 22px; }
+  dl.scope dt { color: var(--muted); font-weight: 600; font-size: 13px; }
+  dl.scope dd { margin: 0; }
+
+  ul.plain { margin: 0; padding-left: 20px; }
+  ul.plain li { margin: 4px 0; }
+
+  /* Footer / reproducibility */
+  .footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line);
+    color: var(--faint); font-size: 13px; }
+  .footer .paths { font-family: var(--mono); font-size: 12px; line-height: 1.9;
+    color: var(--muted); margin: 8px 0 0; }
+  .footer .paths .k { color: var(--faint); display: inline-block; min-width: 84px; }
+
+  /* Trust badge (always visible — the consumer's reassurance) */
+  .badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px;
+    background: var(--good-bg); color: #065F46; font-size: 13px; font-weight: 600;
+    padding: 6px 13px; border-radius: 999px; }
+  .badge.partial { background: var(--warn-bg); color: #92400E; }
+
+  /* Progressive disclosure: machinery collapses; pros expand it */
+  details > summary { cursor: pointer; list-style: none; }
+  details > summary::-webkit-details-marker { display: none; }
+
+  .section-details > summary { font-size: 13px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--faint); margin: 48px 0 0; padding-bottom: 8px;
+    border-bottom: 1px solid var(--line); display: flex; align-items: center; }
+  .section-details > summary::after { content: "▸"; margin-left: auto; font-size: 11px; }
+  .section-details[open] > summary::after { content: "▾"; }
+  .section-details > .section-body { margin-top: 18px; }
+
+  .verify { margin-top: 16px; }
+  .verify > summary { display: inline-flex; align-items: center; gap: 6px; font-size: 13px;
+    font-weight: 600; color: #065F46; background: var(--good-bg); padding: 8px 12px;
+    border-radius: 8px; }
+  .verify.refuted > summary { color: #991B1B; background: var(--bad-bg); }
+  .verify.followup > summary { color: #92400E; background: var(--warn-bg); }
+  .verify .vbody { margin: 12px 2px 0; font-size: 14px; color: #4B5563; }
+  .verify .vbody p { margin: 0 0 6px; }
+
+  @media print {
+    body { background: #fff; }
+    .page { padding: 0; max-width: none; }
+    .finding, .kpi, dl.scope { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+{% set open = 'open' if audience == 'analyst' else '' %}
+<div class="page">
+
+  <header>
+    {% if eyebrow %}<p class="eyebrow">{{ eyebrow }}</p>{% else %}<p class="eyebrow">Analysis Report</p>{% endif %}
+    <h1>{{ title | default("Untitled Analysis") }}</h1>
+    {% if subtitle %}<p class="subtitle">{{ subtitle }}</p>{% endif %}
+    {% if trust %}<div class="badge">✓ {{ trust }}</div>
+    {% elif _verified_all %}<div class="badge">✓ Every key number independently verified</div>
+    {% elif _n_verified %}<div class="badge partial">✓ {{ _n_verified }} of {{ _n_findings }} findings verified</div>
+    {% endif %}
+  </header>
+
+  {% if kpis %}
+  <section class="kpis">
+    {% for kpi in kpis %}
+    <div class="kpi">
+      <div class="label">{{ kpi.label }}</div>
+      <div class="value">{{ kpi.value }}</div>
+      {% if kpi.delta %}<div class="delta {{ kpi.tone | default('') }}">{{ kpi.delta }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if direct_answer %}
+  <section class="answer">
+    <p class="label">Answer</p>
+    <p>{{ direct_answer }}</p>
+  </section>
+  {% endif %}
+
+  {% if findings %}
+  <h2>Findings</h2>
+  {% for f in findings %}
+  <article class="finding">
+    <h3>{{ f.claim | default(f.title) }}</h3>
+    {% if f.body %}<p class="body">{{ f.body }}</p>{% endif %}
+    {% if f.chart_svg %}<figure class="chart">{{ f.chart_svg }}</figure>{% endif %}
+    {% if f.table_html %}<div class="table-wrap">{{ f.table_html }}</div>{% endif %}
+    {% if f.caveat %}<div class="meta"><div class="chip caveat"><span class="k">Caveat</span>{{ f.caveat }}</div></div>{% endif %}
+    {% if f.evidence or f.verification %}
+    <details class="verify {% if f.status == 'refuted' %}refuted{% elif f.status == 'needs_followup' %}followup{% endif %}" {{ open }}>
+      <summary>{% if f.status == 'refuted' %}✗ Refuted{% elif f.status == 'needs_followup' %}⊙ Needs follow-up{% else %}✓ Verified{% endif %} — evidence &amp; how we checked</summary>
+      <div class="vbody">
+        {% if f.evidence %}<p><strong>Evidence.</strong> {{ f.evidence }}</p>{% endif %}
+        {% if f.verification %}<p><strong>Verification.</strong> {{ f.verification }}</p>{% endif %}
+      </div>
+    </details>
+    {% endif %}
+  </article>
+  {% endfor %}
+  {% endif %}
+
+  {% if sources or date_range or grain or filters or method %}
+  <details class="section-details" {{ open }}>
+    <summary>Method &amp; data scope</summary>
+    <div class="section-body">
+      <dl class="scope">
+        {% if sources %}<dt>Sources</dt><dd>{{ sources }}</dd>{% endif %}
+        {% if date_range %}<dt>Date range</dt><dd>{{ date_range }}</dd>{% endif %}
+        {% if grain %}<dt>Grain</dt><dd>{{ grain }}</dd>{% endif %}
+        {% if filters %}<dt>Filters</dt><dd>{{ filters }}</dd>{% endif %}
+        {% if method %}<dt>Method</dt><dd>{{ method }}</dd>{% endif %}
+        {% if privacy %}<dt>Privacy</dt><dd>{{ privacy }}</dd>{% endif %}
+      </dl>
+    </div>
+  </details>
+  {% endif %}
+
+  {% if limitations %}
+  <h2>Limitations</h2>
+  {% if limitations is string %}
+  <p>{{ limitations }}</p>
+  {% else %}
+  <ul class="plain">{% for item in limitations %}<li>{{ item }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% endif %}
+
+  <footer class="footer">
+    {% if generated %}Generated {{ generated }}.{% endif %}
+    {% if artifacts %}
+    <div class="paths">
+      {% for a in artifacts %}<div><span class="k">{{ a.label }}</span>{{ a.path }}</div>{% endfor %}
+    </div>
+    {% endif %}
+  </footer>
+
+</div>
+</body>
+</html>

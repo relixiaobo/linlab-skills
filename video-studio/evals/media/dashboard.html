@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Q2 Growth Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #0b1020 0%, #1f2a4d 100%);
+    color: #f5f7ff; width: 1080px; height: 1920px; overflow: hidden;
+  }
+  .wrap { padding: 96px 72px; display: flex; flex-direction: column; height: 100%; }
+  h1 { font-size: 84px; font-weight: 800; letter-spacing: -1px; }
+  .sub { font-size: 40px; color: #9fb3ff; margin-top: 16px; }
+  .cards { margin-top: 80px; display: grid; gap: 48px; }
+  .card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 32px; padding: 56px; }
+  .metric { font-size: 120px; font-weight: 800; }
+  .label { font-size: 40px; color: #c7d2fe; margin-top: 8px; }
+  .up { color: #34d399; } .down { color: #f87171; }
+  .bar { margin-top: 28px; height: 28px; background: rgba(255,255,255,0.1); border-radius: 14px; overflow: hidden; }
+  .bar > span { display:block; height:100%; background: linear-gradient(90deg,#34d399,#3b82f6); }
+  footer { margin-top: auto; font-size: 32px; color: #7c89b8; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Q2 Growth</h1>
+    <div class="sub">Acme Analytics &middot; April–June 2026</div>
+    <div class="cards">
+      <div class="card">
+        <div class="metric up">+42%</div>
+        <div class="label">Monthly active users</div>
+        <div class="bar"><span style="width:82%"></span></div>
+      </div>
+      <div class="card">
+        <div class="metric up">$1.2M</div>
+        <div class="label">Net new ARR</div>
+        <div class="bar"><span style="width:64%"></span></div>
+      </div>
+      <div class="card">
+        <div class="metric down">-1.8%</div>
+        <div class="label">Monthly churn</div>
+        <div class="bar"><span style="width:22%"></span></div>
+      </div>
+    </div>
+    <footer>Generated for the video-studio eval &middot; data is illustrative</footer>
+  </div>
+</body>
+</html>

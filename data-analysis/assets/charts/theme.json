@@ -1,0 +1,73 @@
+{
+  "$schema_note": "Vega-Lite config — the house visual identity. Merged under every chart spec by render_chart.py (spec.config overrides these). Edit here to restyle ALL charts at once; never restyle a single template by hand.",
+  "background": "white",
+  "font": "Inter, -apple-system, Helvetica Neue, Arial, sans-serif",
+  "padding": 12,
+  "view": {
+    "stroke": null,
+    "continuousWidth": 560,
+    "continuousHeight": 320,
+    "discreteHeight": { "step": 30 }
+  },
+  "title": {
+    "anchor": "start",
+    "fontSize": 16,
+    "fontWeight": 600,
+    "color": "#111827",
+    "subtitleFontSize": 12,
+    "subtitleColor": "#6B7280",
+    "subtitlePadding": 6,
+    "offset": 14
+  },
+  "axis": {
+    "labelFont": "Inter, -apple-system, Helvetica Neue, Arial, sans-serif",
+    "titleFont": "Inter, -apple-system, Helvetica Neue, Arial, sans-serif",
+    "labelColor": "#6B7280",
+    "titleColor": "#374151",
+    "labelFontSize": 11,
+    "titleFontSize": 12,
+    "titleFontWeight": 600,
+    "titlePadding": 8,
+    "domainColor": "#E5E7EB",
+    "tickColor": "#E5E7EB",
+    "gridColor": "#EEF1F4",
+    "gridWidth": 1,
+    "labelPadding": 6
+  },
+  "axisX": { "grid": false, "domain": true, "ticks": true },
+  "axisY": { "grid": true, "domain": false, "ticks": false },
+  "legend": {
+    "labelFont": "Inter, -apple-system, Helvetica Neue, Arial, sans-serif",
+    "titleFont": "Inter, -apple-system, Helvetica Neue, Arial, sans-serif",
+    "labelColor": "#374151",
+    "titleColor": "#6B7280",
+    "labelFontSize": 11,
+    "titleFontSize": 11,
+    "titleFontWeight": 600,
+    "orient": "top",
+    "direction": "horizontal",
+    "offset": 8,
+    "symbolType": "circle",
+    "symbolSize": 80
+  },
+  "range": {
+    "category": [
+      "#4F46E5",
+      "#06B6D4",
+      "#F59E0B",
+      "#10B981",
+      "#EF4444",
+      "#8B5CF6",
+      "#EC4899",
+      "#64748B"
+    ],
+    "heatmap": { "scheme": "tealblues" },
+    "ramp": { "scheme": "tealblues" }
+  },
+  "line": { "strokeWidth": 2.5, "point": false, "interpolate": "linear" },
+  "bar": { "fill": "#4F46E5", "cornerRadiusEnd": 2 },
+  "point": { "filled": true, "size": 70, "opacity": 0.85 },
+  "rule": { "color": "#9CA3AF" },
+  "rect": { "stroke": "white", "strokeWidth": 1 },
+  "text": { "font": "Inter, -apple-system, Helvetica Neue, Arial, sans-serif", "fontSize": 11, "color": "#374151" }
+}

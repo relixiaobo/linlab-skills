@@ -1,0 +1,6 @@
+{
+  "name": "video-studio",
+  "dependencies": {
+    "playwright": "^1.61.1"
+  }
+}

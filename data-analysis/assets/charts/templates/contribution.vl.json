@@ -1,0 +1,19 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": { "text": "", "subtitle": "" },
+  "data": { "name": "main" },
+  "mark": { "type": "bar", "cornerRadiusEnd": 2 },
+  "encoding": {
+    "y": {
+      "field": "factor",
+      "type": "nominal",
+      "title": null,
+      "sort": { "field": "contribution", "order": "descending" }
+    },
+    "x": { "field": "contribution", "type": "quantitative", "title": null },
+    "color": {
+      "condition": { "test": "datum.contribution >= 0", "value": "#10B981" },
+      "value": "#EF4444"
+    }
+  }
+}
