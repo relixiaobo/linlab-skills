@@ -11,21 +11,24 @@ Personal Codex skills maintained by Linlab.
 
 ## Install
 
-Copy a skill folder into your Codex skills directory:
+For Codex CLI, copy or symlink a skill folder into the user skills directory:
 
 ```sh
-mkdir -p ~/.codex/skills
-rsync -a code-review/ ~/.codex/skills/code-review/
+mkdir -p ~/.agents/skills
+ln -s "$PWD/code-review" ~/.agents/skills/code-review
 ```
 
 To install all skills:
 
 ```sh
-mkdir -p ~/.codex/skills
+mkdir -p ~/.agents/skills
 for skill in code-review data-analysis research video-studio; do
-  rsync -a "$skill/" "$HOME/.codex/skills/$skill/"
+  ln -s "$PWD/$skill" "$HOME/.agents/skills/$skill"
 done
 ```
+
+Codex detects skill changes automatically in new sessions. If a skill does not
+appear in `/skills` or `$` completion, restart Codex CLI.
 
 ## Validate
 
