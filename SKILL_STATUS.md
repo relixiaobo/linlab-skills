@@ -11,6 +11,8 @@ retiring skills.
 - `watch`: useful, but boundary or trigger behavior needs more evidence.
 - `candidate-retire`: likely overlaps with base model capability or another
   skill; do not expand without a new concrete reason.
+- `archived`: kept for reference, but removed from default installation and
+  active maintenance.
 - `planned`: worth building only after the boundary and handoff contract are
   clear.
 
@@ -23,7 +25,12 @@ retiring skills.
 | `document` | active | Markdown/structured source or native DOCX when required | Reading/review artifact | Source fidelity, section structure, DOCX semantics, comments/redlines, reader questions | Optimized for agent-maintained documents and Word review workflows. |
 | `presentation` | active | Agent-maintainable deck source or native PPTX when required | Slide/talk artifact | Slide narrative, visual hierarchy, asset fidelity, presenter/read deck fit, render/export checks | Optimized for communication on slides, not generic PPTX file handling. |
 | `video-studio` | active | Media files, scripts, manifests, platform packaging settings | Finished video/package | ffprobe/ffmpeg QA, platform dimensions, audio/subtitle/frame checks | Clear production toolchain and verification surface. |
-| `research` | candidate-retire | External sources and source logs | Source-grounded answer/report | Source quality, claim verification, citation audit | Prior trigger experiments showed low trigger rate; much of the workflow resembles base model + browsing behavior. Keep only if it proves unique value through artifacts, domain routing, or claim-audit tooling. |
+
+## Archived Skills
+
+| Skill | Status | Archive path | Reason | Restore only if |
+| --- | --- | --- | --- | --- |
+| `research` | archived | `archive/research` | Prior trigger experiments showed low trigger rate, and much of the workflow resembles base model plus browsing behavior. | Deep, auditable research artifacts prove unique value beyond normal browsing/search, such as source logs, claim audits, domain routing, patent/grant/regulatory workflows, or literature-review machinery. |
 
 ## Planned / Possible Skills
 
@@ -68,21 +75,20 @@ skill or rely on the base model.
 
 ## Research Skill Decision Record
 
-Current recommendation: keep `research` in `candidate-retire` until the next
-trigger and utility evaluation.
+Decision: archive `research` under `archive/research` and remove it from the
+default install list.
 
 Reasons:
 
 - The trigger surface is broad and overlaps with normal browsing/search tasks.
 - Good research behavior is increasingly a baseline expectation rather than a
   specialized skill.
-- The skill may still be valuable for deep, auditable work where it creates
-  source logs, claim audits, and reusable artifacts.
+- The skill may still be useful as reference material for future deep,
+  auditable workflows where source logs, claim audits, and reusable artifacts
+  create value beyond baseline browsing.
 
 Next decision options:
 
-- Retire: remove from default install and archive the folder.
-- Narrow: keep only for deep research artifacts, due diligence, claim audits,
-  patent/grant/regulatory research, and literature reviews.
-- Merge: move the useful source-policy and claim-verification pieces into a
-  shared reference or into `document`/`data-analysis` handoff guidance.
+- Restore as explicit-only if a narrower research workflow earns its own skill.
+- Split useful pieces into another skill only when they satisfy the split rule.
+- Delete the archive later if no future workflow reuses it.
