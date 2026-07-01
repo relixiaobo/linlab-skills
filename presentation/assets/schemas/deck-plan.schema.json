@@ -8,6 +8,22 @@
     "audience": { "type": "string" },
     "goal": { "type": "string" },
     "outputRoute": { "type": "string" },
+    "deliveryMode": {
+      "type": "string",
+      "description": "live-talk, reading-share, agent-maintained-source, visual-showcase, handout, or another explicit mode"
+    },
+    "editabilityRequirement": {
+      "type": "string",
+      "description": "human-native-editable, visual-only, mixed, or not-required"
+    },
+    "revisionSurface": {
+      "type": "string",
+      "description": "source-first, native-pptx, visual-only, or mixed"
+    },
+    "notesMode": {
+      "type": "string",
+      "description": "none, brief-speaker-notes, verbatim-script, presenter-mode, or outline-only"
+    },
     "visualTemperament": { "type": "string" },
     "visualSystem": {
       "type": "object",
@@ -27,6 +43,22 @@
     "sourceMaterials": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "assetInventory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["asset", "role"],
+        "properties": {
+          "asset": { "type": "string" },
+          "role": { "type": "string" },
+          "source": { "type": "string" },
+          "path": { "type": "string" },
+          "status": { "type": "string" },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
     },
     "storySpine": {
       "type": "array",

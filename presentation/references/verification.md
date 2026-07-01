@@ -5,6 +5,7 @@ Approach verification as a bug hunt. First renders often have concrete issues.
 ## Universal Checks
 
 - source claims are represented faithfully
+- recent or unstable facts have sources or are marked as assumptions
 - slide order supports the story
 - no lorem, TODO, placeholder, sample, dummy, or xxxx text remains
 - no broken local asset references
@@ -12,9 +13,14 @@ Approach verification as a bug hunt. First renders often have concrete issues.
 - repeated layouts are intentional
 - contrast is projector-readable
 - images are cropped intentionally
+- named brands/products have real logos or explicitly accepted placeholders
+- screenshots and charts remain readable at final slide size
 - final artifact opens or renders when local tools allow it
 - every designed slide has a registered layout recipe
 - the deck uses one visual system instead of slide-by-slide styling
+- the source of truth is clear, inspectable, and available for future agent
+  revisions
+- live-talk decks keep presenter-only material out of visible slide content
 
 ## PPTX Checks
 
@@ -23,6 +29,8 @@ Approach verification as a bug hunt. First renders often have concrete issues.
 - check slide relationships and content types
 - check notes/media/chart references
 - open or convert the file when possible
+- if human PowerPoint editability was explicitly required, verify text is not
+  flattened into slide images
 
 ## HTML Checks
 
@@ -30,6 +38,7 @@ Approach verification as a bug hunt. First renders often have concrete issues.
 - open in a browser when possible
 - check desktop and narrow viewport framing
 - verify keyboard navigation
+- verify notes are hidden in audience view and available where expected
 - search generated files for placeholders
 - review visual warnings: layout variety, missing `data-layout`, text-only
   slides, bullet density, tiny text, remote dependencies, and broken local assets

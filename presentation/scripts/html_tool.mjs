@@ -2,7 +2,7 @@
 import { access, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-const PLACEHOLDER_RE = /\b(lorem|ipsum|todo|placeholder|sample|dummy|xxxx)\b/gi;
+const PLACEHOLDER_RE = /\b(lorem|ipsum|todo|placeholder|sample|dummy|xxxx)\b|\[(?:必填|todo|placeholder)[^\]]*\]|replace\s+(?:this|with)\b/gi;
 const REGISTERED_LAYOUTS = new Set([
   'cover',
   'hero-media',
@@ -18,6 +18,8 @@ const REGISTERED_LAYOUTS = new Set([
   'gallery',
   'quote',
   'close',
+  'scripted-demo',
+  'evidence-wall',
 ]);
 const TEXT_ONLY_LAYOUTS = new Set(['section', 'quote', 'close']);
 const VISUAL_MARKER_RE = /<(img|svg|canvas|video|figure)\b|class\s*=\s*["'][^"']*\b(metric|stage-visual|device-frame|feature-grid|visual-frame|timeline|quote|gallery|compare|diagram|signal|panel|number|chart)\b/i;
@@ -77,6 +79,19 @@ function slideElementCount(html) {
   return count;
 }
 
+function hasFixedStageHint(html) {
+  return /aspect-ratio\s*:\s*16\s*\/\s*9/i.test(html)
+    || /width\s*:\s*1920px/i.test(html) && /height\s*:\s*1080px/i.test(html)
+    || /width\s*:\s*1280px/i.test(html) && /height\s*:\s*720px/i.test(html)
+    || /width\s*:\s*960pt/i.test(html) && /height\s*:\s*540pt/i.test(html);
+}
+
+function hasKeyboardNavigation(html) {
+  return /addEventListener\s*\(\s*['"]keydown['"]/i.test(html)
+    || /onkeydown\s*=/i.test(html)
+    || /keydown/i.test(html) && /(ArrowRight|ArrowLeft|PageDown|PageUp|Home|End|Space|\s['"]\s)/i.test(html);
+}
+
 function remoteDependencies(html) {
   const remoteSrcs = attrValues(html, 'src').filter((value) => /^https?:/i.test(value.trim()));
   const remoteCssUrls = [];
@@ -124,10 +139,20 @@ async function inspectHtml(filePath, html) {
   const textOnlySlides = slides
     .filter((slide) => !TEXT_ONLY_LAYOUTS.has(slide.layout) && !VISUAL_MARKER_RE.test(slide.html))
     .map((slide) => slide.index);
+  const notesSlides = slides
+    .filter((slide) => /<aside\b[^>]*class\s*=\s*["'][^"']*\bnotes\b/i.test(slide.html)
+      || /<div\b[^>]*class\s*=\s*["'][^"']*\bnotes\b/i.test(slide.html))
+    .map((slide) => slide.index);
   const bulletDenseSlides = slides
     .filter((slide) => (slide.html.match(/<li\b/gi) ?? []).length >= 5)
     .map((slide) => slide.index);
   const tinyTextHits = sortedUnique([...html.matchAll(TINY_FONT_RE)].map((match) => `${match[1]}px`));
+  const slideDisplayNone = /\.slide[^{]*{[^}]*display\s*:\s*none/i.test(html);
+  const visiblePresenterText = slides
+    .filter((slide) => /speaker\s*(notes?|script)|presenter\s*(notes?|view)|逐字稿|讲稿|演讲者/i.test(
+      slide.html.replace(/<(aside|div)\b[^>]*class\s*=\s*["'][^"']*\bnotes\b[^>]*>[\s\S]*?<\/\1>/gi, '')
+    ))
+    .map((slide) => slide.index);
   const brokenLocalReferences = [];
   for (const ref of localRefs) {
     if (!(await existingLocalReference(filePath, ref))) brokenLocalReferences.push(ref);
@@ -136,14 +161,16 @@ async function inspectHtml(filePath, html) {
   if (placeholders.length > 0) warnings.push('placeholder_text_found');
   if (brokenLocalReferences.length > 0) errors.push('broken_local_asset_reference_found');
   if (remoteDependencyRefs.length > 0) warnings.push('remote_dependency_reference_found');
-  if (!/keydown|data-deck|data-slide/i.test(html)) warnings.push('navigation_not_obvious');
-  if (!/aspect-ratio\s*:\s*16\s*\/\s*9/i.test(html)) warnings.push('missing_16_9_aspect_ratio_hint');
+  if (!hasKeyboardNavigation(html)) warnings.push('keyboard_navigation_not_obvious');
+  if (!hasFixedStageHint(html)) warnings.push('missing_16_9_stage_hint');
+  if (slideDisplayNone) warnings.push('display_none_slide_switching_risk');
   if (missingLayoutSlides.length > 0) warnings.push('missing_registered_layout_found');
   if (unknownLayouts.length > 0) warnings.push('unknown_layout_found');
   if (slideCount >= 4 && new Set(layouts).size <= 2) warnings.push('low_layout_variety');
   if (textOnlySlides.length > 0) warnings.push('text_only_slide_found');
   if (bulletDenseSlides.length > 0) warnings.push('bullet_dump_risk');
   if (tinyTextHits.length > 0) warnings.push('tiny_text_risk');
+  if (visiblePresenterText.length > 0) warnings.push('presenter_text_visible_risk');
 
   return {
     file: filePath,
@@ -155,8 +182,10 @@ async function inspectHtml(filePath, html) {
     unknown_layouts: unknownLayouts,
     visual_slide_count: slideCount - textOnlySlides.length,
     text_only_slides: textOnlySlides,
+    notes_slides: notesSlides,
     bullet_dense_slides: bulletDenseSlides,
     tiny_text_hits: tinyTextHits,
+    visible_presenter_text_slides: visiblePresenterText,
     local_references: sortedUnique(localRefs),
     remote_dependency_references: remoteDependencyRefs,
     broken_local_references: sortedUnique(brokenLocalReferences),

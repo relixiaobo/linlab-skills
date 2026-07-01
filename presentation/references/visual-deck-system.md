@@ -8,7 +8,9 @@ and a small set of layout recipes before generating slides.
 
 ## Design Directions
 
-Choose exactly one direction unless the user supplies a brand system.
+Choose exactly one direction unless the user supplies a brand system. If the
+user is unsure, choose from the deck's purpose and create three concrete
+first-slide visual directions rather than asking for abstract style labels.
 
 ### Keynote Stage
 
@@ -55,6 +57,8 @@ board-style narratives.
 - compare, metric, timeline, and chart recipes
 - every number needs a source or note
 - avoid tiny tables on projected slides
+- for human-editable PPTX, prefer native charts, tables, and shapes when the
+  recipient will continue analysis work manually in PowerPoint
 
 ### Teaching Board
 
@@ -64,6 +68,31 @@ Use for lectures, workshops, internal enablement, frameworks, and method decks.
 - examples, step cards, process flows, before/after pairs
 - repeat visual grammar so learners can predict the page
 - avoid high decoration that competes with the lesson
+
+### Swiss Signal
+
+Use for information-driven talks, engineering culture, design critiques,
+roadmaps, and decks that benefit from strict grid discipline.
+
+- high-contrast sans type, strict grid, hairline rules, large numbers
+- one decisive accent such as blue, yellow, green, or orange
+- sparse labels, precise alignment, visible structure
+- use when the user asks for Swiss, grid, international style, Helvetica,
+  engineering, or data-driven clarity
+- avoid if the content needs warmth, photography-led emotion, or a soft
+  editorial reading rhythm
+
+### Magazine Narrative
+
+Use for essays, founder notes, culture, trend reports, creator talks, and
+image-led internal sharing.
+
+- editorial cover rhythm, humanist or serif display, expressive image crops
+- half-bleed photography, pull quotes, folios, section openers
+- warm paper or ink palettes only when intentional
+- use when the user asks for magazine, essay, humanities, culture, or personal
+  point of view
+- avoid if the deck is primarily KPI comparison or dense operational data
 
 ## Theme Tokens
 
@@ -90,6 +119,8 @@ Rules:
 - do not use gradients, blobs, bokeh, or decorative orbs as the main design move
 - use beige or warm paper only when the direction is intentionally editorial;
   do not make it the default for modern/keynote decks
+- if a real brand is involved, derive tokens from the asset inventory instead
+  of inventing adjacent colors
 
 ## Motif
 
@@ -113,6 +144,9 @@ Use the motif on most slides. Do not combine all motifs.
 - captions and labels: no smaller than 14 px in HTML or 10 pt in PPTX
 - body text is left aligned; center only covers, section dividers, and short quotes
 - keep letter spacing at 0 for normal text
+- avoid default display stacks unless the brand requires them; typography should
+  feel selected, not incidental
+- use at most two type families unless the supplied brand system says otherwise
 
 ## Composition Rules
 
@@ -127,6 +161,10 @@ Use the motif on most slides. Do not combine all motifs.
   cover, split, metric, compare, timeline, gallery, chart, and close pages
 - for Keynote Stage decks, bias toward `cover`, `product-stage`, `hero-media`,
   `metric`, `feature-grid`, `compare`, and `close` before report-like pages
+- plan theme rhythm before building: avoid more than three consecutive slides
+  with the same background or energy level
+- do not put presenter explanation, style labels, or internal workflow text on
+  audience-facing slides
 
 ## Assets
 
@@ -136,6 +174,8 @@ Use the motif on most slides. Do not combine all motifs.
 - use contain-fit for UI screenshots and cover-fit for photos
 - choose stable image ratios: 21:9, 16:9, 16:10, 4:3, 3:2, 1:1, or 3:4
 - do not use stock-like atmospheric images when the audience needs evidence
+- logos and product images should be real assets; never redraw a known brand or
+  product as generic CSS/SVG art
 
 ## Avoid
 
@@ -147,3 +187,6 @@ Use the motif on most slides. Do not combine all motifs.
 - inconsistent margins
 - slide-by-slide styling without a system
 - text-only slides unless the slide is a deliberate quote, section, or statement
+- generic AI technology clichés: purple-blue gradients, glowing abstract blobs,
+  robot faces, circuit boards, or fake dashboards unless the source brand or
+  concept specifically calls for them

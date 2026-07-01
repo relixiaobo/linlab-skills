@@ -18,6 +18,7 @@ REL_NS = "{http://schemas.openxmlformats.org/package/2006/relationships}"
 P_NS = "{http://schemas.openxmlformats.org/presentationml/2006/main}"
 A_NS = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 R_NS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
+PIC_NS = "{http://schemas.openxmlformats.org/drawingml/2006/picture}"
 
 
 def read_xml(zf: zipfile.ZipFile, name: str) -> Optional[ET.Element]:
@@ -68,8 +69,10 @@ def inspect_pptx(path: Path) -> dict:
         "slides": [],
         "media_count": 0,
         "chart_count": 0,
+        "notes_count": 0,
         "placeholder_hits": [],
         "missing_relationship_targets": [],
+        "image_only_slide_candidates": [],
     }
 
     if not path.exists():
@@ -84,6 +87,7 @@ def inspect_pptx(path: Path) -> dict:
             names = set(zf.namelist())
             result["media_count"] = len([name for name in names if name.startswith("ppt/media/")])
             result["chart_count"] = len([name for name in names if name.startswith("ppt/charts/")])
+            result["notes_count"] = len([name for name in names if name.startswith("ppt/notesSlides/") and name.endswith(".xml")])
 
             required = ["[Content_Types].xml", "ppt/presentation.xml", "ppt/_rels/presentation.xml.rels"]
             for name in required:
@@ -113,6 +117,10 @@ def inspect_pptx(path: Path) -> dict:
                     "text_chars": 0,
                     "placeholder_hits": [],
                     "relationship_count": 0,
+                    "picture_count": 0,
+                    "shape_count": 0,
+                    "chart_count": 0,
+                    "notes": False,
                 }
                 if not slide_part or slide_part not in names:
                     result["missing_relationship_targets"].append({"from": "ppt/presentation.xml", "rid": rid, "target": target})
@@ -122,6 +130,9 @@ def inspect_pptx(path: Path) -> dict:
                 slide_root = read_xml(zf, slide_part)
                 text = text_from_xml(slide_root)
                 slide_report["text_chars"] = len(text)
+                if slide_root is not None:
+                    slide_report["picture_count"] = len(list(slide_root.iter(f"{PIC_NS}pic")))
+                    slide_report["shape_count"] = len(list(slide_root.iter(f"{P_NS}sp")))
                 hits = sorted(set(match.group(0).lower() for match in PLACEHOLDER_RE.finditer(text)))
                 slide_report["placeholder_hits"] = hits
                 for hit in hits:
@@ -131,12 +142,20 @@ def inspect_pptx(path: Path) -> dict:
                 slide_rels = rels_for(zf, rels_name)
                 slide_report["relationship_count"] = len(slide_rels)
                 for rel_id, slide_rel in slide_rels.items():
+                    rel_type = slide_rel.get("type", "")
+                    if rel_type.endswith("/notesSlide"):
+                        slide_report["notes"] = True
+                    if rel_type.endswith("/chart"):
+                        slide_report["chart_count"] += 1
                     if slide_rel.get("mode") == "External":
                         continue
                     rel_target = slide_rel.get("target", "")
                     resolved = normalized_target(slide_part, rel_target)
                     if resolved not in names:
                         result["missing_relationship_targets"].append({"from": slide_part, "rid": rel_id, "target": rel_target})
+
+                if slide_report["text_chars"] < 20 and slide_report["picture_count"] >= 1 and slide_report["shape_count"] <= 1:
+                    result["image_only_slide_candidates"].append(index)
 
                 result["slides"].append(slide_report)
 
@@ -146,6 +165,8 @@ def inspect_pptx(path: Path) -> dict:
                 result["warnings"].append("placeholder_text_found")
             if result["missing_relationship_targets"]:
                 result["warnings"].append("missing_relationship_targets")
+            if result["image_only_slide_candidates"]:
+                result["warnings"].append("image_only_slide_candidates")
             result["ok"] = len(result["errors"]) == 0 and len(result["missing_relationship_targets"]) == 0
             return result
     except zipfile.BadZipFile:

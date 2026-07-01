@@ -21,6 +21,8 @@ recipe in `layout`.
 | `gallery` | examples, screenshots, evidence wall | image grid with consistent ratios and captions |
 | `quote` | memorable voice or turning point | large quote, source, minimal support text |
 | `close` | final takeaway or action | one final claim plus 1-3 next actions |
+| `scripted-demo` | live product walkthrough, code demo, feature tour | current state, next action, and short presenter cue in notes |
+| `evidence-wall` | many examples, logos, screenshots, or source snippets | consistent crop grid with a single takeaway and source labels |
 
 ## Deck Rhythm
 
@@ -29,6 +31,10 @@ recipe in `layout`.
 - 15+ slides: use at least 6 different recipes and section resets
 - no more than 2 consecutive slides should use the same recipe
 - no more than 3 slides in a row should be mostly text
+- every 3-5 slides should change energy with a section, quote, hero-media, or
+  metric reset
+- live talks should alternate explanation pages with proof, demo, quote, or
+  visual reset pages so the presenter has rhythm
 
 ## Recipe Notes
 
@@ -92,9 +98,35 @@ recipe in `layout`.
 - use consistent image ratios
 - captions explain why each example matters
 - screenshots use contain-fit when text readability matters
+- for named brands/products, each visible logo or UI should come from the asset
+  inventory or be explicitly marked as placeholder
 
 ### quote
 
 - quote text is the visual object
 - keep source legible but secondary
 - use sparingly for rhythm, not as filler
+
+### chart
+
+- one chart is the visual object
+- title the chart with the takeaway, not the measure name
+- label axes and highlight the key comparison
+- include source, date, and denominator when relevant
+- use editable/native chart objects in PPTX when humans need to modify data
+  manually in PowerPoint; use rendered charts when source-first agent revisions
+  or visual fidelity matter more
+
+### scripted-demo
+
+- keep visible slide content audience-facing only
+- use a product-stage or split composition with one current state
+- put presenter prompts, next-click reminders, and timing cues in notes
+- avoid tiny UI details; zoom or crop to the interaction that matters
+
+### evidence-wall
+
+- use when many examples prove a pattern better than one large example
+- keep tiles aligned to a fixed ratio and label sources consistently
+- add one headline that interprets the wall; do not make the audience infer it
+- split into multiple walls when captions or screenshots become unreadable

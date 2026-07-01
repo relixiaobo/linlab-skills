@@ -7,7 +7,10 @@ artifact and did not require PowerPoint.
 
 - Produce a self-contained `index.html` unless the user asks for a project folder.
 - Use local or inline assets; do not depend on remote CDNs.
-- Use responsive 16:9 slides.
+- Use a fixed 16:9 slide stage. Prefer authoring at 1920×1080 and scaling the
+  whole stage uniformly to fit the browser. A responsive `aspect-ratio: 16 / 9`
+  wrapper is acceptable for simple decks, but slide content must not reflow into
+  a different composition on phones.
 - Support keyboard navigation.
 - Keep presenter controls outside the visual safe area.
 - Respect reduced-motion preferences if animations are present.
@@ -15,6 +18,8 @@ artifact and did not require PowerPoint.
 - Start from `assets/templates/html-deck/index.html` when creating a new HTML
   deck unless the user provided a stronger template.
 - Put a registered layout recipe on every slide with `data-layout`.
+- Include hidden `<aside class="notes">` per slide when the deck is for a live
+  talk or training.
 
 ## Suggested Structure
 
@@ -32,6 +37,8 @@ artifact and did not require PowerPoint.
 - Avoid layout shifts on hover or navigation.
 - Do not use decorative gradient blobs or generic bokeh backgrounds.
 - Keep text sizes fixed by role, not by viewport width.
+- Avoid system/default fonts for display type unless matching a supplied brand
+  system. Choose typography deliberately and load or bundle it reliably.
 - Use the template component classes before inventing new one-off CSS:
   `.chrome`, `.kicker`, `.display`, `.lead`, `.panel`, `.metric`,
   `.stage-visual`, `.device-frame`, `.feature-grid`, `.visual-frame`,
@@ -62,3 +69,8 @@ node scripts/html_tool.mjs inspect path/to/index.html --out verification.json
 Then inspect or screenshot the deck in a browser when available.
 Treat `low_layout_variety`, `text_only_slide_found`, and `bullet_dump_risk`
 warnings as design issues to fix unless the user asked for a plain outline.
+Treat `keyboard_navigation_not_obvious`, `missing_16_9_stage_hint`, and
+`display_none_slide_switching_risk` as structural issues for browser-presented
+decks.
+Also check keyboard navigation, notes visibility, fixed 16:9 framing, and
+desktop plus narrow viewport screenshots when browser tools are available.
