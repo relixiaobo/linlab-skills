@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spreadsheet"
+  short_description: "Create, edit, and verify workbook artifacts."
+  default_prompt: "Use $spreadsheet to create, inspect, or improve this workbook or spreadsheet model."

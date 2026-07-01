@@ -81,7 +81,7 @@ This is **not** a third decision; it is the **display flag** from Start Here, ap
 These always hold; only the *depth* of planning, verification, and artifacts scales with the tier — the floor in **Start Here** never does.
 
 - Never present a number you did not compute.
-- Never guess table names, column names, metric definitions, grain, filters, or date windows. For Standard/Rigorous, settle them in a Definition Contract (`templates/definition_contract.yaml`) before computing; enumerate the readings you rejected and confirm only the ambiguities that move the answer.
+- Never guess table names, column names, metric definitions, grain, filters, or date windows. For Standard/Rigorous, settle them in a Definition Contract (`assets/templates/definition_contract.yaml`) before computing; enumerate the readings you rejected and confirm only the ambiguities that move the answer.
 - First touch of any dataset must include profiling.
 - Treat raw input data and production databases as read-only.
 - Write analysis artifacts under `analysis_runs/<run_id>/`, not next to raw data.
@@ -98,10 +98,10 @@ This is the Standard/Rigorous path. Quick tasks collapse it to **Profile (step 2
 
 1. **Discover** inputs, files, database config, prior context, and the user's decision need.
 2. **Load and profile** every new dataset. Prefer `{baseDir}/scripts/profile_dataset.py` for files.
-3. **Plan** the analysis with `templates/analysis_plan.md`, and settle the metric, grain, filters, window, and population in a Definition Contract (`templates/definition_contract.yaml`) — enumerate the readings you rejected; confirm only the ambiguities that move the answer. (Quick tier: skip the file, state the one load-bearing assumption inline.)
+3. **Plan** the analysis with `assets/templates/analysis_plan.md`, and settle the metric, grain, filters, window, and population in a Definition Contract (`assets/templates/definition_contract.yaml`) — enumerate the readings you rejected; confirm only the ambiguities that move the answer. (Quick tier: skip the file, state the one load-bearing assumption inline.)
 4. **Execute** with SQL/Python. Prefer read-only DuckDB for local files and sampled checks before full runs.
 5. **Validate** two ways: recompute each key number by an independent path (implementation), AND triangulate the result against an external reference with `scripts/triangulate.py` — reconcile to a known total, and check coverage/grain/window/magnitude (specification). See `references/specification-checks.md`.
-6. **Record findings** in `templates/findings_ledger.tsv` format.
+6. **Record findings** in `assets/templates/findings_ledger.tsv` format.
 7. **Report** (only when the Deliverable decision calls for one) — build a self-contained HTML report with `build_report.py`: charts and tables inlined into one shareable file, carrying data scope, method, evidence, verification, limitations, and artifact paths. Reports are HTML only.
 
 ## What To Read
@@ -142,10 +142,10 @@ For domain-specific analysis, read one domain reference before planning:
   (Subcommands: `reconcile`, `coverage`, `grain`, `window`, `magnitude`, `parts`. See `references/specification-checks.md`.)
 - Render a house-styled chart from a template (static SVG by default; `--format png|html`):
   `python3 {baseDir}/scripts/render_chart.py --template time-trend --data series.csv --map x=date,y=revenue,series=channel --title "..." --subtitle "units · range · n" --out analysis_runs/<run_id>/charts/trend.svg`
-  (Templates and role fields: `{baseDir}/assets/charts/README.md`. Never hand-write chart code.)
+  (Templates and role fields: `{baseDir}/references/visualization-assets/charts.md`. Never hand-write chart code.)
 - Render a house-styled HTML table (conditional color, heatmaps, in-cell sparklines) for a report's `table_html` slot:
   `python3 {baseDir}/scripts/render_table.py --data metrics.csv --spec spec.json --title "..." --out analysis_runs/<run_id>/tables/guardrails.html`
-  (Spec keys and recipes: `{baseDir}/assets/tables/README.md`. Use for columns needing visual encoding; plain markdown tables are fine otherwise.)
+  (Spec keys and recipes: `{baseDir}/references/visualization-assets/tables.md`. Use for columns needing visual encoding; plain markdown tables are fine otherwise.)
 - Validate a findings ledger:
   `python3 {baseDir}/scripts/validate_findings.py analysis_runs/<run_id>/findings.tsv`
 - Build a self-contained HTML report (inlines SVG charts + HTML tables into one shareable file):

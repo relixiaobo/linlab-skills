@@ -38,7 +38,7 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise SystemExit("jinja2 is required: pip install jinja2") from exc
 
-TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "report.html"
+TEMPLATE = Path(__file__).resolve().parent.parent / "assets" / "templates" / "report.html"
 
 
 def inline_svg(path: Path) -> str:

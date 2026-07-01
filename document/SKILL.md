@@ -1,6 +1,6 @@
 ---
 name: document
-description: Create, edit, analyze, review, or polish professional documents including source-first Markdown drafts, Word/DOCX files, reports, memos, briefs, proposals, policies, contracts, PDF handouts, comments, redlines, reader tests, and summaries.
+description: Create, edit, analyze, review, or polish professional documents including source-first Markdown drafts, Word/DOCX files, reports, memos, briefs, proposals, policies, contracts, PDF handouts, comments, redlines, reader tests, and summaries. Use when the primary artifact is written communication for reading or review, not when the user needs a calculable workbook, formula model, slide deck, or PDF-native file operation.
 ---
 
 # Document

@@ -1,0 +1,4 @@
+plan,base_price,seats,discount,setup_fee
+Starter,49,25,0,0
+Team,199,12,0.10,500
+Enterprise,799,5,0.18,2500

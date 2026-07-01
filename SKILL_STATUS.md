@@ -23,7 +23,9 @@ retiring skills.
 | `code-review` | active | Git diff, PR, branch, review comments | Review findings | Bug/regression/security findings with line-grounded evidence and confidence | Clear domain-specific workflow; keep separate. |
 | `data-analysis` | active | Raw data, metric definitions, SQL/Python, findings ledger | Trustworthy findings | Profile data, define metric/grain/window, verify key numbers, triangulate specification | Evidence layer for later reports, decks, and workbooks. |
 | `document` | active | Markdown/structured source or native DOCX when required | Reading/review artifact | Source fidelity, section structure, DOCX semantics, comments/redlines, reader questions | Optimized for agent-maintained documents and Word review workflows. |
+| `pdf` | active | Native PDF, page renders, extracted evidence, or editable source that exports PDF | Fixed-layout PDF artifact | Page count/boxes, render checks, text/OCR extraction, forms, annotations, links, redaction, encryption, and output re-inspection | Optimized for PDF-native operations and final-layout QA, not drafting source documents/slides/sheets. |
 | `presentation` | active | Agent-maintainable deck source or native PPTX when required | Slide/talk artifact | Slide narrative, visual hierarchy, asset fidelity, presenter/read deck fit, render/export checks | Optimized for communication on slides, not generic PPTX file handling. |
+| `spreadsheet` | active | Workbook spec/source script, native XLSX, or flat data file | Calculable workbook/data-entry artifact | Sheet roles, formulas, named ranges, validation, links, protection, source data coverage, and open/render limits | Optimized for durable spreadsheet models, not ordinary tables inside documents or slides. |
 | `video-studio` | active | Media files, scripts, manifests, platform packaging settings | Finished video/package | ffprobe/ffmpeg QA, platform dimensions, audio/subtitle/frame checks | Clear production toolchain and verification surface. |
 
 ## Archived Skills
@@ -32,18 +34,18 @@ retiring skills.
 | --- | --- | --- | --- | --- |
 | `research` | archived | `archive/research` | Prior trigger experiments showed low trigger rate, and much of the workflow resembles base model plus browsing behavior. | Deep, auditable research artifacts prove unique value beyond normal browsing/search, such as source logs, claim audits, domain routing, patent/grant/regulatory workflows, or literature-review machinery. |
 
-## Planned / Possible Skills
-
-| Skill | Status | Build only if | Boundary |
-| --- | --- | --- | --- |
-| `spreadsheet` | planned | Users need to create, edit, or verify workbooks as durable artifacts | Excel/CSV/Sheets as calculable models: sheets, ranges, formulas, pivots, charts, validation, workbook QA. Not ordinary tables inside documents or slides. |
-
 ## Cross-Skill Guidance
 
 Do not make repository-level handoff contracts mandatory. Codex chooses skills
 from their names and descriptions, then loads only the selected `SKILL.md`.
 Users may install only one skill or a subset of this repository, so each skill
 must remain useful on its own and must not assume any other skill exists.
+
+The artifact skills (`presentation`, `document`, `spreadsheet`, and `pdf`) have
+shared trigger and smoke checks in `evals/artifact-skills/suite.json` and
+`evals/run_artifact_skill_checks.py`. Keep those evals focused on realistic user
+tasks, especially boundary cases where a file format appears but is not the
+primary artifact.
 
 Use this file only as portfolio guidance. If artifacts should be reusable, make
 them ordinary files with clear names and contents. Do not encode dependencies on
@@ -55,6 +57,8 @@ Reusable artifacts can include:
   paths, chart/table artifacts, and verification status.
 - `document`: thesis, section outline, source map, comments/redlines, and
   reader-test results.
+- `pdf`: page renders, extracted text/tables/images, form-field inventory,
+  redaction/OCR limitations, and PDF verification reports.
 - `presentation`: slide narrative, speaker notes, asset inventory, deck source,
   and render/export checks.
 - `spreadsheet`: data dictionary, workbook formulas, named ranges, sheet

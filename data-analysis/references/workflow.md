@@ -13,7 +13,7 @@ Scale the lifecycle to the effort tier (see SKILL.md → Effort Tiers). A **Quic
   prior analysis may have left (distinct from per-run `analysis_runs/<run_id>/`
   artifacts). If present, read it before planning; never assume it exists:
   - `LEARNINGS.md` — findings worth carrying forward.
-  - `METRICS.md` — confirmed metric definitions (see `templates/metric_definition.yaml`).
+  - `METRICS.md` — confirmed metric definitions (see `assets/templates/metric_definition.yaml`).
   - `SCHEMA_NOTES.md` — table/column meanings discovered earlier.
   - `GOTCHAS.md` — data-quality traps to avoid repeating.
 
@@ -37,7 +37,7 @@ Use `scripts/profile_dataset.py` for files when possible.
 
 ## Phase 3: Plan
 
-Write or mentally fill `templates/analysis_plan.md`.
+Write or mentally fill `assets/templates/analysis_plan.md`.
 
 The plan must define:
 
@@ -52,7 +52,7 @@ The plan must define:
 
 Keep simple tasks light, but do not skip planning for multi-step work.
 
-For Standard/Rigorous work, settle the metric, grain, filters, window, and population in a **Definition Contract** (`templates/definition_contract.yaml`) before executing: enumerate the readings you rejected, and confirm only the ambiguities that would move the answer. See `references/specification-checks.md`.
+For Standard/Rigorous work, settle the metric, grain, filters, window, and population in a **Definition Contract** (`assets/templates/definition_contract.yaml`) before executing: enumerate the readings you rejected, and confirm only the ambiguities that would move the answer. See `references/specification-checks.md`.
 
 ## Phase 4: Execute
 

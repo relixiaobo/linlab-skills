@@ -142,7 +142,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--template", required=True, help="template name, e.g. time-trend")
     parser.add_argument("--data", type=Path, required=True, help="csv/tsv/parquet/json/xlsx")
-    parser.add_argument("--map", required=True, help="role=column,role=column (canonical roles per template — see assets/charts/README.md)")
+    parser.add_argument("--map", required=True, help="role=column,role=column (canonical roles per template; see references/visualization-assets/charts.md)")
     parser.add_argument("--annotations", type=Path, help="optional second table for annotation layers")
     parser.add_argument("--annotations-map", default="", help="role=column for the annotations table, e.g. at=date,label=note")
     parser.add_argument("--title", default="", help="chart title")

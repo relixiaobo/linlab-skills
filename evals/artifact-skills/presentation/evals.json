@@ -1,0 +1,52 @@
+{
+  "skill_name": "presentation",
+  "skill_path": "presentation",
+  "evals": [
+    {
+      "id": "presentation-html-investor-update",
+      "name": "agent-maintainable-html-deck",
+      "prompt": "Use $presentation to turn evals/artifact-skills/presentation/source/quarterly_update.md into a polished 6-slide browser-presentable deck for a live founder update. The deck should be source-first HTML, include speaker notes for each slide, use a consistent visual system, and produce a verification report. Do not create a marketing landing page.",
+      "files": [
+        "evals/artifact-skills/presentation/source/quarterly_update.md"
+      ],
+      "expected_skill": "presentation",
+      "assertions": [
+        "Creates an HTML deck source artifact rather than only a prose outline",
+        "Uses 5-7 slides with clear slide purposes and concise live-talk density",
+        "Includes speaker notes or presenter notes for each slide",
+        "Uses the provided metrics and caveats without inventing new numbers",
+        "Runs the HTML inspection script or equivalent and reports any warnings/limitations",
+        "Does not trigger document, spreadsheet, or pdf as the primary skill"
+      ]
+    },
+    {
+      "id": "presentation-pdf-handout-boundary",
+      "name": "pdf-handout-from-deck-source",
+      "prompt": "Use $presentation to create a short reading/share deck from evals/artifact-skills/presentation/source/product_brief.md and export or describe the PDF handout route. Keep the deck source editable for future agent revisions. The PDF is only the handout deliverable, not the source of truth.",
+      "files": [
+        "evals/artifact-skills/presentation/source/product_brief.md"
+      ],
+      "expected_skill": "presentation",
+      "assertions": [
+        "Keeps a deck source of truth instead of treating PDF as the primary artifact",
+        "Plans a reading/share deck, not a long-form document",
+        "Uses PDF only as export/handout after deck source is stable",
+        "Includes deck verification steps before handoff"
+      ]
+    },
+    {
+      "id": "presentation-negative-report",
+      "name": "should-not-handle-long-report",
+      "prompt": "Create a 5-page written board memo from evals/artifact-skills/presentation/source/quarterly_update.md. It should be a narrative document with headings and a source map, not slides.",
+      "files": [
+        "evals/artifact-skills/presentation/source/quarterly_update.md"
+      ],
+      "expected_skill": "document",
+      "assertions": [
+        "Does not use presentation as the primary skill",
+        "Identifies the request as a document/memo artifact",
+        "Avoids slide-deck planning language as the main output"
+      ]
+    }
+  ]
+}

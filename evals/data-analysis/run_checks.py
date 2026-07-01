@@ -7,7 +7,7 @@ machine checks. It synthesizes novel trap data (per evals/README.md — never fa
 datasets) and asserts the scripts catch the traps, that the trust badge cannot be
 shown without real verification, and that the renderers still produce output.
 
-Run:  python3 evals/run_checks.py
+Run:  python3 evals/data-analysis/run_checks.py
 Exit: 0 if every check passes, 1 if any fails. Checks needing an optional
 dependency (vl-convert / great-tables / jinja2) SKIP rather than fail.
 """
@@ -19,7 +19,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPTS = ROOT / "data-analysis" / "scripts"
 PY = sys.executable
 results = {"pass": 0, "fail": 0, "skip": 0}
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Presentation"
+  short_description: "Create, edit, and verify slide decks."
+  default_prompt: "Use $presentation to create, inspect, or improve this slide deck."

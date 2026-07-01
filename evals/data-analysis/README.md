@@ -47,7 +47,7 @@ the shipped skill).
 ships with the skill:
 
 ```
-python3 evals/run_checks.py
+python3 evals/data-analysis/run_checks.py
 ```
 
 It is the machine-checked counterpart to the Operating Rules (which are only

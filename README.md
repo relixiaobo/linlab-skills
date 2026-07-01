@@ -7,7 +7,9 @@ Personal Codex skills maintained by Linlab.
 - `code-review` - high-signal PR, branch, and local-diff review with confidence scoring and git-history context.
 - `data-analysis` - trustworthy analysis of files, tables, metrics, experiments, and trends.
 - `document` - source-first professional documents, DOCX/Word workflows, comments, redlines, and reader tests.
+- `pdf` - PDF-native inspection, extraction, page operations, rendering, OCR/form/redaction guidance, and QA.
 - `presentation` - source-first slide decks, PPTX/HTML decks, speaker notes, handouts, and deck QA.
+- `spreadsheet` - source-first spreadsheet workbooks, XLSX/CSV inspection, formulas, validation, and workbook QA.
 - `video-studio` - manifest-driven local video editing, rendering, packaging, and QA.
 
 See `SKILL_STATUS.md` for each skill's status, boundary, source of truth, and next action.
@@ -28,7 +30,7 @@ To install all skills:
 
 ```sh
 mkdir -p ~/.agents/skills
-for skill in code-review data-analysis document presentation video-studio; do
+for skill in code-review data-analysis document pdf presentation spreadsheet video-studio; do
   ln -s "$PWD/$skill" "$HOME/.agents/skills/$skill"
 done
 ```
@@ -44,4 +46,23 @@ Validate a skill with Codex's skill validator:
 python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py code-review
 ```
 
-Each skill is intentionally self-contained. Generated `*-workspace/` folders are local evaluation artifacts and are not part of the published source.
+Run repository-level eval checks:
+
+```sh
+python3 evals/run_artifact_skill_checks.py
+python3 evals/data-analysis/run_checks.py
+```
+
+Eval definitions and fixtures are grouped by skill family under `evals/`, for
+example `evals/artifact-skills/`, `evals/data-analysis/`, and
+`evals/video-studio/`.
+
+## Repository Structure
+
+Each skill folder is intentionally self-contained and should contain only runtime
+skill resources: `SKILL.md`, optional `agents/`, `references/`, `scripts/`, and
+`assets/`.
+
+Repository-level eval definitions and fixtures live under `evals/`. Generated
+`*-workspace/` folders are local evaluation outputs and are not part of the
+published source.
