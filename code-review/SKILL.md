@@ -28,16 +28,23 @@ Identify the target before reviewing:
 
 If the target is ambiguous and no safe inference is available, ask one concise clarification.
 
-## Skip Conditions
+## Status Handling
 
-Before doing expensive review work, check whether review should stop:
+Before doing expensive review work, check the target status. A direct user request
+to review a specific PR, branch, or diff is an explicit request; do not stop just
+because the PR is draft, small, automated, or already reviewed.
 
-- PR is closed.
-- PR is draft.
-- PR is clearly trivial or automated and the user did not explicitly request review anyway.
-- A previous assistant review already exists and the user did not ask for another pass.
+Hard stop by default only when:
 
-Still review assistant-generated PRs unless another skip condition applies.
+- A GitHub PR target is closed and the user did not explicitly ask to inspect a closed PR.
+
+Treat these as soft signals, not skip conditions, when the user requested review:
+
+- PR is draft: continue the review, and mention draft status only in the summary or residual risk.
+- PR is clearly trivial or automated: continue for a requested target; keep the review proportionate.
+- A previous assistant review already exists: continue if the user asked for another pass or named this target in a new request.
+
+Still review assistant-generated PRs unless the hard stop applies.
 
 ## Core Workflow
 
