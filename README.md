@@ -6,8 +6,12 @@ Personal Codex skills maintained by Linlab.
 
 - `code-review` - high-signal PR, branch, and local-diff review with confidence scoring and git-history context.
 - `data-analysis` - trustworthy analysis of files, tables, metrics, experiments, and trends.
-- `research` - source-grounded research with cited artifacts and claim verification.
+- `document` - source-first professional documents, DOCX/Word workflows, comments, redlines, and reader tests.
+- `presentation` - source-first slide decks, PPTX/HTML decks, speaker notes, handouts, and deck QA.
+- `research` - source-grounded research with cited artifacts and claim verification. Candidate for retirement or narrowing; see `SKILL_STATUS.md`.
 - `video-studio` - manifest-driven local video editing, rendering, packaging, and QA.
+
+See `SKILL_STATUS.md` for each skill's status, boundary, source of truth, and next action.
 
 ## Install
 
@@ -22,7 +26,7 @@ To install all skills:
 
 ```sh
 mkdir -p ~/.agents/skills
-for skill in code-review data-analysis research video-studio; do
+for skill in code-review data-analysis document presentation research video-studio; do
   ln -s "$PWD/$skill" "$HOME/.agents/skills/$skill"
 done
 ```

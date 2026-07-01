@@ -31,6 +31,7 @@ Resolve the preset into concrete decisions before drafting:
 - table and callout treatment
 - footer/header needs
 - source/citation pattern
+- metadata needs: author, status, version, classification, template, document type
 
 ## Form Factors
 
@@ -46,9 +47,21 @@ Map each major content unit to its natural form:
 - table: repeated comparable records with shared fields
 - form layout: response fields, questionnaire, RFI/compliance matrix
 - source list: citations, appendix, evidence register
+- document-control block: owner, status, version, classification, approvals
 
 Use the lightest structure that makes the reader's job easier. Avoid visual
 variety for its own sake.
+
+## Source-First Documents
+
+For agent-maintained documents, keep the source easy to revise:
+
+- use Markdown or a structured source file as the default revision surface
+- keep local assets and source indexes next to the document
+- use YAML front matter for document-control metadata when generating DOCX/PDF
+- make generated DOCX/PDF files reproducible from the source
+- avoid manual edits in generated exports unless the user makes the export the
+  source of truth
 
 ## Table Gate
 
@@ -81,6 +94,8 @@ Before finalizing a table:
 - Use consistent terminology.
 - Remove drafting scaffolds before delivery.
 - Report intentional unresolved comments, redlines, or placeholders.
+- Keep enough source notes for a later reviewer or agent to trace important
+  claims.
 
 ## Tone
 

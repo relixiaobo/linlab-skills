@@ -8,12 +8,48 @@
     "audience": { "type": "string" },
     "goal": { "type": "string" },
     "outputRoute": { "type": "string" },
+    "revisionSurface": {
+      "type": "string",
+      "description": "source-first, native-docx, generated-docx, visual-only, or mixed"
+    },
+    "reviewMode": {
+      "type": "string",
+      "description": "none, comments, tracked-changes, redline, clean-copy, reader-test, or mixed"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "author": { "type": "string" },
+        "date": { "type": "string" },
+        "version": { "type": "string" },
+        "status": { "type": "string" },
+        "classification": { "type": "string" },
+        "template": { "type": "string" },
+        "documentType": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "archetype": { "type": "string" },
     "designPreset": { "type": "string" },
     "tone": { "type": "string" },
     "sourceMaterials": {
       "type": "array",
       "items": { "type": "string" }
+    },
+    "sourceMap": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "supports"],
+        "properties": {
+          "source": { "type": "string" },
+          "supports": { "type": "string" },
+          "section": { "type": "string" },
+          "claim": { "type": "string" },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
     },
     "sections": {
       "type": "array",
@@ -25,6 +61,8 @@
           "purpose": { "type": "string" },
           "formFactor": { "type": "string" },
           "source": { "type": "string" },
+          "sourceId": { "type": "string" },
+          "reviewState": { "type": "string" },
           "notes": { "type": "string" }
         },
         "additionalProperties": false

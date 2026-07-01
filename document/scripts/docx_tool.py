@@ -37,6 +37,10 @@ def text_from_xml(root: ET.Element | None) -> str:
     return "\n".join(parts)
 
 
+def placeholder_hits(text: str) -> list[str]:
+    return sorted(set(match.group(0).lower() for match in PLACEHOLDER_RE.finditer(text)))
+
+
 def paragraph_text(paragraph: ET.Element) -> str:
     parts = []
     for text in paragraph.iter(f"{W_NS}t"):
@@ -119,8 +123,11 @@ def inspect_docx(path: Path) -> dict:
         "manual_bullet_count": 0,
         "text_chars": 0,
         "placeholder_hits": [],
+        "placeholder_locations": [],
         "external_relationships": [],
         "missing_relationship_targets": [],
+        "text_box_count": 0,
+        "paragraph_anchor_candidates": [],
     }
 
     if not path.exists():
@@ -150,8 +157,10 @@ def inspect_docx(path: Path) -> dict:
             doc = read_xml(zf, "word/document.xml")
             text = text_from_xml(doc)
             result["text_chars"] = len(text)
-            hits = sorted(set(match.group(0).lower() for match in PLACEHOLDER_RE.finditer(text)))
+            hits = placeholder_hits(text)
             result["placeholder_hits"] = hits
+            if hits:
+                result["placeholder_locations"].append({"part": "word/document.xml", "hits": hits})
 
             if doc is not None:
                 paragraphs = list(doc.iter(f"{W_NS}p"))
@@ -179,6 +188,7 @@ def inspect_docx(path: Path) -> dict:
                 result["tables_without_grid_count"] = sum(1 for table in tables if table.find(f"{W_NS}tblGrid") is None)
                 result["tracked_change_count"] = len(list(doc.iter(f"{W_NS}ins"))) + len(list(doc.iter(f"{W_NS}del")))
                 result["hyperlink_count"] = len(list(doc.iter(f"{W_NS}hyperlink")))
+                result["text_box_count"] = len(list(doc.iter(f"{W_NS}txbxContent")))
                 comment_refs = []
                 for tag_name in ("commentRangeStart", "commentReference"):
                     for node in doc.iter(f"{W_NS}{tag_name}"):
@@ -186,6 +196,16 @@ def inspect_docx(path: Path) -> dict:
                         if comment_id is not None:
                             comment_refs.append(comment_id)
                 result["comment_reference_count"] = len(set(comment_refs))
+                for index, paragraph in enumerate(paragraphs, start=1):
+                    p_text = paragraph_text(paragraph).strip()
+                    if len(p_text) >= 20:
+                        result["paragraph_anchor_candidates"].append({
+                            "index": index,
+                            "style": paragraph_style(paragraph) or "",
+                            "text": p_text[:120],
+                        })
+                    if len(result["paragraph_anchor_candidates"]) >= 25:
+                        break
 
             comments = read_xml(zf, "word/comments.xml")
             comment_ids = set()
@@ -195,6 +215,10 @@ def inspect_docx(path: Path) -> dict:
                     if comment_id is not None:
                         comment_ids.add(comment_id)
                 result["comment_count"] = len(comment_ids)
+                comment_text = text_from_xml(comments)
+                comment_hits = placeholder_hits(comment_text)
+                if comment_hits:
+                    result["placeholder_locations"].append({"part": "word/comments.xml", "hits": comment_hits})
             if doc is not None:
                 referenced = set()
                 for tag_name in ("commentRangeStart", "commentReference"):
@@ -203,6 +227,15 @@ def inspect_docx(path: Path) -> dict:
                         if comment_id is not None:
                             referenced.add(comment_id)
                 result["missing_comment_references"] = sorted(referenced - comment_ids)
+
+            for part in sorted(name for name in names if name.startswith("word/header") and name.endswith(".xml")):
+                part_hits = placeholder_hits(text_from_xml(read_xml(zf, part)))
+                if part_hits:
+                    result["placeholder_locations"].append({"part": part, "hits": part_hits})
+            for part in sorted(name for name in names if name.startswith("word/footer") and name.endswith(".xml")):
+                part_hits = placeholder_hits(text_from_xml(read_xml(zf, part)))
+                if part_hits:
+                    result["placeholder_locations"].append({"part": part, "hits": part_hits})
 
             rels = rels_for(zf, "word/_rels/document.xml.rels")
             for rid, rel in rels.items():
@@ -216,6 +249,8 @@ def inspect_docx(path: Path) -> dict:
 
             if result["placeholder_hits"]:
                 result["warnings"].append("placeholder_text_found")
+            if len(result["placeholder_locations"]) > (1 if result["placeholder_hits"] else 0):
+                result["warnings"].append("placeholder_text_outside_body_found")
             if result["missing_relationship_targets"]:
                 result["warnings"].append("missing_relationship_targets")
             if result["missing_comment_references"]:
@@ -228,6 +263,8 @@ def inspect_docx(path: Path) -> dict:
                 result["warnings"].append("heading_level_jump_found")
             if result["tables_without_grid_count"]:
                 result["warnings"].append("tables_without_grid_found")
+            if result["text_box_count"]:
+                result["warnings"].append("text_boxes_present")
             result["ok"] = len(result["errors"]) == 0 and len(result["missing_relationship_targets"]) == 0
             return result
     except zipfile.BadZipFile:

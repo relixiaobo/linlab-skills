@@ -14,6 +14,24 @@
       "type": "array",
       "items": { "type": "string" }
     },
+    "renderArtifacts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "readerQuestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["question", "status"],
+        "properties": {
+          "question": { "type": "string" },
+          "status": { "type": "string", "enum": ["answered", "partial", "missing", "skipped"] },
+          "evidence": { "type": "string" },
+          "fix": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
     "checks": {
       "type": "array",
       "items": {

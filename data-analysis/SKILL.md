@@ -165,4 +165,9 @@ For completed analyses, tell the user:
 - The main caveats.
 - Paths to report, scripts, queries, charts, and ledger.
 
+Keep outputs easy to reuse outside the current answer: preserve metric
+definitions, caveats, source paths, chart/table artifacts, and verification
+status as ordinary files under the run directory. Do not require a hidden
+protocol to understand the analysis.
+
 Do not dump large tables into chat. Save them as artifacts and summarize the decision-relevant rows.
