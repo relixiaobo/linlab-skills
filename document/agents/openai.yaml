@@ -1,0 +1,4 @@
+interface:
+  display_name: "Document"
+  short_description: "Draft, edit, review, and verify documents."
+  default_prompt: "Use $document to draft, revise, inspect, or verify this document."

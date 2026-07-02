@@ -20,6 +20,8 @@ Read the report for:
 - table and media counts
 - comments and tracked-change counts
 - missing comment references
+- text boxes and placeholder locations outside the body
+- paragraph anchor candidates for targeted edits
 - missing relationship targets
 - placeholder-like text
 - unusual external relationships
@@ -29,6 +31,10 @@ Read the report for:
 - Preserve `word/styles.xml`, numbering, comments, and relationship files unless the edit intentionally changes them.
 - Keep runs and paragraph properties intact when making small text changes.
 - Do not remove comments, tracked changes, footnotes, endnotes, or hyperlinks unless the user asked.
+- For precise edits, target stable anchors: paragraph index plus text hash from
+  a DOCX editing library when available, nearby heading, table index/row/column,
+  or a unique phrase with surrounding context.
+- Avoid blind global find/replace in long, legal, policy, or review documents.
 - Repack the ZIP with the original internal path names.
 - Verify by opening, converting, rendering, or inspecting the package when possible.
 
@@ -58,6 +64,8 @@ after the normal DOCX tool path is blocked.
 
 - Use comments for review notes and tracked changes for proposed edits when the user needs a reviewer workflow.
 - Keep every comment tied to a concrete issue or question.
+- Use generated redlines when comparing an original and revised document; do not
+  substitute a plain text diff when the user needs Word review workflow.
 - Summarize unresolved comments and accepted limitations in the delivery report.
 
 ## Package Risks
@@ -73,3 +81,4 @@ Common failure modes:
 - heading level jumps that make the table of contents unstable
 - tables with missing grids or ad-hoc widths
 - hidden placeholder text in text boxes, headers, footers, or comments
+- target text appears multiple times and the edit is not anchored

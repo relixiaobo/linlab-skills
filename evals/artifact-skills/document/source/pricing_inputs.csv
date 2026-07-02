@@ -1,0 +1,4 @@
+plan,monthly_price,seats,discount
+Starter,49,12,0
+Team,199,8,0.10
+Enterprise,799,3,0.18

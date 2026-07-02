@@ -13,7 +13,7 @@ Recomputation is self-referential. To catch a specification error you need an
 
 ## Gate 1 — Definition Contract (during PLAN, blocks EXECUTE)
 
-Before computing, fill `templates/definition_contract.yaml`: metric, grain,
+Before computing, fill `assets/templates/definition_contract.yaml`: metric, grain,
 filters, window, population, assumptions. The form is not the point — the
 discipline is:
 

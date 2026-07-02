@@ -38,7 +38,7 @@ Do not run DDL/DML:
 
 If a semantic layer or metric catalog exists (`semantic/metrics.yaml`, dbt MetricFlow, Cube, Looker/LookML, AtScale, or similar), inspect it before writing raw metric SQL.
 
-Minimum metric definition (capture a discovered or confirmed metric in `templates/metric_definition.yaml`):
+Minimum metric definition (capture a discovered or confirmed metric in `assets/templates/metric_definition.yaml`):
 
 - Name.
 - Description.

@@ -1,0 +1,5 @@
+account_id,name,email,status,notes
+00123,Acme Ops,ops@example.com,active,normal
+00456,Beta Lab,beta@example.com,paused,=HYPERLINK("http://bad.example","click")
+07890,Core Works,core@example.com,active,+SUM(1,2)
+00123,Acme Ops Duplicate,ops2@example.com,active,duplicate id

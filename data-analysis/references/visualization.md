@@ -19,8 +19,9 @@ python3 {baseDir}/scripts/render_chart.py \
 Default output is static SVG (self-contained, prints clean, no JS); `--format
 png` for raster, `--format html` for a self-contained interactive version from
 the same spec. Templates and their role fields are documented in
-`{baseDir}/assets/charts/README.md`. The eight templates map 1:1 to the Defaults
-below. Restyle every chart at once by editing `{baseDir}/assets/charts/theme.json`.
+`{baseDir}/references/visualization-assets/charts.md`. The eight templates map
+1:1 to the Defaults below. Restyle every chart at once by editing
+`{baseDir}/assets/charts/theme.json`.
 
 ## Defaults
 
@@ -43,4 +44,3 @@ Each default has a ready template (→ name) in the asset library.
 - Use log scale only when explained.
 - Do not hide outliers without showing sensitivity.
 - Save charts under `analysis_runs/<run_id>/charts/`.
-

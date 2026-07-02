@@ -1,0 +1,4 @@
+interface:
+  display_name: "PDF"
+  short_description: "Inspect, edit, render, and verify PDF artifacts."
+  default_prompt: "Use $pdf to inspect, edit, render, or verify this PDF artifact."

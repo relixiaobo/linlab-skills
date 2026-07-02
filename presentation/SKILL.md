@@ -1,6 +1,6 @@
 ---
 name: presentation
-description: Create, edit, analyze, or improve slide decks, presentations, PPT/PowerPoint or .pptx files, agent-maintainable deck source, HTML decks, pitch decks, talks with speaker notes or presenter mode, lecture decks, PDF handouts, speaker outlines, and deck cover images.
+description: Create, edit, analyze, or improve slide decks, presentations, PPT/PowerPoint or .pptx files, agent-maintainable deck source, HTML decks, pitch decks, talks with speaker notes or presenter mode, lecture decks, PDF handouts, speaker outlines, and deck cover images. Use when the primary artifact is a slide/talk/deck experience, not when the user wants a long-form memo, report, policy, workbook, or PDF-native file operation.
 ---
 
 # Presentation
@@ -34,6 +34,8 @@ when the user explicitly needs that.
    audience, proof, data, constraints, claims, citations, and must-include
    details before planning slides. If the user supplied only a topic and factual
    accuracy matters, gather or verify source facts before authoring.
+   If source materials include findings, metrics, caveats, charts, tables, or
+   verification notes, use them as evidence for slide claims and chart captions.
 4. If named brands, products, people, places, or screenshots appear in the deck,
    build an asset inventory before designing. Prefer official logos, product
    images, UI screenshots, and source-provided charts over generic decoration.

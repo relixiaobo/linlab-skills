@@ -1,6 +1,6 @@
 ---
 name: document
-description: Create, edit, analyze, review, or polish professional documents including Word/DOCX files, Markdown drafts, reports, memos, briefs, proposals, policies, contracts, PDF handouts, comments, redlines, and summaries.
+description: Create, edit, analyze, review, or polish professional documents including source-first Markdown drafts, Word/DOCX files, reports, memos, briefs, proposals, policies, contracts, PDF handouts, comments, redlines, reader tests, and summaries. Use when the primary artifact is written communication for reading or review, not when the user needs a calculable workbook, formula model, slide deck, or PDF-native file operation.
 ---
 
 # Document
@@ -10,38 +10,67 @@ description: Create, edit, analyze, review, or polish professional documents inc
 Build documents as durable written communication. Treat DOCX, Markdown, PDF, and
 plain text as delivery routes selected by audience, review workflow, fidelity,
 and layout risk.
+Default to source-first artifacts that another agent can inspect, revise, and
+regenerate. Use DOCX/PDF as delivery exports unless the user explicitly needs
+the Word file itself to be the source of truth.
 
 ## Route
 
 1. Identify the job: create, rewrite, edit, review, redline, comment, inspect,
    summarize, convert, or package for handoff.
-2. Extract audience, decision or reader action, source materials, required
-   claims, approval constraints, template/style constraints, and review path.
-3. Choose an archetype and form-factor plan before drafting. For new documents
+2. Classify the revision surface and review mode:
+   - source-first: Markdown or structured source stays primary; DOCX/PDF are
+     regenerated deliverables
+   - native DOCX: edit the existing Word file directly because comments,
+     tracked changes, template preservation, or binary handoff is the job
+   - reader test: evaluate whether the document works for a fresh reader
+   - summary/intake: convert source material into usable Markdown first
+3. Extract audience, decision or reader action, source materials, required
+   claims, approval constraints, template/style constraints, metadata, and
+   review path.
+   If source materials include findings, metrics, caveats, charts, tables, or
+   verification notes, treat them as source evidence, not as prose to copy
+   blindly.
+4. For multi-format or non-text source files, choose an intake route before
+   drafting. Use `references/source-intake.md`.
+5. Choose an archetype and form-factor plan before drafting. For new documents
    or major rewrites, read `references/document-system.md`.
-4. If the user supplied a DOCX, inspect it before editing with
+6. If the user supplied a DOCX, inspect it before editing with
    `python3 {baseDir}/scripts/docx_tool.py inspect path/to/file.docx --out report.json`
-   when useful. Preserve existing template conventions unless the user requests a redesign.
-5. Create a document plan before writing. If emitting JSON, keep it compatible
+   when useful. Preserve existing template conventions unless the user requests
+   a redesign. For precise edits, comments, or tracked changes, read
+   `references/review-workflow.md`.
+7. Create a document plan before writing. If emitting JSON, keep it compatible
    with `{baseDir}/assets/schemas/document-plan.schema.json`.
-6. Choose the output route:
+8. Choose the output route:
    - Use Markdown for fast drafts, reviewable structure, and agent-friendly iteration.
    - Use DOCX when the user needs Word compatibility, comments, tracked-change workflows, exact table/list behavior, or template preservation.
    - Use PDF only for fixed-layout delivery or handouts after the source document is stable.
-7. Build or edit with the route's intended tools:
+9. Build or edit with the route's intended tools:
    - For DOCX creation, editing, comments, redlines, or template preservation, first prefer a real DOCX library, office automation, or host document tool available in the task environment. If the required package or command is missing, verify that absence and try to install or enable it in the local task environment when permissions allow.
+   - If Markdown is the source and DOCX is a deliverable, prefer a file-first
+     Markdown-to-DOCX route and keep the `.md` alongside generated output. See
+     `references/markdown-to-docx.md`.
    - Do not silently downgrade an explicit DOCX/Word request to Markdown, plain text, or PDF, and do not hand-author WordprocessingML ZIP packages as a substitute for a missing DOCX library unless the user approves that lower-level route or no install path is available and you state the limitation.
    - Prefer bundled scripts for deterministic structure checks; use richer host rendering/conversion tools only when they preserve the same verification discipline.
-8. Verify before delivering. At minimum check source fidelity, heading structure,
-   placeholders, local assets, tables, comments/redlines, and render/open limits.
+10. Verify before delivering. At minimum check source fidelity, heading
+    structure, placeholders, local assets, tables, comments/redlines, source
+    coverage, and render/open limits. For substantial docs, include a reader
+    test or at least a predicted-reader-questions pass.
 
 ## References
 
 Load only the reference needed for the current route:
 
 - `references/workflow.md` for planning, source mapping, and delivery flow.
+- `references/source-intake.md` for converting PDFs, DOCX, spreadsheets, web
+  pages, images/OCR, and other source materials into LLM-friendly Markdown.
 - `references/document-system.md` for archetypes, design presets, form factors, tone, hierarchy, and table gates.
 - `references/docx-operations.md` for DOCX package inspection, comments, tracked changes, OOXML risks, and template preservation.
+- `references/review-workflow.md` for comments, tracked changes, redlines,
+  precise DOCX edit anchoring, and reader testing.
+- `references/markdown-to-docx.md` for Markdown-first Word export, front matter,
+  templates, and generated deliverables.
 - `references/verification.md` for source-fidelity, structural, and format QA.
 
 ## Scripts
@@ -61,7 +90,11 @@ skill-dependency rule before changing formats.
 - Make the document's purpose obvious from the title, opening, and section order.
 - Pick document archetype and form factors deliberately; do not use tables as decorative layout boxes.
 - Preserve factual source fidelity; label inferences and assumptions.
+- Keep the revision surface explicit. Future agent edits should target source
+  Markdown or stable DOCX anchors, not an opaque final export.
 - Keep headings parallel and useful for skimming.
 - Keep Word semantics real: headings are heading styles, lists are numbering definitions, tables have deliberate geometry, comments/redlines are intentional.
 - Do not leave placeholders, TODOs, unresolved comments, or accidental tracked changes unless the user asked for them.
+- For high-stakes documents, test whether a fresh reader can answer the key
+  questions from the document alone.
 - State limitations plainly when rendering, DOCX editing, or visual verification is unavailable.

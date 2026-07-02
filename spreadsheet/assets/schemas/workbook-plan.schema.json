@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Workbook Plan",
+  "type": "object",
+  "required": ["title", "audience", "goal", "sourceOfTruth", "outputRoute", "sheets"],
+  "properties": {
+    "title": { "type": "string" },
+    "audience": { "type": "string" },
+    "goal": { "type": "string" },
+    "sourceOfTruth": {
+      "type": "string",
+      "description": "source-first, native-xlsx, flat-data, google-sheets, or mixed"
+    },
+    "outputRoute": {
+      "type": "string",
+      "description": "xlsx, csv, tsv, json, pdf, workbook-spec, or mixed"
+    },
+    "workbookType": { "type": "string" },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "owner": { "type": "string" },
+        "date": { "type": "string" },
+        "version": { "type": "string" },
+        "status": { "type": "string" },
+        "currency": { "type": "string" },
+        "units": { "type": "string" },
+        "timezone": { "type": "string" },
+        "template": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "sourceData": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "role"],
+        "properties": {
+          "source": { "type": "string" },
+          "role": { "type": "string" },
+          "format": { "type": "string" },
+          "refresh": { "type": "string" },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "sheets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "purpose", "role"],
+        "properties": {
+          "name": { "type": "string" },
+          "purpose": { "type": "string" },
+          "role": { "type": "string" },
+          "inputs": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "outputs": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "formulas": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "namedRanges": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "tables": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "validation": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "protection": { "type": "string" },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "verificationPlan": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

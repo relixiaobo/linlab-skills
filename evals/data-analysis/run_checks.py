@@ -7,9 +7,10 @@ machine checks. It synthesizes novel trap data (per evals/README.md — never fa
 datasets) and asserts the scripts catch the traps, that the trust badge cannot be
 shown without real verification, and that the renderers still produce output.
 
-Run:  python3 evals/run_checks.py
-Exit: 0 if every check passes, 1 if any fails. Checks needing an optional
-dependency (vl-convert / great-tables / jinja2) SKIP rather than fail.
+Run:  python3 evals/data-analysis/run_checks.py
+Exit: 0 if every check passes, 1 if any fails. Missing core dependencies fail.
+Checks explicitly marked as optional output layers (jinja2 / vl-convert /
+great-tables) SKIP rather than fail.
 """
 
 from __future__ import annotations
@@ -19,7 +20,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPTS = ROOT / "data-analysis" / "scripts"
 PY = sys.executable
 results = {"pass": 0, "fail": 0, "skip": 0}
 
@@ -29,14 +31,20 @@ def run(args: list[str], stdin: str | None = None) -> tuple[int, str]:
     return proc.returncode, proc.stdout + proc.stderr
 
 
+def missing_dependency(out: str) -> bool:
+    return "is required:" in out or "ModuleNotFoundError" in out
+
+
 def check(name: str, args: list[str], *, want_exit=None, want_in=None, want_not_in=None,
-          outfile=None, file_in=None, file_not_in=None):
+          outfile=None, file_in=None, file_not_in=None, optional_dependency=False):
     code, out = run(args)
-    if "is required:" in out or "ModuleNotFoundError" in out:
+    if missing_dependency(out) and optional_dependency:
         print(f"  SKIP  {name}  (optional dependency missing)")
         results["skip"] += 1
         return
     problems = []
+    if missing_dependency(out):
+        problems.append("required dependency missing")
     if want_exit is not None and code != want_exit:
         problems.append(f"exit {code} != {want_exit}")
     for s in (want_in or []):
@@ -121,10 +129,12 @@ def main() -> None:
         '"verification":"DuckDB and pandas agree to the dollar; row counts reconcile"}]}')
     check("no badge when nothing verified",
           [build, "--context", str(tmp/"unverified.json"), "--out", str(tmp/"u.html")],
-          want_exit=0, outfile=str(tmp/"u.html"), file_not_in=[BADGE])
+          want_exit=0, outfile=str(tmp/"u.html"), file_not_in=[BADGE],
+          optional_dependency=True)
     check("badge when all verified",
           [build, "--context", str(tmp/"verified.json"), "--out", str(tmp/"v.html")],
-          want_exit=0, outfile=str(tmp/"v.html"), file_in=[BADGE])
+          want_exit=0, outfile=str(tmp/"v.html"), file_in=[BADGE],
+          optional_dependency=True)
 
     # --- ledger validation rejects empty fields ---
     print("validate_findings — rejects incomplete ledger")
@@ -140,12 +150,12 @@ def main() -> None:
     (tmp / "series.csv").write_text("d,rev\n2024-01-01,10\n2024-02-01,20\n")
     check("render_chart produces SVG", [str(SCRIPTS/"render_chart.py"), "--template", "time-trend",
           "--data", str(tmp/"series.csv"), "--map", "x=d,y=rev", "--out", str(tmp/"c.svg")],
-          want_exit=0, want_in=["Wrote"])
+          want_exit=0, want_in=["Wrote"], optional_dependency=True)
     (tmp / "tbl.csv").write_text("metric,lift\nA,0.04\nB,-0.02\n")
     (tmp / "tbl.spec.json").write_text('{"rowname":"metric","sign_color":["lift"]}')
     check("render_table produces HTML", [str(SCRIPTS/"render_table.py"), "--data", str(tmp/"tbl.csv"),
           "--spec", str(tmp/"tbl.spec.json"), "--out", str(tmp/"t.html")],
-          want_exit=0, want_in=["Wrote"])
+          want_exit=0, want_in=["Wrote"], optional_dependency=True)
 
     print(f"\n{results['pass']} passed, {results['fail']} failed, {results['skip']} skipped")
     sys.exit(1 if results["fail"] else 0)
