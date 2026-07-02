@@ -47,6 +47,9 @@ shared trigger and smoke checks in `evals/artifact-skills/suite.json` and
 tasks, especially boundary cases where a file format appears but is not the
 primary artifact.
 
+Repository-level validation is tracked in `evals/VALIDATION_MATRIX.md` and can
+be run with `python3 evals/run_all_skill_checks.py`.
+
 Use this file only as portfolio guidance. If artifacts should be reusable, make
 them ordinary files with clear names and contents. Do not encode dependencies on
 other skills.

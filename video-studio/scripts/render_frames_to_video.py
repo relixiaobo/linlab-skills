@@ -11,7 +11,7 @@ from pathlib import Path
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--frames", required=True, help="Input pattern, e.g. frames/%06d.png")
+    parser.add_argument("--frames", required=True, help="Input pattern, e.g. frames/%%06d.png")
     parser.add_argument("--fps", type=int, default=30)
     parser.add_argument("--output", required=True)
     parser.add_argument("--audio")

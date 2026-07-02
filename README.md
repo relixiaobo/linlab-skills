@@ -49,6 +49,7 @@ python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py code-rev
 Run repository-level eval checks:
 
 ```sh
+python3 evals/run_all_skill_checks.py
 python3 evals/run_artifact_skill_checks.py
 python3 evals/data-analysis/run_checks.py
 ```
@@ -65,6 +66,8 @@ python3 -m venv .venv
 Eval definitions and fixtures are grouped by skill family under `evals/`, for
 example `evals/artifact-skills/`, `evals/data-analysis/`, and
 `evals/video-studio/`.
+See `evals/VALIDATION_MATRIX.md` for the current validation level and limits for
+each skill.
 
 ## Repository Structure
 
