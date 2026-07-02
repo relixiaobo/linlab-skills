@@ -66,6 +66,15 @@ scripts behave under attack:
 - the renderers still produce output (these checks **SKIP** when an optional
   dependency is absent, rather than failing).
 
+Core verification dependencies (`pandas` and `duckdb`) are required. If they are
+missing, the affected checks fail rather than skip. For a full local run:
+
+```
+python3 -m venv .venv
+.venv/bin/python -m pip install -r data-analysis/requirements.txt
+.venv/bin/python evals/data-analysis/run_checks.py
+```
+
 Exit code is non-zero if any check fails. Run it after touching any script: it
 exists because three real bugs once shipped in the verification tool undetected,
 and a wrong verifier is worse than none. New regressions should land here as a new

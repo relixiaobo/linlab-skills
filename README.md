@@ -53,6 +53,15 @@ python3 evals/run_artifact_skill_checks.py
 python3 evals/data-analysis/run_checks.py
 ```
 
+For a full `data-analysis` gate, install its dependencies first. A local venv is
+recommended because Homebrew Python may reject global pip installs:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r data-analysis/requirements.txt
+.venv/bin/python evals/data-analysis/run_checks.py
+```
+
 Eval definitions and fixtures are grouped by skill family under `evals/`, for
 example `evals/artifact-skills/`, `evals/data-analysis/`, and
 `evals/video-studio/`.
