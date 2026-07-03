@@ -9,6 +9,7 @@ Personal Codex skills maintained by Linlab.
 - `document` - source-first professional documents, DOCX/Word workflows, comments, redlines, and reader tests.
 - `pdf` - PDF-native inspection, extraction, page operations, rendering, OCR/form/redaction guidance, and QA.
 - `presentation` - source-first slide decks, PPTX/HTML decks, speaker notes, handouts, and deck QA.
+- `shape-product-spec` - shapes product ideas, features, and business rules into decision-ready and execution-ready specs with goals, constraints, options, flows, acceptance criteria, and review audits.
 - `spreadsheet` - source-first spreadsheet workbooks, XLSX/CSV inspection, formulas, validation, and workbook QA.
 - `video-studio` - manifest-driven local video editing, rendering, packaging, and QA.
 
@@ -30,7 +31,7 @@ To install all skills:
 
 ```sh
 mkdir -p ~/.agents/skills
-for skill in code-review data-analysis document pdf presentation spreadsheet video-studio; do
+for skill in code-review data-analysis document pdf presentation shape-product-spec spreadsheet video-studio; do
   ln -s "$PWD/$skill" "$HOME/.agents/skills/$skill"
 done
 ```
@@ -51,6 +52,7 @@ Run repository-level eval checks:
 ```sh
 python3 evals/run_all_skill_checks.py
 python3 evals/run_artifact_skill_checks.py
+python3 evals/shape-product-spec/run_checks.py
 python3 evals/data-analysis/run_checks.py
 ```
 

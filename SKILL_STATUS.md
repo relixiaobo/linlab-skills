@@ -25,6 +25,7 @@ retiring skills.
 | `document` | active | Markdown/structured source or native DOCX when required | Reading/review artifact | Source fidelity, section structure, DOCX semantics, comments/redlines, reader questions | Optimized for agent-maintained documents and Word review workflows. |
 | `pdf` | active | Native PDF, page renders, extracted evidence, or editable source that exports PDF | Fixed-layout PDF artifact | Page count/boxes, render checks, text/OCR extraction, forms, annotations, links, redaction, encryption, and output re-inspection | Optimized for PDF-native operations and final-layout QA, not drafting source documents/slides/sheets. |
 | `presentation` | active | Agent-maintainable deck source or native PPTX when required | Slide/talk artifact | Slide narrative, visual hierarchy, asset fidelity, presenter/read deck fit, render/export checks | Optimized for communication on slides, not generic PPTX file handling. |
+| `shape-product-spec` | active | Product idea, feature request, business rule, source notes, screenshots, existing docs, interviews, user flows, evidence, assumptions, constraints, options, and approved decisions | Decision-ready and execution-ready product spec | Stable IDs, explicit decisions/evidence/non-goals, clean-slate vs constrained target framing, constraint classification, flow/state coverage, story slices, testable acceptance criteria, assumptions/open questions, contradiction review, and `spec_check.py` smoke validation | Solves the pre-build spec gap: the user wants an agent or team to build/change/evaluate a product capability, but intent is not executable yet. |
 | `spreadsheet` | active | Workbook spec/source script, native XLSX, or flat data file | Calculable workbook/data-entry artifact | Sheet roles, formulas, named ranges, validation, links, protection, source data coverage, and open/render limits | Optimized for durable spreadsheet models, not ordinary tables inside documents or slides. |
 | `video-studio` | active | Media files, scripts, manifests, platform packaging settings | Finished video/package | ffprobe/ffmpeg QA, platform dimensions, audio/subtitle/frame checks | Clear production toolchain and verification surface. |
 
@@ -64,6 +65,10 @@ Reusable artifacts can include:
   redaction/OCR limitations, and PDF verification reports.
 - `presentation`: slide narrative, speaker notes, asset inventory, deck source,
   and render/export checks.
+- `shape-product-spec`: product model, evidence ledger, objective/constraint
+  framing, clean-slate and constrained options, source decisions, flow/state
+  maps, story and requirement IDs, business rules, acceptance criteria,
+  assumptions, open questions, and story-slice suggestions.
 - `spreadsheet`: data dictionary, workbook formulas, named ranges, sheet
   dependencies, and validation issues.
 
