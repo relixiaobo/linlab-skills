@@ -1,6 +1,9 @@
 ---
 name: spreadsheet
 description: Create, edit, inspect, validate, or package spreadsheet workbooks and calculable tabular models, including Excel/XLSX, CSV-based workbook sources, Google Sheets-targeted models, formulas, named ranges, data validation, tables, pivots, charts, imports, exports, workbook QA, and spreadsheet-driven templates. Use when the spreadsheet itself is the durable artifact or calculation model, not when a table is merely embedded in a document or slide.
+metadata:
+  author: lin
+  version: "0.1.0"
 ---
 
 # Spreadsheet
@@ -16,6 +19,18 @@ data, and generation script together so another agent can inspect, revise, and
 regenerate the XLSX. Use native workbook editing when the user's existing file,
 formulas, formatting, comments, data validation, pivots, or template fidelity
 are the source of truth.
+
+## Runtime Dependencies
+
+Treat the execution environment as unknown. Do not assume Python, Node,
+spreadsheet libraries, office automation, LibreOffice, or calculation engines
+are installed, and do not run a full dependency preflight by default.
+
+Start with the task-specific command or host tool. If a runtime, package,
+binary, spreadsheet engine, or converter is missing, handle that execution-time
+failure by installing/enabling the minimum local dependency when appropriate,
+switching to an equivalent available tool that preserves the workbook contract,
+or reporting the exact missing dependency and install command.
 
 ## Route
 

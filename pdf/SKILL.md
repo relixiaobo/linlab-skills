@@ -1,6 +1,9 @@
 ---
 name: pdf
 description: Create, edit, inspect, extract from, repair, render, OCR, combine, split, rotate, redact, fill, validate, or package PDF artifacts. Use when a .pdf file is the primary input or output, when fixed-layout page fidelity matters, when scanned PDFs or form fields are involved, or when another skill exports PDF and needs PDF-level rendering or QA. Do not use for drafting documents, slides, or spreadsheets when their editable source remains the primary artifact.
+metadata:
+  author: lin
+  version: "0.1.0"
 ---
 
 # PDF
@@ -11,6 +14,18 @@ Treat PDF as a fixed-layout delivery and evidence format. Unlike DOCX, PPTX, or
 XLSX, a PDF is often lossy, hard to edit semantically, and easy to break
 visually. Prefer changing the editable source when it exists; work directly on
 PDF only when the PDF itself is the source, evidence, or final artifact.
+
+## Runtime Dependencies
+
+Treat the execution environment as unknown. Do not assume Python, Poppler, qpdf,
+OCR tools, PDF libraries, browser engines, or converters are installed, and do
+not run a full dependency preflight by default.
+
+Start with the task-specific command or library path. If a runtime, package,
+binary, OCR engine, or renderer is missing, handle that execution-time failure by
+installing/enabling the minimum local dependency when appropriate, switching to
+an equivalent available tool that preserves the PDF contract, or reporting the
+exact missing dependency and install command.
 
 ## Route
 

@@ -10,20 +10,22 @@ Prefer:
 Playwright headless Chromium -> PNG frames -> FFmpeg -> MP4
 ```
 
-This does not require a desktop browser UI. It does require a Chromium binary and Linux/macOS dependencies.
+This does not require a desktop browser UI. It needs a Chromium binary and
+platform dependencies only when this workflow is actually used.
 
 ## Server Without Browser UI
 
-No GUI is fine. Options:
+No GUI is fine. Invoke the chosen capture path first; if Playwright, Chromium,
+or platform dependencies are missing, resolve the smallest missing piece:
 
-1. Install Playwright Chromium locally:
+1. Use Node Playwright locally:
 
 ```bash
 npm install playwright
 npx playwright install --with-deps chromium
 ```
 
-2. Use Python Playwright:
+2. Use Python Playwright only when a Python path is the best fit:
 
 ```bash
 pip install playwright

@@ -1,6 +1,9 @@
 ---
 name: shape-product-spec
 description: Shape product ideas, feature requests, business rules, or product changes into decision-ready and execution-ready product specs before agents execute them. Use when a user wants an agent or team to build, change, evaluate, or review a product capability but the goal, users, constraints, tradeoffs, flows, business rules, scope, or acceptance criteria are too ambiguous to execute safely; covers PRDs, product briefs, discovery synthesis, story maps, user flows, acceptance criteria, prototype behavior specs, clean-slate vs brownfield option framing, contradiction audits, and implementation handoff specs. Do not use for generic writing, pure market research with no product decision, pure visual design, pure implementation architecture, or file-format work where the format operation is the primary task.
+metadata:
+  author: lin
+  version: "0.1.0"
 ---
 
 # Shape Product Spec
@@ -34,6 +37,17 @@ the work executable without pretending uncertainty is resolved.
 Do not add product methods as ceremony. Use them only to answer the operational
 question: what should change, for whom, under which constraints, and why is this
 the right version to execute now?
+
+## Runtime Dependencies
+
+Treat the execution environment as unknown. Do not assume Python or other local
+tooling is installed, and do not run a full dependency preflight by default.
+
+Start with the task-specific artifact or script path. If a runtime, package, or
+binary is missing, handle that execution-time failure by installing/enabling the
+minimum local dependency when appropriate, switching to an equivalent available
+tool that preserves the spec review contract, or reporting the exact missing
+dependency and install command.
 
 ## Route
 

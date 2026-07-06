@@ -1,6 +1,9 @@
 ---
 name: presentation
 description: Create, edit, analyze, or improve slide decks, presentations, PPT/PowerPoint or .pptx files, agent-maintainable deck source, HTML decks, pitch decks, talks with speaker notes or presenter mode, lecture decks, PDF handouts, speaker outlines, and deck cover images. Use when the primary artifact is a slide/talk/deck experience, not when the user wants a long-form memo, report, policy, workbook, or PDF-native file operation.
+metadata:
+  author: lin
+  version: "0.1.0"
 ---
 
 # Presentation
@@ -13,6 +16,18 @@ Choose for the audience, revision workflow, and delivery setting before choosing
 tools. Default to source-first artifacts that another agent can inspect, modify,
 verify, and regenerate; optimize for human manual editing in PowerPoint only
 when the user explicitly needs that.
+
+## Runtime Dependencies
+
+Treat the execution environment as unknown. Do not assume Python, Node, PPTX
+libraries, office automation, browser engines, converters, or rendering tools
+are installed, and do not run a full dependency preflight by default.
+
+Start with the task-specific command or host tool. If a runtime, package,
+binary, browser, or office capability is missing, handle that execution-time
+failure by installing/enabling the minimum local dependency when appropriate,
+switching to an equivalent available tool that preserves the deck contract, or
+reporting the exact missing dependency and install command.
 
 ## Route
 

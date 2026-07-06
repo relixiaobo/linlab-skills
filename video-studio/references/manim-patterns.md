@@ -14,12 +14,17 @@ pipeline (captions, BGM, QA, packaging) unchanged.
 Do not use Manim for talking-head edits, trims, crops, or generic motion
 graphics — those stay on ffmpeg / Remotion / web-to-video.
 
-## Requirements
+## Runtime Requirements
 
-- `manim` on PATH (`pip install manim`, or the `manimcommunity/manim` Docker image).
+Use this path only when the task needs Manim. If `manim`, TeX, or Typst is
+missing, resolve that execution-time failure by installing/enabling only the
+missing piece or by using the `manimcommunity/manim` Docker image.
+
+- `manim` on PATH (`pip install manim`, or the Docker image).
 - A TeX distribution for `mathtex` / `tex_transform` (e.g. TeX Live / MacTeX), or
   Manim's Typst backend. `text` and `axes_plot` do NOT need TeX.
-- Run `scripts/doctor.py` — it reports `manim` and `latex` as optional deps.
+- `scripts/doctor.py` can help diagnose optional `manim` / `latex` availability
+  after a failed or confusing run; do not use it as a default preflight.
 
 Pin the Manim version (it is mid-refactor). This integration targets ManimCE
 0.20.x and shells out to the stable `manim render` CLI.

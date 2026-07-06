@@ -4,7 +4,9 @@ Use Remotion when the video is generated from code, data, scenes, or reusable te
 
 ## Project Setup
 
-Use a local project dependency, not global Remotion:
+Use a local project dependency, not global Remotion. If an existing project
+already has the required packages, use it directly. Otherwise install only in
+the local video project:
 
 ```bash
 npx create-video@latest --yes --blank --no-tailwind my-video
