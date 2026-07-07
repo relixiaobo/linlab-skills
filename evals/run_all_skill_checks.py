@@ -16,6 +16,7 @@ SKILLS = [
     "code-review",
     "data-analysis",
     "document",
+    "feed-processing",
     "pdf",
     "presentation",
     "shape-product-spec",
@@ -61,6 +62,7 @@ def main() -> int:
         run("code-review", [sys.executable, "evals/code-review/run_checks.py"]),
         run("artifact-skills", [sys.executable, "evals/run_artifact_skill_checks.py"]),
         run("data-analysis", [python_for_data_analysis(), "evals/data-analysis/run_checks.py"]),
+        run("feed-processing", [sys.executable, "evals/feed-processing/run_checks.py"]),
         run("shape-product-spec", [sys.executable, "evals/shape-product-spec/run_checks.py"]),
         run("video-studio", [sys.executable, "evals/video-studio/run_checks.py"]),
         run("python-compile", [
@@ -69,6 +71,7 @@ def main() -> int:
             "evals/run_artifact_skill_checks.py",
             "evals/code-review/run_checks.py",
             "evals/data-analysis/run_checks.py",
+            "evals/feed-processing/run_checks.py",
             "evals/shape-product-spec/run_checks.py",
             "evals/video-studio/run_checks.py",
             "document/scripts/docx_tool.py",
@@ -97,6 +100,19 @@ def main() -> int:
         for script in [
             "document/scripts/markdown_tool.mjs",
             "presentation/scripts/html_tool.mjs",
+            "feed-processing/scripts/feed_diff.mjs",
+            "feed-processing/scripts/feed_discover.mjs",
+            "feed-processing/scripts/feed_fetch.mjs",
+            "feed-processing/scripts/feed_pack.mjs",
+            "feed-processing/scripts/feed_parse.mjs",
+            "feed-processing/scripts/feed_profile.mjs",
+            "feed-processing/scripts/feed_rules.mjs",
+            "feed-processing/scripts/feed_window.mjs",
+            "feed-processing/scripts/full_text_extract.mjs",
+            "feed-processing/scripts/lib/feed_common.mjs",
+            "feed-processing/scripts/opml_tool.mjs",
+            "feed-processing/scripts/source_list.mjs",
+            "feed-processing/scripts/validate_feed_pack.mjs",
             "video-studio/scripts/capture_web_frames.mjs",
         ]:
             checks.append(run(f"node-check:{script}", [node, "--check", script]))

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Example RSS</title>
+    <link>https://example.com</link>
+    <description>Example feed</description>
+    <item>
+      <title>Recent RSS Item</title>
+      <link>https://example.com/recent</link>
+      <guid>rss-recent</guid>
+      <pubDate>Mon, 06 Jul 2026 10:00:00 GMT</pubDate>
+      <description>Short summary for a recent item.</description>
+    </item>
+    <item>
+      <title>Old RSS Item</title>
+      <link>https://example.com/old</link>
+      <guid>rss-old</guid>
+      <pubDate>Mon, 01 Jun 2026 10:00:00 GMT</pubDate>
+      <description>Old summary.</description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Malformed Identity RSS</title>
+    <link>https://bad.example</link>
+    <description>Missing item dates and links.</description>
+    <item>
+      <title>Missing Link And Date</title>
+      <guid>bad-1</guid>
+      <description>Still parseable.</description>
+    </item>
+  </channel>
+</rss>
