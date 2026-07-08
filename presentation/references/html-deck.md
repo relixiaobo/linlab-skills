@@ -7,7 +7,7 @@ artifact and did not require PowerPoint.
 
 - Produce a self-contained `index.html` unless the user asks for a project folder.
 - Use local or inline assets; do not depend on remote CDNs.
-- Use a fixed 16:9 slide stage. Prefer authoring at 1920×1080 and scaling the
+- Use a fixed 16:9 slide stage. Prefer authoring at 1920x1080 and scaling the
   whole stage uniformly to fit the browser. A responsive `aspect-ratio: 16 / 9`
   wrapper is acceptable for simple decks, but slide content must not reflow into
   a different composition on phones.

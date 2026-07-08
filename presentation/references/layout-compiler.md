@@ -49,6 +49,8 @@ intentional translucent overlay. A full-slide image above text is a defect.
 - `sparse`: one claim, one metric cluster, one quote, or one visual proof. Do
   not place a small paragraph block in the upper-left corner of an otherwise
   empty slide.
+- A title/subtitle-only slide followed by the actual table, chart, or evidence
+  is a layout defect unless it is explicitly a section divider.
 - `medium`: one main visual or 2-4 structured content groups.
 - `dense`: table, matrix, evidence wall, or multi-part analysis. Use smaller
   type only within recipe limits; split the slide when objects become tiny or
@@ -81,6 +83,22 @@ to a statement, metric, quote, section, or split recipe.
 - Stage labels may not overflow slide edges.
 - Connectors must adjust to wrapped rows instead of extending past the canvas.
 
+### timeline
+
+- Maximum 7 date or milestone labels in one horizontal row.
+- More than 7 milestones must wrap, paginate, group by era, or become a
+  vertical/stacked timeline.
+- Milestone detail text below 8 pt is a defect for generated PPTX.
+
+### table-takeaway
+
+- Tables must fit inside the body area as native table or structured groups.
+- Tables with 9+ rows and 6+ columns, 12+ rows, or 8+ columns need splitting,
+  summarization, or pagination.
+- Table text below 9 pt is allowed only when the table is secondary evidence
+  and remains readable in a rendered thumbnail; below 8 pt is a defect.
+- A slide may not be only a title for a table that appears on the next slide.
+
 ### map-callout
 
 - Use when place, region, field, basin, market, or route matters.
@@ -93,6 +111,9 @@ to a statement, metric, quote, section, or split recipe.
 - A section slide may use a full-bleed image only as the bottom background
   layer, with a contrast overlay and text above it.
 - Do not insert a full-slide image after section text.
+- Do not insert foreground evidence, map, chart, or screenshot media on top of
+  section title/subtitle text. Convert the slide to a content recipe or create a
+  separate map-callout/image-led slide.
 
 ### card components
 
@@ -122,10 +143,16 @@ Before delivery, verify:
 - no normal object extends outside the slide or safe area
 - no text box overlaps a picture unless the recipe explicitly defines an
   overlay with contrast treatment
+- no foreground picture collides with section divider text
 - no blank shape covers a picture
 - no full-slide picture sits above text
 - no grid/process row exceeds recipe limits
+- no timeline row exceeds recipe limits or uses tiny milestone text
+- no table extends outside the slide/body area or requires tiny unreadable type
+- no sparse title/stub slide appears immediately before its actual evidence
 - no stale `current / total` page numbers remain
+- no closing, thanks, or Q&A slide appears before later content unless the deck
+  plan explicitly defines a mid-deck close
 - rendered representative slides match the intended composition
 
 Fail the deck or mark it as needing repair when these checks find unresolved

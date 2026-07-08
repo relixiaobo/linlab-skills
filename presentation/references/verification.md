@@ -33,18 +33,27 @@ Approach verification as a bug hunt. First renders often have concrete issues.
 - verify the closing slide is last unless the deck plan explicitly says otherwise
 - verify static page numbers, total counts, and section counters after any structural edit
 - verify one final writer or an explicit repair workflow was used for new multi-section decks
-- check for out-of-bounds shapes and pictures
+- check for out-of-bounds shapes, pictures, and native PPTX tables
 - check for text/picture overlap, blank shapes covering pictures, and
   full-slide pictures placed above text
+- check for section-picture collisions when media is added to existing decks
 - check that picture counts include native PPTX `p:pic` elements, not only
   DrawingML picture namespace elements
-- check grids, process rows, value chains, and card sets against recipe limits
+- check grids, process rows, value chains, card sets, timelines, and tables
+  against recipe limits
+- check for sparse title/stub slides that should have been merged with the
+  following content slide or made into an intentional section/statement slide
+- check for dense tables, tiny text, and single-row timelines with too many
+  milestones
 - render thumbnails or slides when possible
 - check slide relationships and content types
 - check notes/media/chart references
 - open or convert the file when possible
 - if human PowerPoint editability was explicitly required, verify text is not
   flattened into slide images
+- when adding pictures to an existing PPTX, compare before/after inspect
+  reports; no new picture layering warning is acceptable without explicit
+  repair or documented acceptance
 
 ## HTML Checks
 

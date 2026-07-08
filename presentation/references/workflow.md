@@ -96,12 +96,37 @@ Capture:
   state.
 - Do not hand-place long rows of cards, stages, or value-chain nodes. Use recipe
   limits and wrap, paginate, or change layout before rendering.
+- Do not hand-place long single-row timelines. Group, wrap, or paginate before
+  labels become tiny or run past the slide edge.
+- Do not emit a title/subtitle-only slide immediately followed by the table or
+  evidence it introduces; merge the content, make a deliberate section divider,
+  or create a real statement slide.
+- Do not force wide or long tables into one page. Split, summarize, or paginate
+  when the table crosses the body area or drops below readable type.
 - Do not append pictures after text generation. Resolve picture roles and slots
   before final writing so text, images, and containers cannot collide.
 
 If forced to repair an already-mutated PPTX, explicitly label the work as
 repair, then perform a full order and page-number verification pass after every
 structural change.
+
+## Existing Deck Image Insertion
+
+- Run `pptx_tool.py inspect` before editing and keep the report for comparison.
+- Inspect the target slide family before inserting media: cover, section,
+  image-led, split, map-callout, chart, table, process, or closing.
+- Assign every inserted image a role, fit, slot, and layer before writing it.
+- If the target slide is a section divider, use the image only as a bottom
+  background layer with text above a contrast overlay, or create a separate
+  map-callout/image-led slide. Do not place a foreground image above section
+  title text.
+- If the image is evidence, map, chart, or screenshot, prefer a content recipe
+  such as split, map-callout, chart, or evidence-wall instead of decorating a
+  section divider.
+- After editing, rerun `pptx_tool.py inspect` and compare before/after counts.
+  Treat any new `text_picture_overlaps`, `section_picture_collisions`,
+  `blank_shape_over_pictures`, `full_slide_picture_over_text`, or
+  `picture_overflows` as a failed insertion that needs relayout.
 
 ## Revision Pattern
 

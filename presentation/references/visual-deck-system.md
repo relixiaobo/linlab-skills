@@ -187,6 +187,6 @@ Use the motif on most slides. Do not combine all motifs.
 - inconsistent margins
 - slide-by-slide styling without a system
 - text-only slides unless the slide is a deliberate quote, section, or statement
-- generic AI technology clichés: purple-blue gradients, glowing abstract blobs,
+- generic AI technology cliches: purple-blue gradients, glowing abstract blobs,
   robot faces, circuit boards, or fake dashboards unless the source brand or
   concept specifically calls for them

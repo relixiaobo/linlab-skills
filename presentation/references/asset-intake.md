@@ -77,6 +77,17 @@ Image insertion must trigger layout selection or relayout. Do not append a
 picture onto a finished slide without resizing or moving existing text, cards,
 and containers.
 
+When adding assets to an existing PPTX:
+
+- inspect the target slide before editing
+- classify the slide family before choosing a slot
+- do not add a foreground evidence image to a section divider unless the
+  section recipe is changed
+- for section dividers, use images only as background layer media with contrast
+  treatment, or move the image to a dedicated content slide
+- compare the before/after inspection reports and repair any new image layering
+  warnings before delivery
+
 ## Screenshots
 
 For product screenshots, clarify or infer:

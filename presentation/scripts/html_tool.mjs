@@ -2,7 +2,7 @@
 import { access, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-const PLACEHOLDER_RE = /\b(lorem|ipsum|todo|placeholder|sample|dummy|xxxx)\b|\[(?:必填|todo|placeholder)[^\]]*\]|replace\s+(?:this|with)\b/gi;
+const PLACEHOLDER_RE = /\b(lorem|ipsum|todo|placeholder|sample|dummy|xxxx)\b|\[(?:\u5fc5\u586b|todo|placeholder)[^\]]*\]|replace\s+(?:this|with)\b/gi;
 const REGISTERED_LAYOUTS = new Set([
   'cover',
   'hero-media',
@@ -152,7 +152,7 @@ async function inspectHtml(filePath, html) {
   const tinyTextHits = sortedUnique([...html.matchAll(TINY_FONT_RE)].map((match) => `${match[1]}px`));
   const slideDisplayNone = /\.slide[^{]*{[^}]*display\s*:\s*none/i.test(html);
   const visiblePresenterText = slides
-    .filter((slide) => /speaker\s*(notes?|script)|presenter\s*(notes?|view)|逐字稿|讲稿|演讲者/i.test(
+    .filter((slide) => /speaker\s*(notes?|script)|presenter\s*(notes?|view)|\u9010\u5b57\u7a3f|\u8bb2\u7a3f|\u6f14\u8bb2\u8005/i.test(
       slide.html.replace(/<(aside|div)\b[^>]*class\s*=\s*["'][^"']*\bnotes\b[^>]*>[\s\S]*?<\/\1>/gi, '')
     ))
     .map((slide) => slide.index);

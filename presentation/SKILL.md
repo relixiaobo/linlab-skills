@@ -124,7 +124,7 @@ Load only the reference needed for the current route:
 
 ## Scripts
 
-- `python3 {baseDir}/scripts/pptx_tool.py inspect deck.pptx --out report.json` inspects PPTX package structure, slide order, relationships, media, notes, image-only slide candidates, placeholders, page-number candidates, out-of-bounds objects, and picture layering risks.
+- `python3 {baseDir}/scripts/pptx_tool.py inspect deck.pptx --out report.json` inspects PPTX package structure, slide order, relationships, media, notes, image-only slide candidates, placeholders, page-number candidates, shape/picture/table bounds, dense tables, tiny text, single-row timeline crowding, sparse stub slides, closing-slide placement, section-picture collisions, and picture layering risks.
 - `node {baseDir}/scripts/html_tool.mjs inspect deck.html --out report.json` inspects static HTML decks for slides, registered layouts, broken local asset references, placeholder text, presenter-text leaks, text-only slides, and basic structure.
 
 The scripts are portable baseline tools. Do not assume product-specific tools exist.
@@ -151,10 +151,20 @@ used, but the final artifact still needs the same verification report.
   final writer, not chained append scripts that mutate the same PPTX.
 - Page numbers, total counts, tables of contents, section counters, and closing
   slides are final-pass elements.
+- A closing or thank-you slide must be generated only after all content and
+  appendix slides unless the deck plan explicitly marks it as a mid-deck break.
+- Do not split a title/subtitle stub and its table or evidence onto adjacent
+  slides; merge, paginate, or use a statement/section recipe intentionally.
 - Images must not be appended after slide rendering without relayout. Give each
   image a role, slot, fit, and layer before rendering.
+- When adding images to an existing PPTX, inspect before and after the edit.
+  The edit fails if it introduces new text-picture overlaps, section-picture
+  collisions, blank shapes over pictures, full-slide pictures over text, or
+  picture overflows.
 - Grids, process rows, value chains, and cards must obey recipe limits; wrap,
   paginate, or change recipe instead of overflowing the slide.
+- Tables and timelines must obey recipe limits: split wide or long tables,
+  avoid tiny type, and wrap or paginate timelines with too many milestones.
 - Rounded containers must fit their text with clear padding and restrained
   radius; avoid large empty round rectangles around small text.
 - Preserve templates by removing unused placeholder groups, not just clearing text.

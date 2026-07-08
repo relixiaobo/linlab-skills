@@ -85,7 +85,11 @@ recipe in `layout`.
 - keep labels short
 - show sequence with spacing, not paragraphs
 - split into multiple slides when steps become dense
-- for more than 5 horizontal steps, wrap, paginate, or switch to vertical rhythm
+- for more than 5 process-like horizontal steps, wrap, paginate, or switch to
+  vertical rhythm
+- for more than 7 date/milestone labels in a horizontal timeline, group by era,
+  wrap, paginate, or use a vertical/stacked timeline
+- do not shrink milestone detail below 8 pt to keep a timeline on one row
 
 ### diagram
 
@@ -150,6 +154,9 @@ recipe in `layout`.
 - place a concise takeaway above or beside the table
 - keep headers readable and rows within the body area
 - split tables that require tiny type or horizontal scrolling
+- split or summarize tables with 9+ rows and 6+ columns, 12+ rows, or 8+
+  columns
+- do not create a title-only slide immediately before the table slide
 
 ### scripted-demo
 
