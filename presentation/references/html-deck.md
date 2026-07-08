@@ -42,7 +42,8 @@ artifact and did not require PowerPoint.
 - Use the template component classes before inventing new one-off CSS:
   `.chrome`, `.kicker`, `.display`, `.lead`, `.panel`, `.metric`,
   `.stage-visual`, `.device-frame`, `.feature-grid`, `.visual-frame`,
-  `.timeline`, `.quote`, `.gallery`, and `.tag`.
+  `.map-frame`, `.callout`, `.statement`, `.takeaway-table`, `.timeline`,
+  `.quote`, `.gallery`, and `.tag`.
 - Keep raw color values inside token declarations; slide CSS should consume tokens.
 - Make screenshots and images part of the recipe, not decorative background filler.
 
@@ -53,8 +54,8 @@ artifact and did not require PowerPoint.
 - For custom pages, name the recipe clearly in `data-layout` and keep the same
   token, spacing, and motif system.
 - Avoid more than two consecutive slides with the same `data-layout`.
-- Avoid text-only slides except `section`, `quote`, and deliberate statement
-  pages.
+- Avoid text-only slides except `section`, `statement`, `quote`, and deliberate
+  close pages.
 - Prefer `product-stage`, `hero-media`, `metric`, and `feature-grid` when the
   user asks for a modern/keynote feel.
 

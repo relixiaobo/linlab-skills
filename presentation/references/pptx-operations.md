@@ -21,6 +21,9 @@ Read the report for:
 - image-only slide candidates when humans need to manually edit the PPTX or when
   no separate source project exists
 - placeholder-like text
+- page-number mismatches and static total-count drift
+- out-of-bounds objects, text/picture overlap, blank shapes covering pictures,
+  and full-slide pictures above text
 - hidden or unusual package parts
 
 ## Template Editing

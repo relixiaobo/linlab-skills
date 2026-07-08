@@ -17,9 +17,12 @@ recipe in `layout`.
 | `timeline` | sequence, roadmap, process | horizontal or vertical steps with dates or stages |
 | `diagram` | system, workflow, relationship | nodes, arrows, or spatial model with labels outside geometry |
 | `chart` | quantitative evidence | one chart, one headline, clear annotation |
+| `map-callout` | geography, basin, route, field, market, territory | map as primary visual with callouts tied to the claim |
 | `feature-grid` | 3-6 capabilities, pillars, benefits, modules | compact grid with consistent icon/label/spec rhythm |
 | `gallery` | examples, screenshots, evidence wall | image grid with consistent ratios and captions |
+| `statement` | sparse idea that needs emphasis | centered or staged claim with optional proof label |
 | `quote` | memorable voice or turning point | large quote, source, minimal support text |
+| `table-takeaway` | table is necessary evidence | table plus one highlighted takeaway, not a raw dump |
 | `close` | final takeaway or action | one final claim plus 1-3 next actions |
 | `scripted-demo` | live product walkthrough, code demo, feature tour | current state, next action, and short presenter cue in notes |
 | `evidence-wall` | many examples, logos, screenshots, or source snippets | consistent crop grid with a single takeaway and source labels |
@@ -61,6 +64,9 @@ recipe in `layout`.
 - choose a 45/55 or 55/45 balance
 - give the visual side a real role: screenshot, diagram, image, or evidence
 - do not put a card inside another card
+- keep text and visual rectangles non-overlapping
+- if the visual is right-side evidence, constrain the text column before the
+  visual slot starts
 
 ### metric
 
@@ -79,12 +85,15 @@ recipe in `layout`.
 - keep labels short
 - show sequence with spacing, not paragraphs
 - split into multiple slides when steps become dense
+- for more than 5 horizontal steps, wrap, paginate, or switch to vertical rhythm
 
 ### diagram
 
 - text labels stay in HTML/text boxes, not inside SVG paths when avoidable
 - geometry should explain relationships, not decorate
 - use one connector style
+- value-chain and process diagrams have a maximum of 5 nodes per horizontal row
+- connectors must adapt to wrapped rows; they must not extend off-canvas
 
 ### feature-grid
 
@@ -92,6 +101,16 @@ recipe in `layout`.
 - keep labels short and action-oriented
 - use icons, numbers, or spec labels only when they clarify the feature set
 - avoid equal-weight paragraphs in every cell
+- use at most 4 columns in a single row
+- wrap 5-6 items into two rows; split, group, or change recipe beyond 6 items
+- keep card dimensions fixed so text and hover/edit states cannot shift layout
+
+### map-callout
+
+- use a real map or source geography when the slide claim is geographic
+- reserve the map as the primary visual and attach 2-5 callouts
+- use contain-fit when labels or boundaries matter
+- avoid generic decorative maps for specific countries, basins, fields, or routes
 
 ### gallery
 
@@ -100,6 +119,14 @@ recipe in `layout`.
 - screenshots use contain-fit when text readability matters
 - for named brands/products, each visible logo or UI should come from the asset
   inventory or be explicitly marked as placeholder
+
+### statement
+
+- use for sparse slides that would otherwise leave a small text block in a
+  corner
+- center, stage, or intentionally offset the claim
+- pair with one proof label, icon, or small visual only when it clarifies the
+  message
 
 ### quote
 
@@ -116,6 +143,13 @@ recipe in `layout`.
 - use editable/native chart objects in PPTX when humans need to modify data
   manually in PowerPoint; use rendered charts when source-first agent revisions
   or visual fidelity matter more
+
+### table-takeaway
+
+- use when a table is necessary evidence, not because the source has a table
+- place a concise takeaway above or beside the table
+- keep headers readable and rows within the body area
+- split tables that require tiny type or horizontal scrolling
 
 ### scripted-demo
 

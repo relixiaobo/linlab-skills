@@ -24,6 +24,11 @@
       "type": "string",
       "description": "source-first, native-pptx, visual-only, or mixed"
     },
+    "layoutMode": {
+      "type": "string",
+      "enum": ["compiler", "template-preserve", "manual-repair"],
+      "description": "compiler for generated layouts, template-preserve for native template fills, manual-repair for existing broken decks"
+    },
     "notesMode": {
       "type": "string",
       "description": "none, brief-speaker-notes, verbatim-script, presenter-mode, or outline-only"
@@ -84,7 +89,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "slide", "purpose", "headline", "visual"],
+        "required": ["id", "slide", "purpose", "headline", "layout", "density", "visual"],
         "properties": {
           "id": {
             "type": "string",
@@ -96,9 +101,83 @@
           "purpose": { "type": "string" },
           "headline": { "type": "string" },
           "evidence": { "type": "string" },
-          "layout": { "type": "string" },
-          "visualRole": { "type": "string" },
+          "layout": {
+            "type": "string",
+            "enum": [
+              "cover",
+              "hero-media",
+              "product-stage",
+              "section",
+              "split",
+              "metric",
+              "compare",
+              "timeline",
+              "diagram",
+              "chart",
+              "map-callout",
+              "feature-grid",
+              "gallery",
+              "statement",
+              "quote",
+              "table-takeaway",
+              "close",
+              "scripted-demo",
+              "evidence-wall"
+            ]
+          },
+          "density": {
+            "type": "string",
+            "enum": ["sparse", "medium", "dense"]
+          },
+          "layoutIntent": {
+            "type": "string",
+            "description": "The composition decision the layout compiler should satisfy"
+          },
           "visual": { "type": "string" },
+          "visualSpec": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "background",
+                  "hero",
+                  "right-evidence",
+                  "left-evidence",
+                  "map",
+                  "chart",
+                  "logo",
+                  "thumbnail",
+                  "callout",
+                  "decorative-accepted"
+                ]
+              },
+              "asset": { "type": "string" },
+              "fit": {
+                "type": "string",
+                "enum": ["contain", "cover", "stretch", "original"]
+              },
+              "slot": { "type": "string" },
+              "layer": {
+                "type": "string",
+                "enum": ["background", "image", "overlay", "text", "logo", "folio"]
+              },
+              "notes": { "type": "string" }
+            },
+            "additionalProperties": false
+          },
+          "layers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["background", "frame", "image", "overlay", "text", "logo", "folio"]
+            }
+          },
+          "geometryNotes": {
+            "type": "string",
+            "description": "Optional constraints for the layout compiler"
+          },
           "assetPlan": { "type": "string" },
           "assets": {
             "type": "array",

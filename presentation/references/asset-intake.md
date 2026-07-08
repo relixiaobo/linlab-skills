@@ -48,6 +48,34 @@ For non-logo media, collect enough candidates to choose well:
 - make every image earn a communication role: evidence, product reveal,
   example, comparison, quote/source context, or emotional beat
 - choose stable ratios before layout: 21:9, 16:9, 16:10, 4:3, 3:2, 1:1, 3:4
+- reject generic images that conflict with the deck topic, geography, industry,
+  audience, or evidence claim
+
+## Asset Layout Roles
+
+Every planned image should have a role before it is inserted:
+
+- `background`: full-bleed or banded visual below text and overlays
+- `hero`: dominant slide visual with minimal text
+- `right-evidence` or `left-evidence`: split-layout proof beside text
+- `map`: geography, route, territory, basin, field, or market context
+- `chart`: quantitative evidence
+- `thumbnail`: gallery or evidence-wall item
+- `callout`: small support image or annotation
+- `logo`: brand mark in cover, section, or footer
+- `decorative-accepted`: decorative asset explicitly accepted by the user or
+  clearly harmless to the message
+
+Also specify fit, slot, and layer:
+
+- fit: contain, cover, stretch, or original
+- slot: visual-right, visual-left, hero, map-primary, gallery-tile, footer-logo,
+  or another recipe slot
+- layer: background, image, overlay, text, logo, or folio
+
+Image insertion must trigger layout selection or relayout. Do not append a
+picture onto a finished slide without resizing or moving existing text, cards,
+and containers.
 
 ## Screenshots
 

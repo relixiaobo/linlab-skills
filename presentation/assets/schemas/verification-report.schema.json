@@ -49,6 +49,43 @@
       },
       "additionalProperties": false
     },
+    "layoutCheck": {
+      "type": "object",
+      "properties": {
+        "checked": { "type": "boolean" },
+        "outOfBoundsObjects": { "type": "integer" },
+        "overlapWarnings": { "type": "integer" },
+        "shapeOverflows": { "type": "integer" },
+        "pictureOverflows": { "type": "integer" },
+        "textPictureOverlaps": { "type": "integer" },
+        "blankShapeOverPictures": { "type": "integer" },
+        "fullSlidePictureOverText": { "type": "integer" },
+        "recipeViolations": { "type": "integer" },
+        "evidence": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "assetCheck": {
+      "type": "object",
+      "properties": {
+        "checked": { "type": "boolean" },
+        "missingAssets": { "type": "integer" },
+        "genericOrIrrelevantAssets": { "type": "integer" },
+        "layeringWarnings": { "type": "integer" },
+        "evidence": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "renderCheck": {
+      "type": "object",
+      "properties": {
+        "checked": { "type": "boolean" },
+        "slidesRendered": { "type": "integer" },
+        "visualDefects": { "type": "integer" },
+        "evidence": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "checks": {
       "type": "array",
       "items": {

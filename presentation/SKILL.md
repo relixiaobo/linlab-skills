@@ -1,9 +1,6 @@
 ---
 name: presentation
 description: Create, edit, analyze, or improve slide decks, presentations, PPT/PowerPoint or .pptx files, agent-maintainable deck source, HTML decks, pitch decks, talks with speaker notes or presenter mode, lecture decks, PDF handouts, speaker outlines, and deck cover images. Use when the primary artifact is a slide/talk/deck experience, not when the user wants a long-form memo, report, policy, workbook, or PDF-native file operation.
-metadata:
-  author: lin
-  version: "0.1.0"
 ---
 
 # Presentation
@@ -62,17 +59,18 @@ reporting the exact missing dependency and install command.
    a source, a 1:1 beautify target, a native template-fill target, or a finished
    deck that should only receive notes/audio/timing.
 6. Choose one visual system before building: design direction, theme, motif,
-   typography posture, and layout recipe set. Use
-   `references/visual-deck-system.md` and `references/layout-recipes.md` for
-   visual decks. If the user asks for modern, premium, launch, keynote, or less
-   old-fashioned templates, choose the `Keynote Stage` direction unless the
-   content clearly needs another system.
+   typography posture, layout recipe set, and layout compiler contract. Use
+   `references/visual-deck-system.md`, `references/layout-recipes.md`, and
+   `references/layout-compiler.md` for visual decks. If the user asks for
+   modern, premium, launch, keynote, or less old-fashioned templates, choose the
+   `Keynote Stage` direction unless the content clearly needs another system.
 7. If the user gives a vague style request and there is time to show work,
    create or describe three concrete visual directions using real deck content.
    Avoid asking the user to choose from abstract style labels alone.
 8. Create a deck plan before building. Include stable slide ids, final order,
    build mode, global elements, purpose, headline, evidence/source, layout
-   recipe, visual treatment, and output notes. If emitting JSON, keep it compatible with
+   recipe, content density, layout intent, visual asset roles, fit/slot/layer
+   treatment, and output notes. If emitting JSON, keep it compatible with
    `{baseDir}/assets/schemas/deck-plan.schema.json`. See
    `references/workflow.md`.
 9. Choose the output route:
@@ -90,6 +88,10 @@ reporting the exact missing dependency and install command.
      charts, images, screenshots, or assets, but a single final writer should
      render slide order, closing slides, page numbers, section counters, and
      total counts.
+   - For generated PPTX decks, let the model choose recipes, density, asset
+     roles, and intent; let deterministic layout code own geometry, wrapping,
+     z-order, bounds, and pagination. Do not make hand-placed coordinates the
+     primary strategy for a substantial deck.
    - If the user explicitly needs humans to manually edit the deck in
      PowerPoint, design for native PPTX editability from the first slide. Read
      `references/editable-pptx.md`.
@@ -113,6 +115,8 @@ Load only the reference needed for the current route:
   explicitly required.
 - `references/visual-deck-system.md` for design directions, themes, motifs, typography, and composition rules.
 - `references/layout-recipes.md` for registered slide recipes and when to use each one.
+- `references/layout-compiler.md` for generated deck geometry, density,
+  layering, asset roles, overflow prevention, and PPTX QA gates.
 - `references/html-deck.md` for self-contained HTML deck structure, template usage, and interaction rules.
 - `references/speaker-notes.md` when the deck is for a talk, training,
   roadshow, or any live presentation with speaker notes.
@@ -120,8 +124,8 @@ Load only the reference needed for the current route:
 
 ## Scripts
 
-- `python3 {baseDir}/scripts/pptx_tool.py inspect deck.pptx --out report.json` inspects PPTX package structure, slide order, relationships, media, notes, image-only slide candidates, likely placeholders, and bottom page-number candidates.
-- `node {baseDir}/scripts/html_tool.mjs inspect deck.html --out report.json` inspects static HTML decks for slides, broken local asset references, placeholder text, and basic structure.
+- `python3 {baseDir}/scripts/pptx_tool.py inspect deck.pptx --out report.json` inspects PPTX package structure, slide order, relationships, media, notes, image-only slide candidates, placeholders, page-number candidates, out-of-bounds objects, and picture layering risks.
+- `node {baseDir}/scripts/html_tool.mjs inspect deck.html --out report.json` inspects static HTML decks for slides, registered layouts, broken local asset references, placeholder text, presenter-text leaks, text-only slides, and basic structure.
 
 The scripts are portable baseline tools. Do not assume product-specific tools exist.
 If a host offers equivalent conversion, rendering, or browser automation, it may be
@@ -133,6 +137,9 @@ used, but the final artifact still needs the same verification report.
 - Every normal slide needs a clear job: orient, explain, prove, compare, transition, or close.
 - Every visual slide needs an intentional visual element: image, chart, diagram, icon system, typographic composition, data block, or structured layout.
 - Do not invent a new layout for every slide. Choose from the registered recipes, then adapt content inside the recipe.
+- For generated PPTX, use a recipe-driven layout compiler: the model selects
+  intent and recipe; deterministic code places objects, wraps overflowing
+  groups, and controls layer order.
 - Preserve source truth: do not invent data, citations, product specs, logos, or
   user quotes to make a slide feel complete.
 - Keep the deck density intentional. Live talks need fewer words and stronger
@@ -144,6 +151,12 @@ used, but the final artifact still needs the same verification report.
   final writer, not chained append scripts that mutate the same PPTX.
 - Page numbers, total counts, tables of contents, section counters, and closing
   slides are final-pass elements.
+- Images must not be appended after slide rendering without relayout. Give each
+  image a role, slot, fit, and layer before rendering.
+- Grids, process rows, value chains, and cards must obey recipe limits; wrap,
+  paginate, or change recipe instead of overflowing the slide.
+- Rounded containers must fit their text with clear padding and restrained
+  radius; avoid large empty round rectangles around small text.
 - Preserve templates by removing unused placeholder groups, not just clearing text.
 - Run at least one fix-and-recheck pass after creating or editing a visual deck.
 - State limitations plainly when rendering or conversion is unavailable.

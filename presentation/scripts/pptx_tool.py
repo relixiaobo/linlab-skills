@@ -10,7 +10,7 @@ import re
 import sys
 import zipfile
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 from xml.etree import ElementTree as ET
 
 PLACEHOLDER_RE = re.compile(r"\b(lorem|ipsum|todo|placeholder|sample|dummy|xxxx)\b", re.I)
@@ -19,8 +19,9 @@ REL_NS = "{http://schemas.openxmlformats.org/package/2006/relationships}"
 P_NS = "{http://schemas.openxmlformats.org/presentationml/2006/main}"
 A_NS = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 R_NS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
-PIC_NS = "{http://schemas.openxmlformats.org/drawingml/2006/picture}"
 DEFAULT_SLIDE_SIZE = {"cx": 12192000, "cy": 6858000, "source": "default-16:9"}
+EMU_PER_INCH = 914400
+OVERFLOW_TOLERANCE_IN = 0.03
 
 
 def read_xml(zf: zipfile.ZipFile, name: str) -> Optional[ET.Element]:
@@ -93,6 +94,241 @@ def shape_text_reports(root: ET.Element | None) -> list[dict[str, object]]:
             }
         )
     return reports
+
+
+def emu_to_inches(value: int | None) -> float | None:
+    if value is None:
+        return None
+    return round(value / EMU_PER_INCH, 4)
+
+
+def slide_dimensions_inches(slide_size: dict[str, int | str]) -> dict[str, float]:
+    cx = slide_size.get("cx")
+    cy = slide_size.get("cy")
+    return {
+        "w": round(cx / EMU_PER_INCH, 4) if isinstance(cx, int) else 13.333,
+        "h": round(cy / EMU_PER_INCH, 4) if isinstance(cy, int) else 7.5,
+    }
+
+
+def box_from_node(node: ET.Element) -> dict[str, float] | None:
+    xfrm = node.find(f".//{A_NS}xfrm")
+    off = xfrm.find(f"{A_NS}off") if xfrm is not None else None
+    ext = xfrm.find(f"{A_NS}ext") if xfrm is not None else None
+    x = emu_to_inches(int_attr(off, "x"))
+    y = emu_to_inches(int_attr(off, "y"))
+    w = emu_to_inches(int_attr(ext, "cx"))
+    h = emu_to_inches(int_attr(ext, "cy"))
+    if x is None or y is None or w is None or h is None:
+        return None
+    return {"x": x, "y": y, "w": w, "h": h}
+
+
+def text_runs_from_node(node: ET.Element) -> list[str]:
+    return [text.text for text in node.iter(f"{A_NS}t") if text.text]
+
+
+def geometry_name(node: ET.Element) -> str:
+    sp_pr = node.find(f"{P_NS}spPr")
+    geom = sp_pr.find(f"{A_NS}prstGeom") if sp_pr is not None else None
+    return geom.attrib.get("prst", "") if geom is not None else ""
+
+
+def picture_rid(node: ET.Element) -> str:
+    blip = node.find(f".//{A_NS}blip")
+    if blip is None:
+        return ""
+    return blip.attrib.get(f"{R_NS}embed") or blip.attrib.get(f"{R_NS}link") or ""
+
+
+def slide_object_reports(
+    root: ET.Element | None,
+    slide_rels: dict[str, dict[str, str]],
+    slide_part: str,
+) -> list[dict[str, Any]]:
+    if root is None:
+        return []
+
+    sp_tree = root.find(f".//{P_NS}spTree")
+    children = list(sp_tree) if sp_tree is not None else list(root)
+    reports: list[dict[str, Any]] = []
+    order = 0
+
+    for child in children:
+        if child.tag not in (f"{P_NS}sp", f"{P_NS}pic"):
+            continue
+        order += 1
+        box = box_from_node(child)
+        if child.tag == f"{P_NS}sp":
+            text_runs = text_runs_from_node(child)
+            text = collapsed_text(" ".join(text_runs))
+            reports.append(
+                {
+                    "kind": "shape",
+                    "order": order,
+                    "box": box,
+                    "text": text,
+                    "text_chars": len(text),
+                    "geometry": geometry_name(child),
+                    "blank": len(text) == 0,
+                }
+            )
+            continue
+
+        rid = picture_rid(child)
+        target = ""
+        if rid and rid in slide_rels:
+            target = normalized_target(slide_part, slide_rels[rid].get("target", ""))
+        reports.append(
+            {
+                "kind": "picture",
+                "order": order,
+                "box": box,
+                "rid": rid,
+                "target": target,
+            }
+        )
+
+    return reports
+
+
+def box_area(box: dict[str, float] | None) -> float:
+    if not box:
+        return 0.0
+    return max(0.0, box["w"]) * max(0.0, box["h"])
+
+
+def intersection_area(a: dict[str, float] | None, b: dict[str, float] | None) -> float:
+    if not a or not b:
+        return 0.0
+    left = max(a["x"], b["x"])
+    top = max(a["y"], b["y"])
+    right = min(a["x"] + a["w"], b["x"] + b["w"])
+    bottom = min(a["y"] + a["h"], b["y"] + b["h"])
+    return max(0.0, right - left) * max(0.0, bottom - top)
+
+
+def overlap_ratio(a: dict[str, float] | None, b: dict[str, float] | None) -> float:
+    inter = intersection_area(a, b)
+    denom = min(box_area(a), box_area(b))
+    if denom <= 0:
+        return 0.0
+    return round(inter / denom, 4)
+
+
+def is_full_slide_box(box: dict[str, float] | None, slide_size: dict[str, int | str]) -> bool:
+    if not box:
+        return False
+    dims = slide_dimensions_inches(slide_size)
+    tol = OVERFLOW_TOLERANCE_IN
+    return (
+        box["x"] <= tol
+        and box["y"] <= tol
+        and box["x"] + box["w"] >= dims["w"] - tol
+        and box["y"] + box["h"] >= dims["h"] - tol
+    )
+
+
+def box_overflows_slide(box: dict[str, float] | None, slide_size: dict[str, int | str]) -> bool:
+    if not box or is_full_slide_box(box, slide_size):
+        return False
+    dims = slide_dimensions_inches(slide_size)
+    tol = OVERFLOW_TOLERANCE_IN
+    return (
+        box["x"] < -tol
+        or box["y"] < -tol
+        or box["x"] + box["w"] > dims["w"] + tol
+        or box["y"] + box["h"] > dims["h"] + tol
+    )
+
+
+def layout_warnings_for_slide(
+    slide_index: int,
+    objects: list[dict[str, Any]],
+    slide_size: dict[str, int | str],
+) -> dict[str, list[dict[str, Any]]]:
+    warnings = {
+        "shape_overflows": [],
+        "picture_overflows": [],
+        "text_picture_overlaps": [],
+        "blank_shape_over_pictures": [],
+        "full_slide_picture_over_text": [],
+    }
+
+    text_shapes = [obj for obj in objects if obj["kind"] == "shape" and obj.get("text_chars", 0) > 0]
+    blank_shapes = [obj for obj in objects if obj["kind"] == "shape" and obj.get("blank")]
+    pictures = [obj for obj in objects if obj["kind"] == "picture"]
+
+    for obj in objects:
+        if not box_overflows_slide(obj.get("box"), slide_size):
+            continue
+        entry = {
+            "slide": slide_index,
+            "order": obj["order"],
+            "box": obj.get("box"),
+        }
+        if obj["kind"] == "picture":
+            entry["target"] = obj.get("target", "")
+            warnings["picture_overflows"].append(entry)
+        else:
+            entry["text"] = str(obj.get("text", ""))[:80]
+            warnings["shape_overflows"].append(entry)
+
+    for picture in pictures:
+        for text_shape in text_shapes:
+            if picture["order"] <= text_shape["order"]:
+                continue
+            ratio = overlap_ratio(picture.get("box"), text_shape.get("box"))
+            if ratio < 0.15:
+                continue
+            warnings["text_picture_overlaps"].append(
+                {
+                    "slide": slide_index,
+                    "picture_order": picture["order"],
+                    "shape_order": text_shape["order"],
+                    "ratio": ratio,
+                    "picture": picture.get("target", ""),
+                    "text": str(text_shape.get("text", ""))[:120],
+                }
+            )
+
+    for shape in blank_shapes:
+        for picture in pictures:
+            if shape["order"] <= picture["order"]:
+                continue
+            ratio = overlap_ratio(shape.get("box"), picture.get("box"))
+            if ratio < 0.85:
+                continue
+            warnings["blank_shape_over_pictures"].append(
+                {
+                    "slide": slide_index,
+                    "shape_order": shape["order"],
+                    "picture_order": picture["order"],
+                    "ratio": ratio,
+                    "picture": picture.get("target", ""),
+                    "shape_geometry": shape.get("geometry", ""),
+                }
+            )
+
+    for picture in pictures:
+        if not is_full_slide_box(picture.get("box"), slide_size):
+            continue
+        covered_text = [
+            shape
+            for shape in text_shapes
+            if picture["order"] > shape["order"] and overlap_ratio(picture.get("box"), shape.get("box")) >= 0.15
+        ]
+        if covered_text:
+            warnings["full_slide_picture_over_text"].append(
+                {
+                    "slide": slide_index,
+                    "picture_order": picture["order"],
+                    "picture": picture.get("target", ""),
+                    "covered_text_shapes": len(covered_text),
+                }
+            )
+
+    return warnings
 
 
 def page_number_candidate(shape: dict[str, object], slide_size: dict[str, int | str]) -> dict[str, object] | None:
@@ -169,6 +405,12 @@ def inspect_pptx(path: Path) -> dict:
         "missing_relationship_targets": [],
         "image_only_slide_candidates": [],
         "page_number_candidate_mismatches": [],
+        "shape_overflows": [],
+        "picture_overflows": [],
+        "text_picture_overlaps": [],
+        "blank_shape_over_pictures": [],
+        "full_slide_picture_over_text": [],
+        "layout_warning_summary": {},
     }
 
     if not path.exists():
@@ -222,6 +464,7 @@ def inspect_pptx(path: Path) -> dict:
                     "chart_count": 0,
                     "notes": False,
                     "page_number_candidates": [],
+                    "layout_warning_count": 0,
                 }
                 if not slide_part or slide_part not in names:
                     result["missing_relationship_targets"].append({"from": "ppt/presentation.xml", "rid": rid, "target": target})
@@ -233,7 +476,6 @@ def inspect_pptx(path: Path) -> dict:
                 slide_report["text_chars"] = len(text)
                 slide_report["text_preview"] = collapsed_text(text)[:300]
                 if slide_root is not None:
-                    slide_report["picture_count"] = len(list(slide_root.iter(f"{PIC_NS}pic")))
                     slide_report["shape_count"] = len(list(slide_root.iter(f"{P_NS}sp")))
                 hits = sorted(set(match.group(0).lower() for match in PLACEHOLDER_RE.finditer(text)))
                 slide_report["placeholder_hits"] = hits
@@ -255,6 +497,22 @@ def inspect_pptx(path: Path) -> dict:
                     resolved = normalized_target(slide_part, rel_target)
                     if resolved not in names:
                         result["missing_relationship_targets"].append({"from": slide_part, "rid": rel_id, "target": rel_target})
+
+                slide_objects = slide_object_reports(slide_root, slide_rels, slide_part)
+                pictures = [obj for obj in slide_objects if obj["kind"] == "picture"]
+                slide_report["picture_count"] = len(pictures)
+                slide_report["pictures"] = [
+                    {
+                        "order": obj["order"],
+                        "target": obj.get("target", ""),
+                        "box": obj.get("box"),
+                    }
+                    for obj in pictures
+                ]
+                slide_layout_warnings = layout_warnings_for_slide(index, slide_objects, slide_size)
+                slide_report["layout_warning_count"] = sum(len(items) for items in slide_layout_warnings.values())
+                for key, items in slide_layout_warnings.items():
+                    result[key].extend(items)
 
                 if slide_report["text_chars"] < 20 and slide_report["picture_count"] >= 1 and slide_report["shape_count"] <= 1:
                     result["image_only_slide_candidates"].append(index)
@@ -278,6 +536,13 @@ def inspect_pptx(path: Path) -> dict:
 
             if not result["slides"]:
                 result["warnings"].append("no_slides_found")
+            result["layout_warning_summary"] = {
+                "shape_overflows": len(result["shape_overflows"]),
+                "picture_overflows": len(result["picture_overflows"]),
+                "text_picture_overlaps": len(result["text_picture_overlaps"]),
+                "blank_shape_over_pictures": len(result["blank_shape_over_pictures"]),
+                "full_slide_picture_over_text": len(result["full_slide_picture_over_text"]),
+            }
             if result["placeholder_hits"]:
                 result["warnings"].append("placeholder_text_found")
             if result["missing_relationship_targets"]:
@@ -286,6 +551,16 @@ def inspect_pptx(path: Path) -> dict:
                 result["warnings"].append("image_only_slide_candidates")
             if result["page_number_candidate_mismatches"]:
                 result["warnings"].append("page_number_candidate_mismatches")
+            if result["shape_overflows"]:
+                result["warnings"].append("shape_overflows")
+            if result["picture_overflows"]:
+                result["warnings"].append("picture_overflows")
+            if result["text_picture_overlaps"]:
+                result["warnings"].append("text_picture_overlaps")
+            if result["blank_shape_over_pictures"]:
+                result["warnings"].append("blank_shape_over_pictures")
+            if result["full_slide_picture_over_text"]:
+                result["warnings"].append("full_slide_picture_over_text")
             result["ok"] = len(result["errors"]) == 0 and len(result["missing_relationship_targets"]) == 0
             return result
     except zipfile.BadZipFile:

@@ -11,13 +11,17 @@
    template-fill PPTX, human-editable PPTX, PDF handout, speaker outline,
    presenter deck, or cover image.
 6. Choose the visual system: design direction, theme tokens, motif, and layout recipe set.
-7. Create a deck plan before building slides.
+7. Create a deck plan before building slides, including recipe, density, layout
+   intent, and asset role/fit/slot/layer for each slide.
 8. For PPTX output, choose the build mode: single-pass generation for new
    decks, template edit for existing decks, or explicit repair for
    already-broken files.
-9. Build from the plan.
-10. Verify visually and structurally.
-11. Fix concrete issues and recheck.
+9. Compile layout from the plan before writing PPTX objects. Use
+   `references/layout-compiler.md` for geometry, layering, wrapping, and
+   overflow rules.
+10. Build from the compiled plan.
+11. Verify visually and structurally.
+12. Fix concrete issues and recheck.
 
 ## Deck Plan Schema
 
@@ -35,11 +39,13 @@ Capture:
 - `revisionSurface`: source-first, native-pptx, visual-only, or mixed
 - `visualTemperament`: editorial narrative, grid analytical, or another deliberate direction
 - `visualSystem`: design direction, style pack, theme, motif, and typography posture
+- `layoutMode`: compiler, template-preserve, or manual-repair
 - `storySpine`: short sequence of messages the deck must carry
 - `globalElements`: page numbers, totals, table of contents, section counters,
   and closing slide policy
 - `slides`: slide objects with stable `id`, final `slide`, `purpose`,
-  `headline`, `evidence`, `layout`, `visual`, and `notes`
+  `headline`, `evidence`, `layout`, `density`, `layoutIntent`,
+  `visualSpec`, `layers`, and `notes`
 - `sourceMaterials`: paths or URLs actually used
 - `verificationPlan`: checks to run before delivery
 
@@ -63,6 +69,19 @@ Capture:
   three concrete first-slide directions using the user's actual content; avoid
   asking the user to choose from abstract style words alone.
 
+## Layout Compiler Pattern
+
+- Use `references/layout-compiler.md` for generated PPTX geometry.
+- The model chooses slide intent, recipe, density, asset role, and proof.
+- Deterministic code chooses rectangles, wrapping, z-order, pagination, and
+  safe-area conformance.
+- Sparse slides must not default to upper-left body text. Convert them to a
+  statement, metric, quote, section, split, or hero-media composition.
+- Images are layout objects. Adding an image after a slide is already built
+  requires relayout, not blind insertion.
+- Classic recipes should vary the rhythm: split, metric, timeline, comparison,
+  chart, map-callout, feature-grid, evidence-wall, quote, section, and close.
+
 ## PPTX Build Discipline
 
 - Treat a new PPTX as a compiled artifact, not as the shared working state.
@@ -75,6 +94,10 @@ Capture:
   other global elements in the final pass.
 - Rebuild from a clean output path when regenerating; do not rely on prior deck
   state.
+- Do not hand-place long rows of cards, stages, or value-chain nodes. Use recipe
+  limits and wrap, paginate, or change layout before rendering.
+- Do not append pictures after text generation. Resolve picture roles and slots
+  before final writing so text, images, and containers cannot collide.
 
 If forced to repair an already-mutated PPTX, explicitly label the work as
 repair, then perform a full order and page-number verification pass after every

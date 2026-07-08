@@ -14,15 +14,18 @@ const REGISTERED_LAYOUTS = new Set([
   'timeline',
   'diagram',
   'chart',
+  'map-callout',
   'feature-grid',
   'gallery',
+  'statement',
   'quote',
+  'table-takeaway',
   'close',
   'scripted-demo',
   'evidence-wall',
 ]);
-const TEXT_ONLY_LAYOUTS = new Set(['section', 'quote', 'close']);
-const VISUAL_MARKER_RE = /<(img|svg|canvas|video|figure)\b|class\s*=\s*["'][^"']*\b(metric|stage-visual|device-frame|feature-grid|visual-frame|timeline|quote|gallery|compare|diagram|signal|panel|number|chart)\b/i;
+const TEXT_ONLY_LAYOUTS = new Set(['section', 'statement', 'quote', 'close']);
+const VISUAL_MARKER_RE = /<(img|svg|canvas|video|figure|table)\b|class\s*=\s*["'][^"']*\b(metric|stage-visual|device-frame|feature-grid|visual-frame|timeline|quote|gallery|compare|diagram|signal|panel|number|chart|map|callout|table|evidence-wall)\b/i;
 const TINY_FONT_RE = /font-size\s*:\s*((?:[0-9](?:\.\d+)?)|(?:1[0-3](?:\.\d+)?))px\b/gi;
 
 function usage() {

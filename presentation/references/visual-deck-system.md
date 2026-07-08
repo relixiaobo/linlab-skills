@@ -151,8 +151,8 @@ Use the motif on most slides. Do not combine all motifs.
 ## Composition Rules
 
 - one primary message per slide
-- one visual role per slide: image, metric, comparison, diagram, timeline, quote,
-  chart, gallery, or typographic statement
+- one visual role per slide: image, metric, comparison, diagram, timeline, map,
+  quote, chart, table, gallery, or typographic statement
 - use layout recipes from `layout-recipes.md`; do not improvise the page skeleton
   unless source material forces it
 - every 3-5 content slides, insert a reset: section divider, quote, full-bleed
