@@ -2,12 +2,16 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Deck Plan",
   "type": "object",
-  "required": ["title", "audience", "goal", "outputRoute", "slides"],
+  "required": ["title", "audience", "goal", "outputRoute", "buildMode", "slides"],
   "properties": {
     "title": { "type": "string" },
     "audience": { "type": "string" },
     "goal": { "type": "string" },
     "outputRoute": { "type": "string" },
+    "buildMode": {
+      "type": "string",
+      "enum": ["single-pass", "template-edit", "html-deck", "pdf-handout", "speaker-outline", "cover-image", "repair"]
+    },
     "deliveryMode": {
       "type": "string",
       "description": "live-talk, reading-share, agent-maintained-source, visual-showcase, handout, or another explicit mode"
@@ -64,13 +68,31 @@
       "type": "array",
       "items": { "type": "string" }
     },
+    "globalElements": {
+      "type": "object",
+      "properties": {
+        "pageNumbers": { "type": "boolean" },
+        "totalSlideCount": { "type": "boolean" },
+        "tableOfContents": { "type": "boolean" },
+        "sectionCounters": { "type": "boolean" },
+        "closingSlideId": { "type": "string" },
+        "finalPassRequired": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
     "slides": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["slide", "purpose", "headline", "visual"],
+        "required": ["id", "slide", "purpose", "headline", "visual"],
         "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
           "slide": { "type": ["integer", "string"] },
+          "type": { "type": "string" },
+          "section": { "type": "string" },
           "purpose": { "type": "string" },
           "headline": { "type": "string" },
           "evidence": { "type": "string" },
@@ -78,6 +100,14 @@
           "visualRole": { "type": "string" },
           "visual": { "type": "string" },
           "assetPlan": { "type": "string" },
+          "assets": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "sourceRefs": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
           "notes": { "type": "string" }
         },
         "additionalProperties": false

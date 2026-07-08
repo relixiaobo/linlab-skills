@@ -12,9 +12,12 @@
    presenter deck, or cover image.
 6. Choose the visual system: design direction, theme tokens, motif, and layout recipe set.
 7. Create a deck plan before building slides.
-8. Build from the plan.
-9. Verify visually and structurally.
-10. Fix concrete issues and recheck.
+8. For PPTX output, choose the build mode: single-pass generation for new
+   decks, template edit for existing decks, or explicit repair for
+   already-broken files.
+9. Build from the plan.
+10. Verify visually and structurally.
+11. Fix concrete issues and recheck.
 
 ## Deck Plan Schema
 
@@ -26,12 +29,17 @@ Capture:
 - `audience`: intended audience
 - `goal`: communication outcome
 - `outputRoute`: PPTX, HTML deck, PDF handout, speaker outline, or cover image
+- `buildMode`: single-pass, template-edit, html-deck, pdf-handout,
+  speaker-outline, cover-image, or repair
 - `deliveryMode`: live-talk, reading-share, agent-maintained-source, handout, or another explicit mode
 - `revisionSurface`: source-first, native-pptx, visual-only, or mixed
 - `visualTemperament`: editorial narrative, grid analytical, or another deliberate direction
 - `visualSystem`: design direction, style pack, theme, motif, and typography posture
 - `storySpine`: short sequence of messages the deck must carry
-- `slides`: slide objects with `slide`, `purpose`, `headline`, `evidence`, `layout`, `visual`, and `notes`
+- `globalElements`: page numbers, totals, table of contents, section counters,
+  and closing slide policy
+- `slides`: slide objects with stable `id`, final `slide`, `purpose`,
+  `headline`, `evidence`, `layout`, `visual`, and `notes`
 - `sourceMaterials`: paths or URLs actually used
 - `verificationPlan`: checks to run before delivery
 
@@ -54,6 +62,23 @@ Capture:
 - For vague style requests, show three concrete direction previews or describe
   three concrete first-slide directions using the user's actual content; avoid
   asking the user to choose from abstract style words alone.
+
+## PPTX Build Discipline
+
+- Treat a new PPTX as a compiled artifact, not as the shared working state.
+- Keep the complete deck plan or slide spec as the source of truth.
+- Allow section modules to produce slide specs, data, images, screenshots, or
+  charts, but do not let them append directly to the same PPTX.
+- Use one final writer to render slides in final order.
+- Add closing slides only after all content sections are assembled.
+- Render page numbers, total counts, tables of contents, section counters, and
+  other global elements in the final pass.
+- Rebuild from a clean output path when regenerating; do not rely on prior deck
+  state.
+
+If forced to repair an already-mutated PPTX, explicitly label the work as
+repair, then perform a full order and page-number verification pass after every
+structural change.
 
 ## Revision Pattern
 
@@ -79,6 +104,8 @@ Capture:
 - Map new content to existing layout families.
 - Preserve the deck's visual language unless the user asks for redesign.
 - Remove unused groups and placeholders.
+- After moving, duplicating, or deleting slides, rerender or update all static
+  page numbers and global counters.
 - Do not flatten a deck into slide images when future agent revisions are
   expected unless the source project remains available and documented.
 

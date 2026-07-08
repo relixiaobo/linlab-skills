@@ -7,6 +7,7 @@ Approach verification as a bug hunt. First renders often have concrete issues.
 - source claims are represented faithfully
 - recent or unstable facts have sources or are marked as assumptions
 - slide order supports the story
+- actual slide order matches the deck plan when a plan exists
 - no lorem, TODO, placeholder, sample, dummy, or xxxx text remains
 - no broken local asset references
 - text does not overflow or overlap
@@ -25,6 +26,9 @@ Approach verification as a bug hunt. First renders often have concrete issues.
 ## PPTX Checks
 
 - inspect package structure with `scripts/pptx_tool.py`
+- verify the closing slide is last unless the deck plan explicitly says otherwise
+- verify static page numbers, total counts, and section counters after any structural edit
+- verify one final writer or an explicit repair workflow was used for new multi-section decks
 - render thumbnails or slides when possible
 - check slide relationships and content types
 - check notes/media/chart references

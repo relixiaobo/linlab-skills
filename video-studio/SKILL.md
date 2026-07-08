@@ -199,7 +199,12 @@ For every non-trivial task:
 2. Probe source media with `{baseDir}/scripts/probe_media.py`.
 3. Write project artifacts in the user project directory, never inside this skill directory.
 4. For a deliverable, wire sound + music first: source/obtain BGM and voiceover, and set `audio.*` and `delivery.profile` in the manifest. Add `subtitles.*` (authored with `{baseDir}/scripts/captions_from_script.py`) only when the user asked for captions.
-5. Create or update `render_manifest.json` before rendering.
+5. Create or update `render_manifest.json` before rendering. Treat the manifest,
+   storyboard, raw media, and caption-free master as the source of truth; treat
+   `renders/final.mp4` as a compiled delivery artifact. Do not build a chain of
+   edits by repeatedly taking the prior final mp4 as the next input unless the
+   user explicitly asks to edit that delivered file and you re-probe it as a new
+   source.
 6. Validate it with `{baseDir}/scripts/validate_manifest.py`.
 7. Render with the selected engine. For `engine: "ffmpeg"`, use `{baseDir}/scripts/render_ffmpeg.py`.
 8. Run `{baseDir}/scripts/qa_video.py --manifest render_manifest.json` (or `--profile social`) on the final video. A non-zero exit (missing sound/music) blocks delivery — fix it, do not present the video as final. Captions are only enforced when you asked for them (`qa.expectCaptions`/`--expect-captions`).
@@ -220,6 +225,9 @@ Use `run-log.jsonl` for long or resumable work. Append one JSON line per stage: 
 ## Hard Rules
 
 - Generate a manifest first; do not improvise long FFmpeg/Playwright/Remotion commands directly from chat.
+- Prefer one final render from source media and declared assets. Intermediate
+  scripts should produce specs, audio, overlays, captions, or master renders,
+  not mutate the delivered final in place.
 - Never deliver a fully silent video. For a narrative/social deliverable, never deliver without a background-music bed unless the user explicitly waived it.
 - Do not auto-add captions. Add subtitles only when the user asks (or the delivery context clearly needs them); when you do, make them read like normal subtitles (one short phrase at a time, see Caption style).
 - Auto-fill missing sound/music where possible (source royalty-free BGM); if an element genuinely cannot be produced, FAIL loudly rather than shipping an empty video.

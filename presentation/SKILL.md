@@ -70,13 +70,13 @@ reporting the exact missing dependency and install command.
 7. If the user gives a vague style request and there is time to show work,
    create or describe three concrete visual directions using real deck content.
    Avoid asking the user to choose from abstract style labels alone.
-8. Create a deck plan before building. Include slide number, purpose, headline,
-   evidence/source, layout recipe, visual treatment, and output notes. If
-   emitting JSON, keep it compatible with
+8. Create a deck plan before building. Include stable slide ids, final order,
+   build mode, global elements, purpose, headline, evidence/source, layout
+   recipe, visual treatment, and output notes. If emitting JSON, keep it compatible with
    `{baseDir}/assets/schemas/deck-plan.schema.json`. See
    `references/workflow.md`.
 9. Choose the output route:
-   - Use PPTX when the user explicitly asks for PowerPoint, provides a PPTX template, or needs a file for PowerPoint/Keynote workflows.
+   - Use PPTX when the user explicitly asks for PowerPoint, provides a PPTX template, or needs a file for PowerPoint/Keynote workflows. For new PPTX decks, treat the file as a compiled artifact from the complete deck plan; do not make chained append scripts the default build strategy.
    - Use source-first HTML or another inspectable project format when future
      revisions are likely to be handled by an agent.
    - Use a self-contained HTML deck when the user wants a polished, inspectable, browser-presentable artifact and did not require PPTX.
@@ -86,6 +86,10 @@ reporting the exact missing dependency and install command.
    - Keep source of truth explicit: source HTML/PPTX project, deck plan, asset
      manifest, and verification report should be easier for an agent to modify
      than a binary-only final export.
+   - For multi-section PPTX work, helper modules may produce slide specs,
+     charts, images, screenshots, or assets, but a single final writer should
+     render slide order, closing slides, page numbers, section counters, and
+     total counts.
    - If the user explicitly needs humans to manually edit the deck in
      PowerPoint, design for native PPTX editability from the first slide. Read
      `references/editable-pptx.md`.
@@ -101,10 +105,10 @@ reporting the exact missing dependency and install command.
 
 Load only the reference needed for the current route:
 
-- `references/workflow.md` for deck planning, content mapping, and delivery flow.
+- `references/workflow.md` for deck planning, content mapping, build discipline, and delivery flow.
 - `references/asset-intake.md` for factual source checks, brand/product assets,
   screenshots, and image selection.
-- `references/pptx-operations.md` for PPTX/template inspection, OOXML package risks, and PowerPoint QA.
+- `references/pptx-operations.md` for PPTX/template inspection, single-writer generation, OOXML package risks, and PowerPoint QA.
 - `references/editable-pptx.md` only when human manual PowerPoint editability is
   explicitly required.
 - `references/visual-deck-system.md` for design directions, themes, motifs, typography, and composition rules.
@@ -116,7 +120,7 @@ Load only the reference needed for the current route:
 
 ## Scripts
 
-- `python3 {baseDir}/scripts/pptx_tool.py inspect deck.pptx --out report.json` inspects PPTX package structure, slide order, relationships, media, notes, and likely placeholders.
+- `python3 {baseDir}/scripts/pptx_tool.py inspect deck.pptx --out report.json` inspects PPTX package structure, slide order, relationships, media, notes, image-only slide candidates, likely placeholders, and bottom page-number candidates.
 - `node {baseDir}/scripts/html_tool.mjs inspect deck.html --out report.json` inspects static HTML decks for slides, broken local asset references, placeholder text, and basic structure.
 
 The scripts are portable baseline tools. Do not assume product-specific tools exist.
@@ -136,6 +140,10 @@ used, but the final artifact still needs the same verification report.
 - Use real assets when a real entity is named. A generic silhouette, fake UI,
   or decorative gradient is not a substitute for an official logo, product
   image, UI screenshot, or source chart.
+- New PPTX decks with multiple sections must use a complete deck plan plus one
+  final writer, not chained append scripts that mutate the same PPTX.
+- Page numbers, total counts, tables of contents, section counters, and closing
+  slides are final-pass elements.
 - Preserve templates by removing unused placeholder groups, not just clearing text.
 - Run at least one fix-and-recheck pass after creating or editing a visual deck.
 - State limitations plainly when rendering or conversion is unavailable.

@@ -14,11 +14,13 @@ from typing import Optional
 from xml.etree import ElementTree as ET
 
 PLACEHOLDER_RE = re.compile(r"\b(lorem|ipsum|todo|placeholder|sample|dummy|xxxx)\b", re.I)
+PAGE_NUMBER_RE = re.compile(r"^\s*(\d{1,4})(?:\s*/\s*(\d{1,4}))?\s*$")
 REL_NS = "{http://schemas.openxmlformats.org/package/2006/relationships}"
 P_NS = "{http://schemas.openxmlformats.org/presentationml/2006/main}"
 A_NS = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
 R_NS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
 PIC_NS = "{http://schemas.openxmlformats.org/drawingml/2006/picture}"
+DEFAULT_SLIDE_SIZE = {"cx": 12192000, "cy": 6858000, "source": "default-16:9"}
 
 
 def read_xml(zf: zipfile.ZipFile, name: str) -> Optional[ET.Element]:
@@ -36,6 +38,98 @@ def text_from_xml(root: ET.Element | None) -> str:
         if node.tag == f"{A_NS}t" and node.text:
             parts.append(node.text)
     return "\n".join(parts)
+
+
+def collapsed_text(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def int_attr(node: ET.Element | None, name: str) -> int | None:
+    if node is None:
+        return None
+    value = node.attrib.get(name)
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        return None
+
+
+def slide_size_from_presentation(root: ET.Element | None) -> dict[str, int | str]:
+    if root is None:
+        return dict(DEFAULT_SLIDE_SIZE)
+    size = root.find(f"{P_NS}sldSz")
+    cx = int_attr(size, "cx")
+    cy = int_attr(size, "cy")
+    if cx is None or cy is None:
+        return dict(DEFAULT_SLIDE_SIZE)
+    return {"cx": cx, "cy": cy, "source": "presentation.xml"}
+
+
+def shape_text_reports(root: ET.Element | None) -> list[dict[str, object]]:
+    if root is None:
+        return []
+    reports = []
+    for shape in root.iter(f"{P_NS}sp"):
+        text_runs = [node.text for node in shape.iter(f"{A_NS}t") if node.text]
+        if not text_runs:
+            continue
+        text = "\n".join(text_runs)
+        one_line = collapsed_text(" ".join(text_runs))
+        compact = "".join(part.strip() for part in text_runs if part.strip())
+        xfrm = shape.find(f".//{A_NS}xfrm")
+        off = xfrm.find(f"{A_NS}off") if xfrm is not None else None
+        ext = xfrm.find(f"{A_NS}ext") if xfrm is not None else None
+        reports.append(
+            {
+                "text": text,
+                "one_line": one_line,
+                "compact": compact,
+                "x": int_attr(off, "x"),
+                "y": int_attr(off, "y"),
+                "cx": int_attr(ext, "cx"),
+                "cy": int_attr(ext, "cy"),
+            }
+        )
+    return reports
+
+
+def page_number_candidate(shape: dict[str, object], slide_size: dict[str, int | str]) -> dict[str, object] | None:
+    slide_height = slide_size.get("cy")
+    y = shape.get("y")
+    cy = shape.get("cy") or 0
+    if not isinstance(slide_height, int) or not isinstance(y, int) or not isinstance(cy, int):
+        return None
+    if y + cy < int(slide_height * 0.72):
+        return None
+
+    texts = [
+        str(shape.get("one_line") or ""),
+        str(shape.get("compact") or ""),
+        collapsed_text(str(shape.get("text") or "")),
+    ]
+    for text in texts:
+        match = PAGE_NUMBER_RE.match(text)
+        if not match:
+            continue
+        number = int(match.group(1))
+        total = int(match.group(2)) if match.group(2) else None
+        return {
+            "text": text,
+            "number": number,
+            "total": total,
+            "x": shape.get("x"),
+            "y": y,
+        }
+    return None
+
+
+def page_number_matches(candidate: dict[str, object], index: int, total_slides: int) -> bool:
+    if candidate.get("number") != index:
+        return False
+    total = candidate.get("total")
+    return total in (None, total_slides)
 
 
 def rels_for(zf: zipfile.ZipFile, rels_name: str) -> dict[str, dict[str, str]]:
@@ -67,12 +161,14 @@ def inspect_pptx(path: Path) -> dict:
         "errors": [],
         "warnings": [],
         "slides": [],
+        "slide_size": {},
         "media_count": 0,
         "chart_count": 0,
         "notes_count": 0,
         "placeholder_hits": [],
         "missing_relationship_targets": [],
         "image_only_slide_candidates": [],
+        "page_number_candidate_mismatches": [],
     }
 
     if not path.exists():
@@ -97,6 +193,8 @@ def inspect_pptx(path: Path) -> dict:
                 return result
 
             pres = read_xml(zf, "ppt/presentation.xml")
+            slide_size = slide_size_from_presentation(pres)
+            result["slide_size"] = slide_size
             pres_rels = rels_for(zf, "ppt/_rels/presentation.xml.rels")
 
             slide_ids = []
@@ -105,6 +203,7 @@ def inspect_pptx(path: Path) -> dict:
                     rid = sld_id.attrib.get(f"{R_NS}id")
                     if rid:
                         slide_ids.append(rid)
+            total_slides = len(slide_ids)
 
             for index, rid in enumerate(slide_ids, start=1):
                 rel = pres_rels.get(rid, {})
@@ -115,12 +214,14 @@ def inspect_pptx(path: Path) -> dict:
                     "rid": rid,
                     "part": slide_part,
                     "text_chars": 0,
+                    "text_preview": "",
                     "placeholder_hits": [],
                     "relationship_count": 0,
                     "picture_count": 0,
                     "shape_count": 0,
                     "chart_count": 0,
                     "notes": False,
+                    "page_number_candidates": [],
                 }
                 if not slide_part or slide_part not in names:
                     result["missing_relationship_targets"].append({"from": "ppt/presentation.xml", "rid": rid, "target": target})
@@ -130,6 +231,7 @@ def inspect_pptx(path: Path) -> dict:
                 slide_root = read_xml(zf, slide_part)
                 text = text_from_xml(slide_root)
                 slide_report["text_chars"] = len(text)
+                slide_report["text_preview"] = collapsed_text(text)[:300]
                 if slide_root is not None:
                     slide_report["picture_count"] = len(list(slide_root.iter(f"{PIC_NS}pic")))
                     slide_report["shape_count"] = len(list(slide_root.iter(f"{P_NS}sp")))
@@ -157,6 +259,21 @@ def inspect_pptx(path: Path) -> dict:
                 if slide_report["text_chars"] < 20 and slide_report["picture_count"] >= 1 and slide_report["shape_count"] <= 1:
                     result["image_only_slide_candidates"].append(index)
 
+                candidates = []
+                for shape in shape_text_reports(slide_root):
+                    candidate = page_number_candidate(shape, slide_size)
+                    if candidate:
+                        candidates.append(candidate)
+                slide_report["page_number_candidates"] = candidates
+                if candidates and not any(page_number_matches(candidate, index, total_slides) for candidate in candidates):
+                    result["page_number_candidate_mismatches"].append(
+                        {
+                            "slide": index,
+                            "expected": str(index),
+                            "candidates": [candidate["text"] for candidate in candidates],
+                        }
+                    )
+
                 result["slides"].append(slide_report)
 
             if not result["slides"]:
@@ -167,6 +284,8 @@ def inspect_pptx(path: Path) -> dict:
                 result["warnings"].append("missing_relationship_targets")
             if result["image_only_slide_candidates"]:
                 result["warnings"].append("image_only_slide_candidates")
+            if result["page_number_candidate_mismatches"]:
+                result["warnings"].append("page_number_candidate_mismatches")
             result["ok"] = len(result["errors"]) == 0 and len(result["missing_relationship_targets"]) == 0
             return result
     except zipfile.BadZipFile:

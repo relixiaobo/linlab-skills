@@ -18,6 +18,37 @@
       "type": "array",
       "items": { "type": "string" }
     },
+    "buildProvenance": {
+      "type": "object",
+      "properties": {
+        "deckPlan": { "type": "string" },
+        "builder": { "type": "string" },
+        "singleWriter": { "type": "boolean" },
+        "appendModeUsed": { "type": "boolean" },
+        "finalPassCompleted": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "orderCheck": {
+      "type": "object",
+      "properties": {
+        "expectedSlides": { "type": "integer" },
+        "actualSlides": { "type": "integer" },
+        "closingSlideLast": { "type": "boolean" },
+        "matchesDeckPlan": { "type": "boolean" },
+        "evidence": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "pageNumberCheck": {
+      "type": "object",
+      "properties": {
+        "checked": { "type": "boolean" },
+        "mismatches": { "type": "integer" },
+        "evidence": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "checks": {
       "type": "array",
       "items": {

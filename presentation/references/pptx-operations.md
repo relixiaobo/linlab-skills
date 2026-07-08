@@ -40,6 +40,38 @@ When using an existing deck as a template:
 7. Clean unused placeholders and orphaned assets.
 8. Repack and verify.
 
+## New PPTX Build Contract
+
+For new PPTX decks, use a single-writer build unless the user explicitly asks
+for manual repair of an existing file.
+
+Preferred architecture:
+
+```text
+source material
+-> deck plan / slide spec
+-> assets
+-> one PPTX builder
+-> final global pass
+-> verification
+-> output.pptx
+```
+
+Rules:
+
+- Use the deck plan or slide spec as the source of truth.
+- Give every planned slide a stable id and final position.
+- Let helper scripts create JSON specs, charts, maps, screenshots, or images.
+- Do not let helper scripts append directly to the same `.pptx` in sequence.
+- Insert closing slides, acknowledgements, and appendix boundaries only in the
+  final builder after all content slides are known.
+- Render static page numbers and total counts only in the final global pass.
+- Regenerate from a clean output path for each build.
+
+Use append-based PPTX mutation only for small, deliberate edits to an existing
+deck or for explicit repair work. When using append or XML reorder operations,
+run full order and page-number checks afterward.
+
 ## Package Risks
 
 Common failure modes:
@@ -50,6 +82,8 @@ Common failure modes:
 - `[Content_Types].xml` missing an override
 - notes or comments copied with stale relationships
 - placeholder text left in hidden groups
+- section script adds a closing slide before later scripts append more content
+- static page numbers drift after slide insertions, moves, or deletes
 - text overflow visible only after rendering
 
 ## Generation Notes
@@ -57,12 +91,14 @@ Common failure modes:
 If generating PPTX with a library:
 
 - set slide size explicitly
+- build slides from the complete ordered spec in one final writer
 - use real list paragraphs, not pasted bullet characters
 - keep images in stable aspect-ratio boxes
 - do not rely on default theme colors
 - use native chart/table APIs when humans need to manually edit the data in
   PowerPoint
 - add speaker notes as notes, not visible microcopy
+- add or update static page numbers only after slide order is final
 - verify by opening, converting, or rendering when possible
 
 If the user explicitly requested PPTX and reliable PPTX generation is not
