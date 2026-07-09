@@ -30,6 +30,9 @@ Approach verification as a bug hunt. First renders often have concrete issues.
 ## PPTX Checks
 
 - inspect package structure with `scripts/pptx_tool.py`
+- run `scripts/pptx_tool.py gate deck.pptx --out report.json` before delivery;
+  a failed gate means the PPTX is not ready to deliver unless the user accepts
+  the blocker explicitly
 - verify the closing slide is last unless the deck plan explicitly says otherwise
 - verify static page numbers, total counts, and section counters after any structural edit
 - verify one final writer or an explicit repair workflow was used for new multi-section decks
@@ -54,6 +57,32 @@ Approach verification as a bug hunt. First renders often have concrete issues.
 - when adding pictures to an existing PPTX, compare before/after inspect
   reports; no new picture layering warning is acceptable without explicit
   repair or documented acceptance
+
+## PPTX Delivery Gate
+
+Use this command for every PPTX created or edited by the agent:
+
+```bash
+python3 scripts/pptx_tool.py gate output.pptx --out pptx-gate-report.json
+```
+
+The gate fails on package errors, placeholder text, page-number drift, object
+overflow, table overflow, crowded tables, tiny text, over-compressed timelines,
+sparse stub slides, early closing slides, text-picture overlaps,
+section-picture collisions, blank shapes above pictures, and full-slide pictures
+above text.
+
+For existing-deck edits, keep a before report and compare after the edit:
+
+```bash
+python3 scripts/pptx_tool.py inspect before.pptx --out before-report.json
+python3 scripts/pptx_tool.py inspect after.pptx --out after-report.json
+python3 scripts/pptx_tool.py compare before-report.json after-report.json --out edit-diff.json
+python3 scripts/pptx_tool.py gate after.pptx --out pptx-gate-report.json
+```
+
+If the gate or compare command returns nonzero, repair and rerun the command.
+Do not treat a successful file open in PowerPoint as a substitute for the gate.
 
 ## HTML Checks
 

@@ -20,8 +20,9 @@
    `references/layout-compiler.md` for geometry, layering, wrapping, and
    overflow rules.
 10. Build from the compiled plan.
-11. Verify visually and structurally.
-12. Fix concrete issues and recheck.
+11. Verify visually and structurally. For PPTX output, run the delivery gate.
+12. Fix concrete issues and recheck. Do not deliver a PPTX with a failed gate
+    unless the unresolved blocker is explicitly accepted by the user.
 
 ## Deck Plan Schema
 
@@ -123,7 +124,8 @@ structural change.
 - If the image is evidence, map, chart, or screenshot, prefer a content recipe
   such as split, map-callout, chart, or evidence-wall instead of decorating a
   section divider.
-- After editing, rerun `pptx_tool.py inspect` and compare before/after counts.
+- After editing, rerun `pptx_tool.py inspect`, run `pptx_tool.py compare` on
+  the before/after reports, and run `pptx_tool.py gate` on the edited deck.
   Treat any new `text_picture_overlaps`, `section_picture_collisions`,
   `blank_shape_over_pictures`, `full_slide_picture_over_text`, or
   `picture_overflows` as a failed insertion that needs relayout.

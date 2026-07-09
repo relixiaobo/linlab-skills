@@ -49,6 +49,23 @@
       },
       "additionalProperties": false
     },
+    "deliveryGate": {
+      "type": "object",
+      "properties": {
+        "checked": { "type": "boolean" },
+        "passed": { "type": "boolean" },
+        "blockingWarnings": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "reviewWarnings": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "evidence": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "layoutCheck": {
       "type": "object",
       "properties": {

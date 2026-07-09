@@ -55,9 +55,9 @@ reporting the exact missing dependency and install command.
 5. If the user supplied an existing deck or template, inspect content and visual
    structure before editing. For PPTX files, use
    `python3 {baseDir}/scripts/pptx_tool.py inspect path/to/deck.pptx --out report.json`
-   when useful. Use `references/pptx-operations.md` to decide whether the deck is
-   a source, a 1:1 beautify target, a native template-fill target, or a finished
-   deck that should only receive notes/audio/timing.
+   before editing. Use `references/pptx-operations.md` to decide whether the
+   deck is a source, a 1:1 beautify target, a native template-fill target, or a
+   finished deck that should only receive notes/audio/timing.
 6. Choose one visual system before building: design direction, theme, motif,
    typography posture, layout recipe set, and layout compiler contract. Use
    `references/visual-deck-system.md`, `references/layout-recipes.md`, and
@@ -97,7 +97,11 @@ reporting the exact missing dependency and install command.
      `references/editable-pptx.md`.
    - Do not silently downgrade an explicit PPTX request to HTML/PDF, and do not hand-author OOXML ZIP packages as a substitute for a missing PPTX library unless the user approves that lower-level route or no install path is available and you state the limitation.
    - Prefer bundled scripts for deterministic checks, and use equivalent host tools only when they preserve the same verification contract.
-11. Verify before delivering. At minimum search for placeholders, check source
+11. Verify before delivering. For any PPTX produced or edited by the agent, run
+    `python3 {baseDir}/scripts/pptx_tool.py gate path/to/deck.pptx --out report.json`.
+    `inspect` is diagnostic; `gate` is the delivery-blocking check. If `gate`
+    fails, repair the deck and rerun it before delivery, or explicitly report
+    the unresolved blocker. At minimum also search for placeholders, check source
     fidelity, inspect visual layout, open or render the artifact when tools
     allow it, run one fix-and-recheck pass, and report what was verified. If
     emitting JSON, keep it compatible with
@@ -125,6 +129,8 @@ Load only the reference needed for the current route:
 ## Scripts
 
 - `python3 {baseDir}/scripts/pptx_tool.py inspect deck.pptx --out report.json` inspects PPTX package structure, slide order, relationships, media, notes, image-only slide candidates, placeholders, page-number candidates, shape/picture/table bounds, dense tables, tiny text, single-row timeline crowding, sparse stub slides, closing-slide placement, section-picture collisions, and picture layering risks.
+- `python3 {baseDir}/scripts/pptx_tool.py gate deck.pptx --out report.json` runs the required PPTX delivery gate and returns nonzero when blocking layout, order, page-number, package, placeholder, table, timeline, or picture-layering issues remain.
+- `python3 {baseDir}/scripts/pptx_tool.py compare before.json after.json --out diff.json` compares inspect reports after editing an existing PPTX and returns nonzero when the edit introduces new layout or picture-layering regressions.
 - `node {baseDir}/scripts/html_tool.mjs inspect deck.html --out report.json` inspects static HTML decks for slides, registered layouts, broken local asset references, placeholder text, presenter-text leaks, text-only slides, and basic structure.
 
 The scripts are portable baseline tools. Do not assume product-specific tools exist.
@@ -161,6 +167,8 @@ used, but the final artifact still needs the same verification report.
   The edit fails if it introduces new text-picture overlaps, section-picture
   collisions, blank shapes over pictures, full-slide pictures over text, or
   picture overflows.
+- Any PPTX delivered by the agent must pass `pptx_tool.py gate`, or the final
+  response must state the unresolved gate blockers plainly.
 - Grids, process rows, value chains, and cards must obey recipe limits; wrap,
   paginate, or change recipe instead of overflowing the slide.
 - Tables and timelines must obey recipe limits: split wide or long tables,

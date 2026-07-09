@@ -12,6 +12,12 @@ Use:
 python3 scripts/pptx_tool.py inspect input.pptx --out report.json
 ```
 
+Before delivery, use:
+
+```bash
+python3 scripts/pptx_tool.py gate output.pptx --out pptx-gate-report.json
+```
+
 Read the report for:
 
 - slide count and slide order
@@ -59,9 +65,12 @@ as object append:
    contrast treatment and text above it, or create a separate content slide.
 5. Never place a foreground image above existing section title/subtitle text.
 6. Run `pptx_tool.py inspect` again and compare warning counts.
-7. Repair the deck when the edit introduces new `text_picture_overlaps`,
+7. Run `pptx_tool.py compare before-report.json after-report.json --out edit-diff.json`.
+8. Run `pptx_tool.py gate edited.pptx --out pptx-gate-report.json`.
+9. Repair the deck when the edit introduces new `text_picture_overlaps`,
    `section_picture_collisions`, `blank_shape_over_pictures`,
-   `full_slide_picture_over_text`, or `picture_overflows`.
+   `full_slide_picture_over_text`, or `picture_overflows`, or when the delivery
+   gate fails.
 
 ## New PPTX Build Contract
 
@@ -76,7 +85,7 @@ source material
 -> assets
 -> one PPTX builder
 -> final global pass
--> verification
+-> delivery gate and verification
 -> output.pptx
 ```
 

@@ -25,6 +25,46 @@ DEFAULT_SLIDE_SIZE = {"cx": 12192000, "cy": 6858000, "source": "default-16:9"}
 EMU_PER_INCH = 914400
 OVERFLOW_TOLERANCE_IN = 0.03
 TINY_TEXT_PT = 8.0
+GATE_BLOCKING_KEYS = (
+    "placeholder_hits",
+    "missing_relationship_targets",
+    "page_number_candidate_mismatches",
+    "shape_overflows",
+    "picture_overflows",
+    "table_overflows",
+    "crowded_tables",
+    "tiny_text",
+    "timeline_many_nodes",
+    "sparse_stub_slides",
+    "closing_slide_not_last",
+    "text_picture_overlaps",
+    "section_picture_collisions",
+    "blank_shape_over_pictures",
+    "full_slide_picture_over_text",
+)
+GATE_REVIEW_KEYS = (
+    "image_only_slide_candidates",
+)
+GATE_BLOCKING_WARNING_NAMES = (
+    "no_slides_found",
+)
+EDIT_REGRESSION_KEYS = (
+    "placeholder_hits",
+    "missing_relationship_targets",
+    "page_number_candidate_mismatches",
+    "shape_overflows",
+    "picture_overflows",
+    "table_overflows",
+    "crowded_tables",
+    "tiny_text",
+    "timeline_many_nodes",
+    "sparse_stub_slides",
+    "closing_slide_not_last",
+    "text_picture_overlaps",
+    "section_picture_collisions",
+    "blank_shape_over_pictures",
+    "full_slide_picture_over_text",
+)
 
 
 def read_xml(zf: zipfile.ZipFile, name: str) -> Optional[ET.Element]:
@@ -947,21 +987,135 @@ def inspect_pptx(path: Path) -> dict:
         return result
 
 
+def count_report_items(report: dict[str, Any], key: str) -> int:
+    value = report.get(key)
+    if isinstance(value, list):
+        return len(value)
+    if isinstance(value, dict):
+        return len(value)
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    return 0
+
+
+def delivery_gate_report(report: dict[str, Any], include_review: bool = False) -> dict[str, Any]:
+    blocking_counts = {
+        key: count_report_items(report, key)
+        for key in GATE_BLOCKING_KEYS
+        if count_report_items(report, key) > 0
+    }
+    warning_names = set(str(item) for item in report.get("warnings", []) if isinstance(item, str))
+    blocking_warning_names = sorted(warning_names.intersection(GATE_BLOCKING_WARNING_NAMES))
+    review_counts = {
+        key: count_report_items(report, key)
+        for key in GATE_REVIEW_KEYS
+        if count_report_items(report, key) > 0
+    }
+    errors = list(report.get("errors", [])) if isinstance(report.get("errors"), list) else []
+
+    passed = not errors and not blocking_counts and not blocking_warning_names
+    if include_review and review_counts:
+        passed = False
+
+    return {
+        "checked": True,
+        "passed": passed,
+        "blocking_counts": blocking_counts,
+        "blocking_warnings": sorted(list(blocking_counts.keys()) + blocking_warning_names),
+        "review_counts": review_counts,
+        "review_warnings": sorted(review_counts.keys()),
+        "error_count": len(errors),
+        "errors": errors,
+        "message": "passed" if passed else "failed: repair blocking warnings before delivery",
+    }
+
+
+def load_report(path: Path) -> dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def compare_reports(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
+    before_counts = {key: count_report_items(before, key) for key in EDIT_REGRESSION_KEYS}
+    after_counts = {key: count_report_items(after, key) for key in EDIT_REGRESSION_KEYS}
+    regressions = {
+        key: {
+            "before": before_counts[key],
+            "after": after_counts[key],
+            "delta": after_counts[key] - before_counts[key],
+        }
+        for key in EDIT_REGRESSION_KEYS
+        if after_counts[key] > before_counts[key]
+    }
+    after_errors = list(after.get("errors", [])) if isinstance(after.get("errors"), list) else []
+    after_missing_relationships = count_report_items(after, "missing_relationship_targets")
+    passed = not regressions and not after_errors and after_missing_relationships == 0
+    return {
+        "checked": True,
+        "passed": passed,
+        "before_file": before.get("file", ""),
+        "after_file": after.get("file", ""),
+        "regression_counts": regressions,
+        "after_error_count": len(after_errors),
+        "after_missing_relationship_targets": after_missing_relationships,
+        "message": "passed" if passed else "failed: edit introduced or retained blocking regressions",
+    }
+
+
+def write_json(data: dict[str, Any], output_path: str) -> None:
+    text = json.dumps(data, indent=2, ensure_ascii=False)
+    if output_path == "-":
+        print(text)
+    else:
+        Path(output_path).write_text(text + "\n", encoding="utf-8")
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Inspect a PPTX package.")
+    parser = argparse.ArgumentParser(description="Inspect and gate a PPTX package.")
     sub = parser.add_subparsers(dest="command", required=True)
     inspect_cmd = sub.add_parser("inspect", help="Inspect PPTX package structure.")
     inspect_cmd.add_argument("pptx")
     inspect_cmd.add_argument("--out", default="-")
+    gate_cmd = sub.add_parser("gate", help="Run the PPTX delivery gate.")
+    gate_cmd.add_argument("pptx")
+    gate_cmd.add_argument("--out", default="-")
+    gate_cmd.add_argument(
+        "--include-review",
+        action="store_true",
+        help="Treat review-level warnings as gate failures.",
+    )
+    compare_cmd = sub.add_parser("compare", help="Compare before/after inspect reports for edit regressions.")
+    compare_cmd.add_argument("before_report")
+    compare_cmd.add_argument("after_report")
+    compare_cmd.add_argument("--out", default="-")
     args = parser.parse_args()
 
-    report = inspect_pptx(Path(args.pptx))
-    data = json.dumps(report, indent=2, ensure_ascii=False)
-    if args.out == "-":
-        print(data)
-    else:
-        Path(args.out).write_text(data + "\n", encoding="utf-8")
-    return 0 if report["ok"] else 1
+    if args.command == "inspect":
+        report = inspect_pptx(Path(args.pptx))
+        write_json(report, args.out)
+        return 0 if report["ok"] else 1
+
+    if args.command == "gate":
+        report = inspect_pptx(Path(args.pptx))
+        report["delivery_gate"] = delivery_gate_report(report, include_review=args.include_review)
+        write_json(report, args.out)
+        if not report["ok"]:
+            return 1
+        return 0 if report["delivery_gate"]["passed"] else 2
+
+    if args.command == "compare":
+        try:
+            before = load_report(Path(args.before_report))
+            after = load_report(Path(args.after_report))
+        except Exception as exc:
+            write_json({"checked": False, "passed": False, "error": str(exc)}, args.out)
+            return 1
+        result = compare_reports(before, after)
+        write_json(result, args.out)
+        return 0 if result["passed"] else 2
+
+    return 1
 
 
 if __name__ == "__main__":
