@@ -29,6 +29,20 @@
       },
       "additionalProperties": false
     },
+    "editProvenance": {
+      "type": "object",
+      "properties": {
+        "editMode": {
+          "type": "string",
+          "enum": ["none", "source-first-edit", "preserve-edit", "regenerate", "template-edit", "repair"]
+        },
+        "sourceSpecUpdated": { "type": "boolean" },
+        "cleanRegeneration": { "type": "boolean" },
+        "preserveEditScoped": { "type": "boolean" },
+        "evidence": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "orderCheck": {
       "type": "object",
       "properties": {
@@ -45,6 +59,20 @@
       "properties": {
         "checked": { "type": "boolean" },
         "mismatches": { "type": "integer" },
+        "evidence": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "packageDiffCheck": {
+      "type": "object",
+      "properties": {
+        "checked": { "type": "boolean" },
+        "passed": { "type": "boolean" },
+        "allowlist": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "unexpectedChanges": { "type": "integer" },
         "evidence": { "type": "string" }
       },
       "additionalProperties": false
@@ -84,6 +112,11 @@
         "sectionPictureCollisions": { "type": "integer" },
         "blankShapeOverPictures": { "type": "integer" },
         "fullSlidePictureOverText": { "type": "integer" },
+        "imageAspectDistortions": { "type": "integer" },
+        "severeImageResolutionWarnings": { "type": "integer" },
+        "imageResolutionWarnings": { "type": "integer" },
+        "imageCropWarnings": { "type": "integer" },
+        "missingImageDimensions": { "type": "integer" },
         "recipeViolations": { "type": "integer" },
         "evidence": { "type": "string" }
       },
@@ -96,6 +129,10 @@
         "missingAssets": { "type": "integer" },
         "genericOrIrrelevantAssets": { "type": "integer" },
         "layeringWarnings": { "type": "integer" },
+        "aspectWarnings": { "type": "integer" },
+        "resolutionWarnings": { "type": "integer" },
+        "cropWarnings": { "type": "integer" },
+        "dimensionWarnings": { "type": "integer" },
         "evidence": { "type": "string" }
       },
       "additionalProperties": false

@@ -10,9 +10,17 @@ description: Create, edit, analyze, or improve slide decks, presentations, PPT/P
 Build presentation artifacts as communication products, not as file-format chores.
 Treat PPTX, HTML, PDF, and images as output formats selected by the user's goal.
 Choose for the audience, revision workflow, and delivery setting before choosing
-tools. Default to source-first artifacts that another agent can inspect, modify,
-verify, and regenerate; optimize for human manual editing in PowerPoint only
-when the user explicitly needs that.
+tools. For a user-supplied PPTX that needs editing, default to preservation:
+keep the original package, masters, layouts, theme, fonts, media, animations,
+and all untouched slides unchanged. Use source-first regeneration for new decks
+or explicit redesign/restructure work, not as the default route for partial
+edits to an existing deck.
+
+Default to a Python-first PPTX toolchain. Use `python-pptx` for new decks,
+controlled regeneration, and native template generation. Do not use
+`python-pptx` as the default mechanism for partial edits to a user-owned PPTX,
+because saving a complex third-party deck can rewrite unrelated package parts.
+Use scoped OOXML/OPC edits plus `package-diff` for preservation work.
 
 ## Runtime Dependencies
 
@@ -56,8 +64,10 @@ reporting the exact missing dependency and install command.
    structure before editing. For PPTX files, use
    `python3 {baseDir}/scripts/pptx_tool.py inspect path/to/deck.pptx --out report.json`
    before editing. Use `references/pptx-operations.md` to decide whether the
-   deck is a source, a 1:1 beautify target, a native template-fill target, or a
-   finished deck that should only receive notes/audio/timing.
+   deck needs preserve-edit, source-first edit, native template-fill, explicit
+   repair, or source-material regeneration. For partial edits to a user-owned
+   or source-unknown PPTX, assume preserve-edit unless the user explicitly asks
+   for redesign, restructuring, or full regeneration.
 6. Choose one visual system before building: design direction, theme, motif,
    typography posture, layout recipe set, and layout compiler contract. Use
    `references/visual-deck-system.md`, `references/layout-recipes.md`, and
@@ -80,7 +90,20 @@ reporting the exact missing dependency and install command.
    - Use a self-contained HTML deck when the user wants a polished, inspectable, browser-presentable artifact and did not require PPTX.
    - Use PDF or cover images only when the user asks for a handout, preview, share card, or static export.
 10. Build the artifact with the route's intended tools:
-   - For PPTX creation or editing, first prefer a real PPTX generation/editing library or existing office automation available in the task environment. If the required package or command is missing, verify that absence and try to install or enable it in the local task environment when permissions allow.
+   - For new PPTX creation, prefer the Python-first route:
+     `deck plan -> slide specs -> deterministic layout compiler -> python-pptx
+     writer -> gate`. If `python-pptx` is missing, install the minimum local
+     dependency when appropriate or report the exact blocker.
+   - For edits to an agent-generated deck with its source spec available, edit
+     the source spec and regenerate from a clean output path instead of patching
+     the compiled PPTX.
+   - For an existing PPTX partial edit, preserve by patching only the targeted
+     slide parts, relationship parts, media parts, notes parts, or metadata
+     required by the requested edit. Do not rebuild unrelated slides, masters,
+     layouts, themes, fonts, media, charts, animations, or notes.
+   - For a user-requested full restructure, treat the original deck as source
+     material, rebuild the deck plan, and generate a new PPTX. Do not promise
+     package-level preservation for a redesign.
    - Keep source of truth explicit: source HTML/PPTX project, deck plan, asset
      manifest, and verification report should be easier for an agent to modify
      than a binary-only final export.
@@ -128,9 +151,11 @@ Load only the reference needed for the current route:
 
 ## Scripts
 
-- `python3 {baseDir}/scripts/pptx_tool.py inspect deck.pptx --out report.json` inspects PPTX package structure, slide order, relationships, media, notes, image-only slide candidates, placeholders, page-number candidates, shape/picture/table bounds, dense tables, tiny text, single-row timeline crowding, sparse stub slides, closing-slide placement, section-picture collisions, and picture layering risks.
-- `python3 {baseDir}/scripts/pptx_tool.py gate deck.pptx --out report.json` runs the required PPTX delivery gate and returns nonzero when blocking layout, order, page-number, package, placeholder, table, timeline, or picture-layering issues remain.
+- `python3 {baseDir}/scripts/pptx_tool.py image-info assets/photo.jpg --out image-report.json` inspects image pixel size, aspect ratio, aspect class, and recommended slots before PPTX insertion.
+- `python3 {baseDir}/scripts/pptx_tool.py inspect deck.pptx --out report.json` inspects PPTX package structure, slide order, relationships, media, notes, image-only slide candidates, placeholders, page-number candidates, shape/picture/table bounds, dense tables, tiny text, single-row timeline crowding, sparse stub slides, closing-slide placement, section-picture collisions, picture layering risks, image aspect distortion, image crop risk, and effective image resolution.
+- `python3 {baseDir}/scripts/pptx_tool.py gate deck.pptx --out report.json` runs the required PPTX delivery gate and returns nonzero when blocking layout, order, page-number, package, placeholder, table, timeline, picture-layering, image-aspect, or severe image-resolution issues remain.
 - `python3 {baseDir}/scripts/pptx_tool.py compare before.json after.json --out diff.json` compares inspect reports after editing an existing PPTX and returns nonzero when the edit introduces new layout or picture-layering regressions.
+- `python3 {baseDir}/scripts/pptx_tool.py package-diff before.pptx after.pptx --allow 'ppt/slides/slide5.xml' --out package-diff.json` compares PPTX package part hashes and fails when changes occur outside explicitly allowed part globs. Use it for preserve-edit work.
 - `node {baseDir}/scripts/html_tool.mjs inspect deck.html --out report.json` inspects static HTML decks for slides, registered layouts, broken local asset references, placeholder text, presenter-text leaks, text-only slides, and basic structure.
 
 The scripts are portable baseline tools. Do not assume product-specific tools exist.
@@ -148,6 +173,9 @@ used, but the final artifact still needs the same verification report.
   groups, and controls layer order.
 - Preserve source truth: do not invent data, citations, product specs, logos, or
   user quotes to make a slide feel complete.
+- Preserve existing PPTX truth: when the user asks to edit an uploaded PPTX,
+  leave everything outside the requested edit unchanged unless the user approves
+  a redesign or structural rebuild.
 - Keep the deck density intentional. Live talks need fewer words and stronger
   pacing; reading decks can carry more detail but must remain scanable.
 - Use real assets when a real entity is named. A generic silhouette, fake UI,
@@ -163,10 +191,21 @@ used, but the final artifact still needs the same verification report.
   slides; merge, paginate, or use a statement/section recipe intentionally.
 - Images must not be appended after slide rendering without relayout. Give each
   image a role, slot, fit, and layer before rendering.
+- Image placement must be aspect-aware. Read or infer each image's intrinsic
+  width, height, aspect ratio, aspect class, crop permission, focal point, and
+  minimum readable size before choosing a recipe slot.
+- Do not use `stretch` for photographs, screenshots, maps, charts, logos, or
+  product images unless the distortion is explicitly accepted. Use `contain`
+  for detail-bearing assets and `cover` only for photography or intentional
+  editorial background crops.
+- If an image does not fit the current recipe slot, change the recipe, paginate,
+  choose another asset, or reject the insertion instead of scaling or cropping
+  blindly.
 - When adding images to an existing PPTX, inspect before and after the edit.
   The edit fails if it introduces new text-picture overlaps, section-picture
   collisions, blank shapes over pictures, full-slide pictures over text, or
-  picture overflows.
+  picture overflows, image aspect distortion, or severe image resolution
+  warnings.
 - Any PPTX delivered by the agent must pass `pptx_tool.py gate`, or the final
   response must state the unresolved gate blockers plainly.
 - Grids, process rows, value chains, and cards must obey recipe limits; wrap,

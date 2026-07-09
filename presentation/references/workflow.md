@@ -8,14 +8,20 @@
 3. Extract the core thesis, supporting proof, constraints, data, examples, citations, and must-include assets.
 4. Build an asset inventory when real brands, products, screenshots, charts, people, or places appear.
 5. Choose the artifact route: source-first HTML/project, PPTX export,
-   template-fill PPTX, human-editable PPTX, PDF handout, speaker outline,
-   presenter deck, or cover image.
+   template-fill PPTX, preserve-edit PPTX, regenerated PPTX, human-editable
+   PPTX, PDF handout, speaker outline, presenter deck, or cover image.
 6. Choose the visual system: design direction, theme tokens, motif, and layout recipe set.
 7. Create a deck plan before building slides, including recipe, density, layout
    intent, and asset role/fit/slot/layer for each slide.
-8. For PPTX output, choose the build mode: single-pass generation for new
-   decks, template edit for existing decks, or explicit repair for
-   already-broken files.
+   For important images, include intrinsic width, height, aspect ratio, aspect
+   class, crop permission, focal point, and minimum effective PPI.
+8. For PPTX output, choose the build mode:
+   - `single-pass` for new decks compiled from a complete plan
+   - `source-first-edit` for edits to an agent-generated deck with source specs
+   - `preserve-edit` for partial edits to a user-owned or source-unknown deck
+   - `regenerate` for user-requested restructure or redesign of an existing deck
+   - `template-edit` for native template shells
+   - `repair` for already-broken files
 9. Compile layout from the plan before writing PPTX objects. Use
    `references/layout-compiler.md` for geometry, layering, wrapping, and
    overflow rules.
@@ -34,8 +40,8 @@ Capture:
 - `audience`: intended audience
 - `goal`: communication outcome
 - `outputRoute`: PPTX, HTML deck, PDF handout, speaker outline, or cover image
-- `buildMode`: single-pass, template-edit, html-deck, pdf-handout,
-  speaker-outline, cover-image, or repair
+- `buildMode`: single-pass, source-first-edit, preserve-edit, regenerate,
+  template-edit, html-deck, pdf-handout, speaker-outline, cover-image, or repair
 - `deliveryMode`: live-talk, reading-share, agent-maintained-source, handout, or another explicit mode
 - `revisionSurface`: source-first, native-pptx, visual-only, or mixed
 - `visualTemperament`: editorial narrative, grid analytical, or another deliberate direction
@@ -76,6 +82,8 @@ Capture:
 - The model chooses slide intent, recipe, density, asset role, and proof.
 - Deterministic code chooses rectangles, wrapping, z-order, pagination, and
   safe-area conformance.
+- Deterministic code reads or receives image dimensions and keeps picture boxes
+  aspect-aware; it must not stretch assets to force a fit.
 - Sparse slides must not default to upper-left body text. Convert them to a
   statement, metric, quote, section, split, or hero-media composition.
 - Images are layout objects. Adding an image after a slide is already built
@@ -87,6 +95,9 @@ Capture:
 
 - Treat a new PPTX as a compiled artifact, not as the shared working state.
 - Keep the complete deck plan or slide spec as the source of truth.
+- Use a Python-first default toolchain for PPTX creation: deterministic layout
+  code writes native PowerPoint objects with `python-pptx`, then
+  `pptx_tool.py` gates the output.
 - Allow section modules to produce slide specs, data, images, screenshots, or
   charts, but do not let them append directly to the same PPTX.
 - Use one final writer to render slides in final order.
@@ -114,9 +125,14 @@ structural change.
 ## Existing Deck Image Insertion
 
 - Run `pptx_tool.py inspect` before editing and keep the report for comparison.
+- Run `pptx_tool.py image-info` on local image files before insertion when
+  available.
 - Inspect the target slide family before inserting media: cover, section,
   image-led, split, map-callout, chart, table, process, or closing.
 - Assign every inserted image a role, fit, slot, and layer before writing it.
+- Use contain-fit for detail-bearing images. Use cover-fit only for photography
+  or planned backgrounds where crop is acceptable. Do not use stretch for real
+  images unless distortion is explicitly accepted.
 - If the target slide is a section divider, use the image only as a bottom
   background layer with text above a contrast overlay, or create a separate
   map-callout/image-led slide. Do not place a foreground image above section
@@ -132,30 +148,49 @@ structural change.
 
 ## Revision Pattern
 
-- Treat final PPTX/PDF/images as derived deliverables unless the user explicitly
-  wants the binary file to be the source of truth.
+- Treat final PPTX/PDF/images as derived deliverables unless the user supplies
+  an existing PPTX for partial editing. In that case, treat the uploaded PPTX
+  package as the source of truth and preserve untouched parts.
+- Distinguish the two editing surfaces:
+  - agent-generated deck with source specs: edit the spec and regenerate
+  - user-owned or source-unknown deck: preserve-edit only the requested scope
 - Keep source files easy for a later agent to modify: stable `data-slide`
   numbers or slide identifiers, `data-layout` recipes, tokenized colors,
   local asset paths, and clear notes.
 - Keep the deck plan and asset manifest near the produced artifact for future
   revision context.
-- When revising, edit the source artifact first, regenerate derived exports, then
-  rerun verification.
+- When revising source-first artifacts, edit the source artifact first,
+  regenerate derived exports, then rerun verification.
+- When revising an existing PPTX with preserve-edit, patch only the target parts,
+  run before/after inspect, run compare, run package-diff with an edit-scope
+  allowlist, then run gate.
+- Do not use `python-pptx` to open and save a complex user-owned PPTX for a
+  partial edit. Experiments showed this can rewrite many unrelated package
+  parts. Use scoped OOXML/OPC edits for preservation work.
 
 ## Existing Deck Pattern
 
 - Inspect slide order, titles, visible text, media, and visual patterns.
 - Determine route before editing:
-  - preserve slide count/order/wording: 1:1 beautify
-  - allow restructuring: treat deck as source material
+  - partial edit to uploaded PPTX: preserve-edit by default
+  - edit to an agent-generated PPTX with available source specs:
+    source-first-edit and regenerate
+  - preserve slide count/order/wording but improve visuals: 1:1 beautify with
+    user-approved scope
+  - allow restructuring or redesign: treat deck as source material and
+    regenerate a new PPTX
   - use as a native template shell: template-fill PPTX
   - add notes/timings only: native enhancement
 - Identify template layouts before editing.
 - Map new content to existing layout families.
 - Preserve the deck's visual language unless the user asks for redesign.
+- Preserve untouched package parts; do not rebuild unrelated slides, masters,
+  layouts, themes, fonts, media, charts, animations, notes, or comments.
 - Remove unused groups and placeholders.
 - After moving, duplicating, or deleting slides, rerender or update all static
   page numbers and global counters.
+- For preserve-edit, prove the unchanged scope with `pptx_tool.py package-diff`
+  and explicit `--allow` globs for only the parts that should change.
 - Do not flatten a deck into slide images when future agent revisions are
   expected unless the source project remains available and documented.
 
@@ -166,5 +201,7 @@ When finished, report:
 - artifact path
 - output route
 - source materials used
+- edit mode and preservation or regeneration evidence when editing PPTX
 - verification performed
+- package-diff result when using preserve-edit
 - known limitations

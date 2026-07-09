@@ -17,6 +17,9 @@ Approach verification as a bug hunt. First renders often have concrete issues.
 - repeated layouts are intentional
 - contrast is projector-readable
 - images are cropped intentionally
+- image display boxes preserve the intended aspect ratio unless a planned crop
+  is documented
+- image effective resolution remains high enough for the intended slot
 - images do not cover text, tables, cards, charts, or other primary content
 - named brands/products have real logos or explicitly accepted placeholders
 - screenshots and charts remain readable at final slide size
@@ -33,12 +36,23 @@ Approach verification as a bug hunt. First renders often have concrete issues.
 - run `scripts/pptx_tool.py gate deck.pptx --out report.json` before delivery;
   a failed gate means the PPTX is not ready to deliver unless the user accepts
   the blocker explicitly
+- for new or regenerated PPTX, verify the deck was built from a complete plan
+  or source spec with one final writer, not by chained append scripts
+- for edits to agent-generated decks with source specs, verify the source spec
+  was updated and the PPTX was regenerated from a clean output path
+- for preserve-edit work on an uploaded PPTX, run `scripts/pptx_tool.py
+  package-diff before.pptx after.pptx --allow ... --out package-diff.json` and
+  fail the edit if package parts outside the requested edit scope changed
+- for preserve-edit work, do not treat a high-level library save as sufficient
+  evidence. The package diff must prove the scope.
 - verify the closing slide is last unless the deck plan explicitly says otherwise
 - verify static page numbers, total counts, and section counters after any structural edit
 - verify one final writer or an explicit repair workflow was used for new multi-section decks
 - check for out-of-bounds shapes, pictures, and native PPTX tables
 - check for text/picture overlap, blank shapes covering pictures, and
   full-slide pictures placed above text
+- check for picture aspect distortion, severe low effective PPI, large crop
+  risk, and missing package image dimensions
 - check for section-picture collisions when media is added to existing decks
 - check that picture counts include native PPTX `p:pic` elements, not only
   DrawingML picture namespace elements
@@ -69,8 +83,8 @@ python3 scripts/pptx_tool.py gate output.pptx --out pptx-gate-report.json
 The gate fails on package errors, placeholder text, page-number drift, object
 overflow, table overflow, crowded tables, tiny text, over-compressed timelines,
 sparse stub slides, early closing slides, text-picture overlaps,
-section-picture collisions, blank shapes above pictures, and full-slide pictures
-above text.
+section-picture collisions, blank shapes above pictures, full-slide pictures
+above text, picture aspect distortion, and severe image resolution problems.
 
 For existing-deck edits, keep a before report and compare after the edit:
 
@@ -78,11 +92,13 @@ For existing-deck edits, keep a before report and compare after the edit:
 python3 scripts/pptx_tool.py inspect before.pptx --out before-report.json
 python3 scripts/pptx_tool.py inspect after.pptx --out after-report.json
 python3 scripts/pptx_tool.py compare before-report.json after-report.json --out edit-diff.json
+python3 scripts/pptx_tool.py package-diff before.pptx after.pptx --allow 'ppt/slides/slide5.xml' --out package-diff.json
 python3 scripts/pptx_tool.py gate after.pptx --out pptx-gate-report.json
 ```
 
-If the gate or compare command returns nonzero, repair and rerun the command.
-Do not treat a successful file open in PowerPoint as a substitute for the gate.
+If the gate, compare, or package-diff command returns nonzero, repair and rerun
+the command. Do not treat a successful file open in PowerPoint as a substitute
+for the gate or the preservation diff.
 
 ## HTML Checks
 
@@ -105,6 +121,9 @@ Include:
 - `outputRoute`: artifact route such as HTML deck or PPTX
 - `filesProduced`: produced deliverables
 - `sourceMaterials`: source inputs used
+- `editProvenance`: edit mode and evidence for source-first regeneration or
+  scoped preservation
+- `packageDiffCheck`: package-diff status and allowlist for preserve-edit work
 - `checks`: check objects with name, status, tool, and evidence or result
 - `issues`: issues found, including fixed issues
 - `limitations`: checks not possible in the current environment

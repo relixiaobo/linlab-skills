@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import fnmatch
+import hashlib
 import json
 import posixpath
 import re
@@ -25,6 +27,10 @@ DEFAULT_SLIDE_SIZE = {"cx": 12192000, "cy": 6858000, "source": "default-16:9"}
 EMU_PER_INCH = 914400
 OVERFLOW_TOLERANCE_IN = 0.03
 TINY_TEXT_PT = 8.0
+MIN_REVIEW_IMAGE_PPI = 120
+MIN_SEVERE_IMAGE_PPI = 80
+ASPECT_DISTORTION_TOLERANCE = 0.12
+SEVERE_CROP_FRACTION = 0.55
 GATE_BLOCKING_KEYS = (
     "placeholder_hits",
     "missing_relationship_targets",
@@ -41,9 +47,14 @@ GATE_BLOCKING_KEYS = (
     "section_picture_collisions",
     "blank_shape_over_pictures",
     "full_slide_picture_over_text",
+    "image_aspect_distortions",
+    "severe_image_resolution_warnings",
 )
 GATE_REVIEW_KEYS = (
     "image_only_slide_candidates",
+    "image_resolution_warnings",
+    "image_crop_warnings",
+    "missing_image_dimensions",
 )
 GATE_BLOCKING_WARNING_NAMES = (
     "no_slides_found",
@@ -64,6 +75,11 @@ EDIT_REGRESSION_KEYS = (
     "section_picture_collisions",
     "blank_shape_over_pictures",
     "full_slide_picture_over_text",
+    "image_aspect_distortions",
+    "severe_image_resolution_warnings",
+    "image_resolution_warnings",
+    "image_crop_warnings",
+    "missing_image_dimensions",
 )
 
 
@@ -154,6 +170,182 @@ def slide_dimensions_inches(slide_size: dict[str, int | str]) -> dict[str, float
     }
 
 
+def aspect_class(width: int | None, height: int | None) -> str:
+    if not width or not height or height <= 0:
+        return "unknown"
+    ratio = width / height
+    if ratio >= 2.2:
+        return "panoramic"
+    if ratio >= 1.55:
+        return "wide"
+    if ratio >= 1.18:
+        return "landscape"
+    if ratio >= 0.85:
+        return "square"
+    if ratio >= 0.58:
+        return "portrait"
+    return "tall"
+
+
+def read_png_size(data: bytes) -> tuple[int, int] | None:
+    if len(data) < 24 or not data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return None
+    return int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big")
+
+
+def read_gif_size(data: bytes) -> tuple[int, int] | None:
+    if len(data) < 10 or data[:6] not in (b"GIF87a", b"GIF89a"):
+        return None
+    return int.from_bytes(data[6:8], "little"), int.from_bytes(data[8:10], "little")
+
+
+def read_bmp_size(data: bytes) -> tuple[int, int] | None:
+    if len(data) < 26 or not data.startswith(b"BM"):
+        return None
+    width = int.from_bytes(data[18:22], "little", signed=True)
+    height = abs(int.from_bytes(data[22:26], "little", signed=True))
+    if width <= 0 or height <= 0:
+        return None
+    return width, height
+
+
+def read_jpeg_size(data: bytes) -> tuple[int, int] | None:
+    if len(data) < 4 or not data.startswith(b"\xff\xd8"):
+        return None
+    idx = 2
+    sof_markers = set(range(0xC0, 0xD0)) - {0xC4, 0xC8, 0xCC}
+    while idx + 3 < len(data):
+        if data[idx] != 0xFF:
+            idx += 1
+            continue
+        while idx < len(data) and data[idx] == 0xFF:
+            idx += 1
+        if idx >= len(data):
+            return None
+        marker = data[idx]
+        idx += 1
+        if marker in (0xD8, 0xD9):
+            continue
+        if marker == 0xDA:
+            return None
+        if idx + 2 > len(data):
+            return None
+        length = int.from_bytes(data[idx : idx + 2], "big")
+        if length < 2 or idx + length > len(data):
+            return None
+        if marker in sof_markers and length >= 7:
+            height = int.from_bytes(data[idx + 3 : idx + 5], "big")
+            width = int.from_bytes(data[idx + 5 : idx + 7], "big")
+            return width, height
+        idx += length
+    return None
+
+
+def read_webp_size(data: bytes) -> tuple[int, int] | None:
+    if len(data) < 30 or data[:4] != b"RIFF" or data[8:12] != b"WEBP":
+        return None
+    chunk = data[12:16]
+    if chunk == b"VP8X":
+        width = 1 + int.from_bytes(data[24:27], "little")
+        height = 1 + int.from_bytes(data[27:30], "little")
+        return width, height
+    if chunk == b"VP8L" and len(data) >= 25 and data[20] == 0x2F:
+        b0, b1, b2, b3 = data[21], data[22], data[23], data[24]
+        width = 1 + (((b1 & 0x3F) << 8) | b0)
+        height = 1 + (((b3 & 0x0F) << 10) | (b2 << 2) | ((b1 & 0xC0) >> 6))
+        return width, height
+    if chunk == b"VP8 " and len(data) >= 30 and data[23:26] == b"\x9d\x01\x2a":
+        width = int.from_bytes(data[26:28], "little") & 0x3FFF
+        height = int.from_bytes(data[28:30], "little") & 0x3FFF
+        return width, height
+    return None
+
+
+def read_svg_size(data: bytes) -> tuple[int, int] | None:
+    try:
+        root = ET.fromstring(data)
+    except Exception:
+        return None
+    view_box = root.attrib.get("viewBox") or root.attrib.get("viewbox")
+    if view_box:
+        parts = re.split(r"[\s,]+", view_box.strip())
+        if len(parts) == 4:
+            try:
+                width = int(round(float(parts[2])))
+                height = int(round(float(parts[3])))
+                if width > 0 and height > 0:
+                    return width, height
+            except ValueError:
+                pass
+    width_text = root.attrib.get("width", "")
+    height_text = root.attrib.get("height", "")
+    try:
+        width = int(round(float(re.sub(r"[^0-9.]+", "", width_text))))
+        height = int(round(float(re.sub(r"[^0-9.]+", "", height_text))))
+    except ValueError:
+        return None
+    if width <= 0 or height <= 0:
+        return None
+    return width, height
+
+
+def image_info_from_bytes(name: str, data: bytes) -> dict[str, Any]:
+    ext = Path(name).suffix.lower().lstrip(".")
+    readers = [
+        ("png", read_png_size),
+        ("jpeg", read_jpeg_size),
+        ("gif", read_gif_size),
+        ("bmp", read_bmp_size),
+        ("webp", read_webp_size),
+        ("svg", read_svg_size),
+    ]
+    size: tuple[int, int] | None = None
+    detected = ext or "unknown"
+    for fmt, reader in readers:
+        size = reader(data)
+        if size:
+            detected = "jpg" if fmt == "jpeg" else fmt
+            break
+    width, height = size if size else (None, None)
+    info: dict[str, Any] = {
+        "format": detected,
+        "bytes": len(data),
+        "width_px": width,
+        "height_px": height,
+        "aspect_class": aspect_class(width, height),
+    }
+    if width and height:
+        info["aspect_ratio"] = round(width / height, 4)
+    return info
+
+
+def crop_rect_from_picture(node: ET.Element) -> dict[str, int] | None:
+    src_rect = node.find(f".//{A_NS}srcRect")
+    if src_rect is None:
+        return None
+    crop = {
+        "l": int_attr(src_rect, "l") or 0,
+        "t": int_attr(src_rect, "t") or 0,
+        "r": int_attr(src_rect, "r") or 0,
+        "b": int_attr(src_rect, "b") or 0,
+    }
+    return crop if any(crop.values()) else None
+
+
+def crop_visible_fraction(crop: dict[str, int] | None) -> dict[str, float]:
+    if not crop:
+        return {"w": 1.0, "h": 1.0, "area": 1.0, "cropped": 0.0}
+    visible_w = max(0.01, 1.0 - (crop.get("l", 0) + crop.get("r", 0)) / 100000)
+    visible_h = max(0.01, 1.0 - (crop.get("t", 0) + crop.get("b", 0)) / 100000)
+    area = visible_w * visible_h
+    return {
+        "w": round(visible_w, 4),
+        "h": round(visible_h, 4),
+        "area": round(area, 4),
+        "cropped": round(1.0 - area, 4),
+    }
+
+
 def transform_from_node(node: ET.Element) -> ET.Element | None:
     xfrm = node.find(f"{P_NS}xfrm")
     if xfrm is not None:
@@ -222,6 +414,7 @@ def slide_object_reports(
     root: ET.Element | None,
     slide_rels: dict[str, dict[str, str]],
     slide_part: str,
+    media_info: dict[str, dict[str, Any]],
 ) -> list[dict[str, Any]]:
     if root is None:
         return []
@@ -260,6 +453,9 @@ def slide_object_reports(
             target = ""
             if rid and rid in slide_rels:
                 target = normalized_target(slide_part, slide_rels[rid].get("target", ""))
+            image_info = media_info.get(target, {})
+            crop = crop_rect_from_picture(child)
+            visible = crop_visible_fraction(crop)
             reports.append(
                 {
                     "kind": "picture",
@@ -267,6 +463,9 @@ def slide_object_reports(
                     "box": box,
                     "rid": rid,
                     "target": target,
+                    "image": image_info,
+                    "crop": crop,
+                    "visible_fraction": visible,
                 }
             )
             continue
@@ -543,6 +742,120 @@ def closing_slide_not_last_warning(report: dict[str, Any], total_slides: int) ->
     }
 
 
+def picture_display_metrics(picture: dict[str, Any]) -> dict[str, Any]:
+    box = picture.get("box")
+    image = picture.get("image")
+    if not isinstance(box, dict) or not isinstance(image, dict):
+        return {}
+    width = image.get("width_px")
+    height = image.get("height_px")
+    if not isinstance(width, int) or not isinstance(height, int) or width <= 0 or height <= 0:
+        return {}
+    visible = picture.get("visible_fraction")
+    if not isinstance(visible, dict):
+        visible = {"w": 1.0, "h": 1.0, "area": 1.0, "cropped": 0.0}
+    visible_w = float(visible.get("w", 1.0))
+    visible_h = float(visible.get("h", 1.0))
+    display_aspect = box["w"] / box["h"] if box["h"] else 0.0
+    image_aspect = width / height
+    effective_aspect = (width * visible_w) / (height * visible_h) if visible_h else image_aspect
+    ppi_x = (width * visible_w) / box["w"] if box["w"] else 0.0
+    ppi_y = (height * visible_h) / box["h"] if box["h"] else 0.0
+    return {
+        "display_aspect": round(display_aspect, 4),
+        "image_aspect": round(image_aspect, 4),
+        "effective_image_aspect": round(effective_aspect, 4),
+        "aspect_delta": round(abs(display_aspect - effective_aspect) / effective_aspect, 4)
+        if effective_aspect
+        else 0.0,
+        "effective_ppi_x": round(ppi_x, 1),
+        "effective_ppi_y": round(ppi_y, 1),
+        "effective_ppi_min": round(min(ppi_x, ppi_y), 1),
+    }
+
+
+def picture_asset_warnings_for_slide(
+    slide_index: int,
+    pictures: list[dict[str, Any]],
+) -> dict[str, list[dict[str, Any]]]:
+    warnings = {
+        "image_aspect_distortions": [],
+        "severe_image_resolution_warnings": [],
+        "image_resolution_warnings": [],
+        "image_crop_warnings": [],
+        "missing_image_dimensions": [],
+    }
+    for picture in pictures:
+        image = picture.get("image")
+        box = picture.get("box")
+        target = picture.get("target", "")
+        if not isinstance(image, dict) or not isinstance(box, dict):
+            continue
+        width = image.get("width_px")
+        height = image.get("height_px")
+        if target and (not isinstance(width, int) or not isinstance(height, int)):
+            warnings["missing_image_dimensions"].append(
+                {
+                    "slide": slide_index,
+                    "picture_order": picture["order"],
+                    "picture": target,
+                    "format": image.get("format", "unknown"),
+                    "reason": "image_dimensions_unavailable",
+                }
+            )
+            continue
+
+        metrics = picture_display_metrics(picture)
+        if not metrics:
+            continue
+        entry = {
+            "slide": slide_index,
+            "picture_order": picture["order"],
+            "picture": target,
+            "box": box,
+            "image": {
+                "width_px": width,
+                "height_px": height,
+                "aspect_class": image.get("aspect_class", "unknown"),
+            },
+            "metrics": metrics,
+        }
+
+        if metrics["aspect_delta"] > ASPECT_DISTORTION_TOLERANCE:
+            warnings["image_aspect_distortions"].append(
+                {
+                    **entry,
+                    "crop": picture.get("crop"),
+                    "reason": "display_box_distorts_image_aspect",
+                }
+            )
+
+        display_area = box_area(box)
+        if display_area >= 2.0:
+            if metrics["effective_ppi_min"] < MIN_SEVERE_IMAGE_PPI:
+                warnings["severe_image_resolution_warnings"].append(
+                    {**entry, "reason": "effective_image_resolution_below_severe_threshold"}
+                )
+            elif metrics["effective_ppi_min"] < MIN_REVIEW_IMAGE_PPI:
+                warnings["image_resolution_warnings"].append(
+                    {**entry, "reason": "effective_image_resolution_below_review_threshold"}
+                )
+
+        visible = picture.get("visible_fraction")
+        cropped = float(visible.get("cropped", 0.0)) if isinstance(visible, dict) else 0.0
+        if cropped > SEVERE_CROP_FRACTION:
+            warnings["image_crop_warnings"].append(
+                {
+                    **entry,
+                    "crop": picture.get("crop"),
+                    "visible_fraction": visible,
+                    "reason": "large_crop_fraction_requires_visual_review",
+                }
+            )
+
+    return warnings
+
+
 def layout_warnings_for_slide(
     slide_index: int,
     objects: list[dict[str, Any]],
@@ -557,6 +870,11 @@ def layout_warnings_for_slide(
         "text_picture_overlaps": [],
         "blank_shape_over_pictures": [],
         "full_slide_picture_over_text": [],
+        "image_aspect_distortions": [],
+        "severe_image_resolution_warnings": [],
+        "image_resolution_warnings": [],
+        "image_crop_warnings": [],
+        "missing_image_dimensions": [],
     }
 
     text_shapes = [obj for obj in objects if obj["kind"] in ("shape", "table") and obj.get("text_chars", 0) > 0]
@@ -667,6 +985,10 @@ def layout_warnings_for_slide(
                 }
             )
 
+    picture_warnings = picture_asset_warnings_for_slide(slide_index, pictures)
+    for key, items in picture_warnings.items():
+        warnings[key].extend(items)
+
     return warnings
 
 
@@ -763,7 +1085,13 @@ def inspect_pptx(path: Path) -> dict:
         "section_picture_collisions": [],
         "blank_shape_over_pictures": [],
         "full_slide_picture_over_text": [],
+        "image_aspect_distortions": [],
+        "severe_image_resolution_warnings": [],
+        "image_resolution_warnings": [],
+        "image_crop_warnings": [],
+        "missing_image_dimensions": [],
         "layout_warning_summary": {},
+        "media_dimensions": {},
     }
 
     if not path.exists():
@@ -776,7 +1104,8 @@ def inspect_pptx(path: Path) -> dict:
     try:
         with zipfile.ZipFile(path) as zf:
             names = set(zf.namelist())
-            result["media_count"] = len([name for name in names if name.startswith("ppt/media/")])
+            media_names = sorted(name for name in names if name.startswith("ppt/media/"))
+            result["media_count"] = len(media_names)
             result["chart_count"] = len([name for name in names if name.startswith("ppt/charts/")])
             result["notes_count"] = len([name for name in names if name.startswith("ppt/notesSlides/") and name.endswith(".xml")])
 
@@ -791,6 +1120,11 @@ def inspect_pptx(path: Path) -> dict:
             slide_size = slide_size_from_presentation(pres)
             result["slide_size"] = slide_size
             pres_rels = rels_for(zf, "ppt/_rels/presentation.xml.rels")
+            media_info = {
+                name: image_info_from_bytes(name, zf.read(name))
+                for name in media_names
+            }
+            result["media_dimensions"] = media_info
 
             slide_ids = []
             if pres is not None:
@@ -854,7 +1188,7 @@ def inspect_pptx(path: Path) -> dict:
                     if resolved not in names:
                         result["missing_relationship_targets"].append({"from": slide_part, "rid": rel_id, "target": rel_target})
 
-                slide_objects = slide_object_reports(slide_root, slide_rels, slide_part)
+                slide_objects = slide_object_reports(slide_root, slide_rels, slide_part, media_info)
                 pictures = [obj for obj in slide_objects if obj["kind"] == "picture"]
                 tables = [obj for obj in slide_objects if obj["kind"] == "table"]
                 font_sizes = [
@@ -871,6 +1205,10 @@ def inspect_pptx(path: Path) -> dict:
                         "order": obj["order"],
                         "target": obj.get("target", ""),
                         "box": obj.get("box"),
+                        "image": obj.get("image", {}),
+                        "crop": obj.get("crop"),
+                        "visible_fraction": obj.get("visible_fraction"),
+                        "metrics": picture_display_metrics(obj),
                     }
                     for obj in pictures
                 ]
@@ -947,6 +1285,11 @@ def inspect_pptx(path: Path) -> dict:
                 "section_picture_collisions": len(result["section_picture_collisions"]),
                 "blank_shape_over_pictures": len(result["blank_shape_over_pictures"]),
                 "full_slide_picture_over_text": len(result["full_slide_picture_over_text"]),
+                "image_aspect_distortions": len(result["image_aspect_distortions"]),
+                "severe_image_resolution_warnings": len(result["severe_image_resolution_warnings"]),
+                "image_resolution_warnings": len(result["image_resolution_warnings"]),
+                "image_crop_warnings": len(result["image_crop_warnings"]),
+                "missing_image_dimensions": len(result["missing_image_dimensions"]),
             }
             if result["placeholder_hits"]:
                 result["warnings"].append("placeholder_text_found")
@@ -980,6 +1323,16 @@ def inspect_pptx(path: Path) -> dict:
                 result["warnings"].append("blank_shape_over_pictures")
             if result["full_slide_picture_over_text"]:
                 result["warnings"].append("full_slide_picture_over_text")
+            if result["image_aspect_distortions"]:
+                result["warnings"].append("image_aspect_distortions")
+            if result["severe_image_resolution_warnings"]:
+                result["warnings"].append("severe_image_resolution_warnings")
+            if result["image_resolution_warnings"]:
+                result["warnings"].append("image_resolution_warnings")
+            if result["image_crop_warnings"]:
+                result["warnings"].append("image_crop_warnings")
+            if result["missing_image_dimensions"]:
+                result["warnings"].append("missing_image_dimensions")
             result["ok"] = len(result["errors"]) == 0 and len(result["missing_relationship_targets"]) == 0
             return result
     except zipfile.BadZipFile:
@@ -1036,6 +1389,66 @@ def load_report(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def pptx_part_hashes(path: Path) -> dict[str, dict[str, Any]]:
+    with zipfile.ZipFile(path) as zf:
+        hashes = {}
+        for info in zf.infolist():
+            if info.is_dir():
+                continue
+            data = zf.read(info.filename)
+            hashes[info.filename] = {
+                "size": len(data),
+                "sha256": hashlib.sha256(data).hexdigest(),
+            }
+        return hashes
+
+
+def part_allowed(part: str, patterns: list[str]) -> bool:
+    return any(fnmatch.fnmatchcase(part, pattern) for pattern in patterns)
+
+
+def package_diff(before_path: Path, after_path: Path, allow_patterns: list[str]) -> dict[str, Any]:
+    before_hashes = pptx_part_hashes(before_path)
+    after_hashes = pptx_part_hashes(after_path)
+    before_parts = set(before_hashes)
+    after_parts = set(after_hashes)
+
+    changes = []
+    for part in sorted(before_parts - after_parts):
+        changes.append({"part": part, "change": "removed"})
+    for part in sorted(after_parts - before_parts):
+        changes.append({"part": part, "change": "added", "after": after_hashes[part]})
+    for part in sorted(before_parts & after_parts):
+        if before_hashes[part]["sha256"] == after_hashes[part]["sha256"]:
+            continue
+        changes.append(
+            {
+                "part": part,
+                "change": "modified",
+                "before": before_hashes[part],
+                "after": after_hashes[part],
+            }
+        )
+
+    allowed = [change for change in changes if part_allowed(str(change["part"]), allow_patterns)]
+    unexpected = [change for change in changes if not part_allowed(str(change["part"]), allow_patterns)]
+    return {
+        "checked": True,
+        "passed": not unexpected,
+        "before_file": str(before_path),
+        "after_file": str(after_path),
+        "allow_patterns": allow_patterns,
+        "before_part_count": len(before_hashes),
+        "after_part_count": len(after_hashes),
+        "change_count": len(changes),
+        "allowed_change_count": len(allowed),
+        "unexpected_change_count": len(unexpected),
+        "allowed_changes": allowed,
+        "unexpected_changes": unexpected,
+        "message": "passed" if not unexpected else "failed: unexpected PPTX package parts changed",
+    }
+
+
 def compare_reports(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
     before_counts = {key: count_report_items(before, key) for key in EDIT_REGRESSION_KEYS}
     after_counts = {key: count_report_items(after, key) for key in EDIT_REGRESSION_KEYS}
@@ -1061,6 +1474,44 @@ def compare_reports(before: dict[str, Any], after: dict[str, Any]) -> dict[str, 
         "after_missing_relationship_targets": after_missing_relationships,
         "message": "passed" if passed else "failed: edit introduced or retained blocking regressions",
     }
+
+
+def image_treatment_recommendation(info: dict[str, Any]) -> dict[str, Any]:
+    cls = str(info.get("aspect_class", "unknown"))
+    if cls == "panoramic":
+        return {"default_fit": "cover-or-contain-by-role", "slots": ["hero", "banner", "background"]}
+    if cls in ("wide", "landscape"):
+        return {"default_fit": "contain-for-detail-cover-for-photo", "slots": ["split", "hero", "image-led"]}
+    if cls == "square":
+        return {"default_fit": "contain", "slots": ["gallery-tile", "thumbnail", "card"]}
+    if cls in ("portrait", "tall"):
+        return {"default_fit": "contain-or-vertical-crop", "slots": ["vertical-split", "profile", "side-panel"]}
+    return {"default_fit": "inspect-manually", "slots": []}
+
+
+def inspect_image_paths(paths: list[str]) -> dict[str, Any]:
+    result: dict[str, Any] = {"ok": True, "images": [], "errors": []}
+    for raw_path in paths:
+        path = Path(raw_path)
+        if not path.exists():
+            result["ok"] = False
+            result["errors"].append({"file": raw_path, "error": "file_not_found"})
+            continue
+        if not path.is_file():
+            result["ok"] = False
+            result["errors"].append({"file": raw_path, "error": "not_file"})
+            continue
+        try:
+            data = path.read_bytes()
+        except Exception as exc:
+            result["ok"] = False
+            result["errors"].append({"file": raw_path, "error": str(exc)})
+            continue
+        info = image_info_from_bytes(path.name, data)
+        info["file"] = str(path)
+        info["recommendation"] = image_treatment_recommendation(info)
+        result["images"].append(info)
+    return result
 
 
 def write_json(data: dict[str, Any], output_path: str) -> None:
@@ -1089,6 +1540,22 @@ def main() -> int:
     compare_cmd.add_argument("before_report")
     compare_cmd.add_argument("after_report")
     compare_cmd.add_argument("--out", default="-")
+    package_diff_cmd = sub.add_parser(
+        "package-diff",
+        help="Compare before/after PPTX package parts and fail on changes outside allowed globs.",
+    )
+    package_diff_cmd.add_argument("before_pptx")
+    package_diff_cmd.add_argument("after_pptx")
+    package_diff_cmd.add_argument(
+        "--allow",
+        action="append",
+        default=[],
+        help="Allowed changed PPTX part glob, for example ppt/slides/slide5.xml. Repeat as needed.",
+    )
+    package_diff_cmd.add_argument("--out", default="-")
+    image_cmd = sub.add_parser("image-info", help="Inspect image dimensions before PPTX insertion.")
+    image_cmd.add_argument("images", nargs="+")
+    image_cmd.add_argument("--out", default="-")
     args = parser.parse_args()
 
     if args.command == "inspect":
@@ -1114,6 +1581,20 @@ def main() -> int:
         result = compare_reports(before, after)
         write_json(result, args.out)
         return 0 if result["passed"] else 2
+
+    if args.command == "package-diff":
+        try:
+            result = package_diff(Path(args.before_pptx), Path(args.after_pptx), list(args.allow))
+        except Exception as exc:
+            write_json({"checked": False, "passed": False, "error": str(exc)}, args.out)
+            return 1
+        write_json(result, args.out)
+        return 0 if result["passed"] else 2
+
+    if args.command == "image-info":
+        result = inspect_image_paths(args.images)
+        write_json(result, args.out)
+        return 0 if result["ok"] else 1
 
     return 1
 

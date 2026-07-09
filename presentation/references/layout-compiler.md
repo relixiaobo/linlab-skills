@@ -11,6 +11,9 @@ global elements.
 - Choose a registered layout recipe before placing any object.
 - Assign every slide a content density: `sparse`, `medium`, or `dense`.
 - Assign every visual asset a role, fit, slot, and layer before insertion.
+- Assign every important image intrinsic width, intrinsic height, aspect ratio,
+  aspect class, crop permission, focal point, and minimum effective PPI before
+  insertion.
 - Never append images or extra sections to an already rendered PPTX without
   relayout and a full verification pass.
 - For PPTX, use one final writer to render slide order, closing slides, page
@@ -132,9 +135,28 @@ Each asset in a deck plan should specify:
 - `fit`: contain, cover, stretch, or original
 - `slot`: recipe slot such as visual-right, hero, map-primary, logo-footer
 - `layer`: background, image, overlay, text, logo, or folio
+- `intrinsicWidthPx` and `intrinsicHeightPx`: source image dimensions
+- `aspectRatio` and `aspectClass`: panoramic, wide, landscape, square,
+  portrait, tall, or unknown
+- `cropAllowed`: false for logos, maps, charts, screenshots, tables, and other
+  detail-bearing evidence
+- `focalPoint`: center, face-left, field-label, basin-center, or another
+  concise focus hint
+- `minEffectivePpi`: minimum resolution after scaling or cropping
 
 Image insertion is a layout event. It must trigger recipe selection or relayout;
 it must not be a post-hoc object placed over existing slide content.
+
+Fit policy:
+
+- Use `contain` for logos, maps, screenshots, charts, tables, and evidence where
+  detail or text must remain visible.
+- Use `cover` for photography, hero media, or background images only when
+  cropping is acceptable and the focal point remains visible.
+- Avoid `stretch` except for explicitly accepted abstract textures or
+  non-informational backgrounds.
+- If the asset aspect does not match the target slot, change the slot or recipe,
+  paginate, or choose another asset instead of distorting the image.
 
 ## Required QA Gates
 
@@ -146,6 +168,10 @@ Before delivery, verify:
 - no foreground picture collides with section divider text
 - no blank shape covers a picture
 - no full-slide picture sits above text
+- no picture is distorted by a display box that conflicts with its effective
+  image aspect
+- no important picture is scaled below its minimum effective PPI
+- no detail-bearing picture is cropped without an explicit crop permission
 - no grid/process row exceeds recipe limits
 - no timeline row exceeds recipe limits or uses tiny milestone text
 - no table extends outside the slide/body area or requires tiny unreadable type

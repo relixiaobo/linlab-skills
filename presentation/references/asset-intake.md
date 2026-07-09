@@ -50,6 +50,10 @@ For non-logo media, collect enough candidates to choose well:
 - choose stable ratios before layout: 21:9, 16:9, 16:10, 4:3, 3:2, 1:1, 3:4
 - reject generic images that conflict with the deck topic, geography, industry,
   audience, or evidence claim
+- inspect asset dimensions before insertion when local files are available:
+  `python3 scripts/pptx_tool.py image-info path/to/image.jpg --out image-report.json`
+- record intrinsic width, height, aspect ratio, aspect class, crop permission,
+  focal point, and minimum readable size in the deck plan for important images
 
 ## Asset Layout Roles
 
@@ -72,10 +76,19 @@ Also specify fit, slot, and layer:
 - slot: visual-right, visual-left, hero, map-primary, gallery-tile, footer-logo,
   or another recipe slot
 - layer: background, image, overlay, text, logo, or folio
+- cropAllowed: true only for photography or intentional editorial background
+  crops; false for logos, maps, charts, tables, and screenshots where detail
+  matters
+- minEffectivePpi: use at least 120 for normal slide images and 160+ for
+  screenshots, charts, maps, and other text/detail-bearing assets when possible
 
 Image insertion must trigger layout selection or relayout. Do not append a
 picture onto a finished slide without resizing or moving existing text, cards,
 and containers.
+
+If an image's aspect class conflicts with the available slot, change the recipe,
+paginate, choose a different asset, or decline the insertion. Do not make the
+image fit by stretching it or by uncontrolled cropping.
 
 When adding assets to an existing PPTX:
 
@@ -114,6 +127,9 @@ For substantial decks, maintain a short manifest in the working folder:
 | Product screenshot | feature reveal | user supplied | assets/feature.png | contains customer data: anonymized |
 | Market chart | proof slide | source PDF p.12 | assets/chart-q3.png | cite on slide |
 ```
+
+For image-heavy decks, add dimensions to the manifest notes or adjacent columns:
+width, height, aspect class, cropAllowed, and intended slot.
 
 Reference local paths from the deck. Do not rely on remote assets for final
 delivery unless the user explicitly wants a network-dependent artifact.

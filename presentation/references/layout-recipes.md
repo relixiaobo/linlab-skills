@@ -52,6 +52,8 @@ recipe in `layout`.
 - let the media carry the slide; support copy stays short
 - keep text in a safe area with strong contrast
 - crop intentionally and avoid dark blurred atmospheric filler
+- use cover-fit only when the focal point survives the crop; otherwise use a
+  framed contain-fit stage or choose another asset
 
 ### product-stage
 
@@ -121,6 +123,8 @@ recipe in `layout`.
 - use consistent image ratios
 - captions explain why each example matters
 - screenshots use contain-fit when text readability matters
+- do not force mixed portrait, square, and panoramic assets into one ratio
+  without planned crop rules
 - for named brands/products, each visible logo or UI should come from the asset
   inventory or be explicitly marked as placeholder
 

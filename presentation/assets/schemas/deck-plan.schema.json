@@ -10,7 +10,18 @@
     "outputRoute": { "type": "string" },
     "buildMode": {
       "type": "string",
-      "enum": ["single-pass", "template-edit", "html-deck", "pdf-handout", "speaker-outline", "cover-image", "repair"]
+      "enum": [
+        "single-pass",
+        "source-first-edit",
+        "preserve-edit",
+        "regenerate",
+        "template-edit",
+        "html-deck",
+        "pdf-handout",
+        "speaker-outline",
+        "cover-image",
+        "repair"
+      ]
     },
     "deliveryMode": {
       "type": "string",
@@ -26,8 +37,8 @@
     },
     "layoutMode": {
       "type": "string",
-      "enum": ["compiler", "template-preserve", "manual-repair"],
-      "description": "compiler for generated layouts, template-preserve for native template fills, manual-repair for existing broken decks"
+      "enum": ["compiler", "package-preserve", "template-preserve", "manual-repair"],
+      "description": "compiler for generated layouts, package-preserve for partial existing PPTX edits, template-preserve for native template fills, manual-repair for existing broken decks"
     },
     "notesMode": {
       "type": "string",
@@ -64,6 +75,13 @@
           "source": { "type": "string" },
           "path": { "type": "string" },
           "status": { "type": "string" },
+          "widthPx": { "type": "integer" },
+          "heightPx": { "type": "integer" },
+          "aspectRatio": { "type": "number" },
+          "aspectClass": {
+            "type": "string",
+            "enum": ["panoramic", "wide", "landscape", "square", "portrait", "tall", "unknown"]
+          },
           "notes": { "type": "string" }
         },
         "additionalProperties": false
@@ -154,11 +172,23 @@
                 ]
               },
               "asset": { "type": "string" },
+              "intrinsicWidthPx": { "type": "integer" },
+              "intrinsicHeightPx": { "type": "integer" },
+              "aspectRatio": { "type": "number" },
+              "aspectClass": {
+                "type": "string",
+                "enum": ["panoramic", "wide", "landscape", "square", "portrait", "tall", "unknown"]
+              },
               "fit": {
                 "type": "string",
                 "enum": ["contain", "cover", "stretch", "original"]
               },
               "slot": { "type": "string" },
+              "slotAspectRatio": { "type": "number" },
+              "cropAllowed": { "type": "boolean" },
+              "focalPoint": { "type": "string" },
+              "minReadableWidth": { "type": "number" },
+              "minEffectivePpi": { "type": "number" },
               "layer": {
                 "type": "string",
                 "enum": ["background", "image", "overlay", "text", "logo", "folio"]
