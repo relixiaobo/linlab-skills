@@ -1,0 +1,90 @@
+{
+  "taskContract": "studio",
+  "studioMode": "unconstrained",
+  "stage": "prototype-accepted",
+  "title": "Signal to Decision",
+  "audience": "Product leadership",
+  "objective": "Make the operating model memorable and decision-ready.",
+  "delivery": {
+    "deliverables": ["html", "pptx", "pdf"],
+    "editabilityRequirement": "Headlines and charts remain editable.",
+    "aspectRatio": "16:9"
+  },
+  "sourceMaterials": [
+    { "ref": "source/product-brief.md", "role": "facts", "authority": "primary" }
+  ],
+  "contentGuardrails": {
+    "mustPreserve": ["Approved metrics"],
+    "canRewrite": ["Narrative order"],
+    "mustVerify": ["All percentages"],
+    "protectedClaims": ["Launch reduced cycle time by 30%."],
+    "mustIncludeFacts": ["Three operating phases"]
+  },
+  "creativeThesis": "Turn fragmented signals into one visible decision path.",
+  "narrativeDirection": {
+    "mode": "library",
+    "archetypeId": "operating-review",
+    "rationale": "The audience needs a concise operating sequence from scorecard to decision.",
+    "adaptations": [
+      "Open with the operating model rather than a period recap.",
+      "Resolve each evidence section with a named leadership decision."
+    ]
+  },
+  "visualDirection": {
+    "name": "Signal Path",
+    "decisionMode": "agent-selected",
+    "rationale": "The direction explains the operating model while giving every proof a visible role.",
+    "reviewRef": "reviews/direction-review.json",
+    "contentSpecificIdea": "Fragmented operating signals become one decision path.",
+    "signatureMove": "A continuous signal line changes state at each decision.",
+    "visualGrammar": "Wide proof fields, one strong convergence line, and deliberate reset slides.",
+    "themeDecision": {
+      "mode": "library",
+      "themeId": "modern-swiss",
+      "rationale": "The audience needs a clear operational system with restrained authority.",
+      "adaptations": [
+        "Use the operating signal path as the recurring composition instead of a generic grid motif.",
+        "Assign the accent color only to decision-state changes and verified metrics."
+      ]
+    },
+    "realContentRefs": ["source/product-brief.md#metric", "source/product-brief.md#model"],
+    "previewRefs": ["renders/signal-cover.png", "renders/signal-dense.png"]
+  },
+  "layoutStrategy": {
+    "coreLayoutIds": ["cover", "diagram", "evidence-wall", "metric", "compare", "close"],
+    "riskLayoutIds": ["evidence-wall", "diagram"],
+    "selectionRationale": "The content alternates system explanation, proof, and decision frames.",
+    "customCompositionPolicy": "Use custom-composition only when the operating signal path cannot be represented by a registered diagram layout."
+  },
+  "prototypes": {
+    "items": [
+      {
+        "slideRef": 1,
+        "artifactRef": "renders/prototype-01.png",
+        "roles": ["opening"]
+      },
+      {
+        "slideRef": 4,
+        "artifactRef": "renders/prototype-04.png",
+        "roles": ["normal", "visual-media"]
+      },
+      {
+        "slideRef": 7,
+        "artifactRef": "renders/prototype-07.png",
+        "roles": ["dense-data", "highest-risk"]
+      },
+      {
+        "slideRef": 12,
+        "artifactRef": "renders/prototype-12.png",
+        "roles": ["closing"]
+      }
+    ],
+    "visualReviewRef": "reviews/prototype-review.json",
+    "status": "accepted"
+  },
+  "successCriteria": {
+    "aesthetic": ["The signal path is memorable and content-specific."],
+    "content": ["Every protected metric is sourced."],
+    "technical": ["All slides render without blocking defects."]
+  }
+}

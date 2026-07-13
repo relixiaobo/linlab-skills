@@ -1,0 +1,60 @@
+{
+  "taskContract": "studio",
+  "studioMode": "constrained",
+  "preservationMatrixRef": "contracts/preservation-matrix.json",
+  "stage": "prototype-accepted",
+  "title": "One-slide board update",
+  "audience": "Board members",
+  "objective": "Improve hierarchy while preserving every source value.",
+  "delivery": {
+    "deliverables": ["html", "pptx"],
+    "editabilityRequirement": "All content remains natively editable."
+  },
+  "sourceMaterials": ["source/board-update.pptx"],
+  "creativeThesis": "One quiet focal metric organizes the full board update.",
+  "narrativeDirection": {
+    "mode": "reference-led",
+    "rationale": "The source slide assignment fixes the sequence while allowing hierarchy to improve.",
+    "sourceRefs": ["source/board-update.pptx#slide-order"],
+    "adaptations": ["Use the protected source order as the narrative spine."]
+  },
+  "visualDirection": {
+    "name": "Single Focus",
+    "decisionMode": "agent-selected",
+    "rationale": "The narrow design latitude calls for one restrained hierarchy rather than a user-facing style exercise.",
+    "reviewRef": "reviews/constrained-direction.json",
+    "contentSpecificIdea": "The protected metric carries the visual hierarchy.",
+    "signatureMove": "One metric anchors the exact content field.",
+    "visualGrammar": "One focal metric, exact text blocks, and restrained evidence styling.",
+    "themeDecision": {
+      "mode": "reference-led",
+      "rationale": "The protected source theme and board context are stronger constraints than a library family.",
+      "sourceRefs": ["source/board-update.pptx#theme"],
+      "adaptations": ["Retain the source theme while rebuilding spacing and hierarchy around the protected metric."]
+    },
+    "realContentRefs": ["source/board-update.pptx#slide-1"],
+    "previewRefs": ["renders/single-focus.png"]
+  },
+  "layoutStrategy": {
+    "coreLayoutIds": ["metric", "evidence-wall"],
+    "riskLayoutIds": ["metric"],
+    "selectionRationale": "The single slide needs one focal metric and one exact evidence field.",
+    "customCompositionPolicy": "Do not use custom-composition unless the preservation matrix explicitly allows a structural redesign."
+  },
+  "prototypes": {
+    "items": [
+      {
+        "slideRef": 1,
+        "artifactRef": "renders/single-focus-accepted.png",
+        "roles": ["opening", "normal", "dense-data", "closing", "highest-risk"]
+      }
+    ],
+    "visualReviewRef": "reviews/single-slide-prototype.json",
+    "status": "accepted"
+  },
+  "successCriteria": {
+    "aesthetic": ["Hierarchy is materially clearer than the source."],
+    "content": ["Every exact field remains unchanged."],
+    "technical": ["The output opens and renders cleanly."]
+  }
+}

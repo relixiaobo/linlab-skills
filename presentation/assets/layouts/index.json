@@ -1,0 +1,151 @@
+{
+  "schemaVersion": "1.0",
+  "layouts": [
+    {
+      "id": "cover",
+      "job": "Open the deck and establish its promise.",
+      "contentShape": "One title, one short framing line, and minimal metadata.",
+      "requires": ["clear promise"],
+      "avoid": ["agenda grid", "dense evidence", "generic decoration"]
+    },
+    {
+      "id": "hero-media",
+      "job": "Let one real image, screenshot, or document carry the claim.",
+      "contentShape": "One dominant media field with concise annotation.",
+      "requires": ["usable high-resolution media", "declared crop policy"],
+      "avoid": ["placeholder imagery", "unreadable screenshot", "decorative stock photo"]
+    },
+    {
+      "id": "product-stage",
+      "job": "Reveal a product, interface, or object as the primary subject.",
+      "contentShape": "One inspectable product view with one value statement.",
+      "requires": ["real product evidence"],
+      "avoid": ["fake UI", "feature-card wall", "tiny device mockup"]
+    },
+    {
+      "id": "section",
+      "job": "Reset pacing and announce a new argument phase.",
+      "contentShape": "Section number or label, thesis, and optional one-line setup.",
+      "requires": ["real narrative transition"],
+      "avoid": ["repeating every few slides", "body copy"]
+    },
+    {
+      "id": "split",
+      "job": "Relate two different but connected content fields.",
+      "contentShape": "Two asymmetric columns such as claim/evidence or concept/example.",
+      "requires": ["meaningful relationship between sides"],
+      "avoid": ["two unrelated bullet lists", "automatic 50/50 symmetry"]
+    },
+    {
+      "id": "metric",
+      "job": "Make one to four verified numbers legible and consequential.",
+      "contentShape": "Dominant metric, unit, comparison, and implication.",
+      "requires": ["real values", "defined denominator or baseline"],
+      "avoid": ["invented scores", "more than four equal focal numbers"],
+      "limits": { "maxPrimaryItems": 4 }
+    },
+    {
+      "id": "compare",
+      "job": "Show a real A/B, before/after, option, or scenario contrast.",
+      "contentShape": "Exactly two primary sides with aligned dimensions.",
+      "requires": ["shared comparison criteria"],
+      "avoid": ["three or more options", "misaligned evidence"],
+      "limits": { "primaryItems": 2 }
+    },
+    {
+      "id": "timeline",
+      "job": "Explain change over time or a linear sequence.",
+      "contentShape": "A dated axis or ordered sequence with concise milestones.",
+      "requires": ["real chronology or order"],
+      "avoid": ["closed loop", "too many milestones", "paragraphs at every node"],
+      "limits": { "maxMilestones": 7 }
+    },
+    {
+      "id": "diagram",
+      "job": "Explain a mechanism, system, hierarchy, or feedback structure.",
+      "contentShape": "Nodes and labeled relationships with one reading direction.",
+      "requires": ["semantic connectors", "explicit scope"],
+      "avoid": ["decorative arrows", "unlabeled boxes", "mixed diagram grammars"]
+    },
+    {
+      "id": "chart",
+      "job": "Prove a quantitative claim through a faithful visualization.",
+      "contentShape": "One primary chart with direct labels and a takeaway.",
+      "requires": ["source data", "defined units", "appropriate encoding"],
+      "avoid": ["rainbow series", "chart without conclusion", "unnecessary 3D"]
+    },
+    {
+      "id": "map-callout",
+      "job": "Explain geography, basin, route, market, or regional concentration.",
+      "contentShape": "One map with bounded callouts and a geographic takeaway.",
+      "requires": ["geographic evidence", "legible labels"],
+      "avoid": ["map used as decoration", "too many markers", "unverified boundaries"]
+    },
+    {
+      "id": "feature-grid",
+      "job": "Present three to six parallel capabilities or ideas.",
+      "contentShape": "A small set of equal or deliberately weighted modules.",
+      "requires": ["parallel content"],
+      "avoid": ["nested cards", "unequal text volume", "more than six peers"],
+      "limits": { "minItems": 3, "maxItems": 6 }
+    },
+    {
+      "id": "gallery",
+      "job": "Build an evidence set from multiple related images or examples.",
+      "contentShape": "Two to six media items with captions or one highlighted item.",
+      "requires": ["related real assets", "consistent crop logic"],
+      "avoid": ["random mood board", "uncaptioned screenshots", "tiny contact sheet"],
+      "limits": { "minItems": 2, "maxItems": 6 }
+    },
+    {
+      "id": "statement",
+      "job": "Land one consequential sentence or reset attention.",
+      "contentShape": "One sentence, phrase, or number with minimal support.",
+      "requires": ["earned claim"],
+      "avoid": ["generic slogan", "multiple paragraphs", "frequent repetition"]
+    },
+    {
+      "id": "quote",
+      "job": "Use a sourced voice or primary text as evidence or transition.",
+      "contentShape": "One quotation, source, and optional interpretation.",
+      "requires": ["verifiable attribution"],
+      "avoid": ["fabricated quote", "quote as decoration", "long transcript"]
+    },
+    {
+      "id": "table-takeaway",
+      "job": "Support exact comparison or lookup while preserving a clear conclusion.",
+      "contentShape": "One bounded table plus a visible takeaway or decision field.",
+      "requires": ["semantic rows and columns", "readable type"],
+      "avoid": ["spreadsheet dump", "too many columns", "table without conclusion"],
+      "limits": { "maxColumns": 8, "maxRows": 12 }
+    },
+    {
+      "id": "close",
+      "job": "Resolve the opening promise into a judgment or action.",
+      "contentShape": "One conclusion, decision, or next move.",
+      "requires": ["connection to opening"],
+      "avoid": ["generic thank-you", "new evidence", "contact-card clutter"]
+    },
+    {
+      "id": "scripted-demo",
+      "job": "Walk through an interface, workflow, or code path in a controlled sequence.",
+      "contentShape": "One primary demo surface with numbered steps or progressive states.",
+      "requires": ["real interface or executable trace", "legible state changes"],
+      "avoid": ["fake interface", "unreadable full-screen capture", "too many simultaneous annotations"]
+    },
+    {
+      "id": "evidence-wall",
+      "job": "Organize several claims, sources, risks, or proof objects into one reviewable field.",
+      "contentShape": "A structured ledger or evidence matrix with one synthesis panel.",
+      "requires": ["explicit evidence bindings", "consistent categories"],
+      "avoid": ["card collage", "mixed granularity", "unprioritized evidence"]
+    },
+    {
+      "id": "custom-composition",
+      "job": "Solve a content shape that the registered layouts cannot express faithfully.",
+      "contentShape": "A documented content-specific composition.",
+      "requires": ["reason the registered library is insufficient", "stable geometry", "visual review"],
+      "avoid": ["default escape hatch", "novelty without explanatory value"]
+    }
+  ]
+}

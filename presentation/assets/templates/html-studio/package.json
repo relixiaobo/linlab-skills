@@ -1,0 +1,19 @@
+{
+  "name": "presentation-studio-project",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "studio": "node studio.mjs",
+    "doctor": "node studio.mjs doctor .",
+    "check": "node studio.mjs check .",
+    "render": "node studio.mjs render-html .",
+    "compile": "node studio.mjs compile .",
+    "compare": "node studio.mjs compare ."
+  },
+  "dependencies": {
+    "dom-to-pptx": "2.0.3",
+    "jszip": "3.10.1",
+    "puppeteer": "25.1.0"
+  }
+}

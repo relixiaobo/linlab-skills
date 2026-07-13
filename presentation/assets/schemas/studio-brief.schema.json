@@ -1,0 +1,336 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Presentation Studio Brief",
+  "description": "Canonical audience, visual direction, theme adaptation, prototype, deliverable, and editability record for Studio work. The policy may be unconstrained or preservation-controlled; production source is HTML.",
+  "type": "object",
+  "required": [
+    "taskContract",
+    "studioMode",
+    "stage",
+    "title",
+    "audience",
+    "objective",
+    "delivery",
+    "sourceMaterials",
+    "creativeThesis",
+    "narrativeDirection",
+    "visualDirection",
+    "layoutStrategy",
+    "successCriteria"
+  ],
+  "properties": {
+    "taskContract": {
+      "const": "studio"
+    },
+    "studioMode": { "type": "string", "enum": ["unconstrained", "constrained"] },
+    "preservationMatrixRef": { "type": "string", "minLength": 1 },
+    "stage": {
+      "type": "string",
+      "enum": ["direction-set", "prototype-accepted"]
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "audience": { "type": "string", "minLength": 1 },
+    "objective": { "type": "string", "minLength": 1 },
+    "delivery": {
+      "type": "object",
+      "required": ["deliverables", "editabilityRequirement"],
+      "properties": {
+        "deliverables": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": { "type": "string", "enum": ["html", "pptx", "pdf", "images"] },
+          "contains": { "const": "html" }
+        },
+        "editabilityRequirement": { "type": "string", "minLength": 1 },
+        "presentationContext": { "type": "string" },
+        "durationMinutes": { "type": "number", "exclusiveMinimum": 0 },
+        "aspectRatio": { "type": "string" },
+        "notesRequirement": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "sourceMaterials": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          { "type": "string", "minLength": 1 },
+          {
+            "type": "object",
+            "required": ["ref", "role"],
+            "properties": {
+              "ref": { "type": "string", "minLength": 1 },
+              "role": { "type": "string", "minLength": 1 },
+              "authority": { "type": "string" },
+              "notes": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "contentGuardrails": {
+      "type": "object",
+      "required": ["mustPreserve", "canRewrite", "mustVerify", "protectedClaims", "mustIncludeFacts"],
+      "properties": {
+        "mustPreserve": { "type": "array", "items": { "type": "string" } },
+        "canRewrite": { "type": "array", "items": { "type": "string" } },
+        "mustVerify": { "type": "array", "items": { "type": "string" } },
+        "unknowns": { "type": "array", "items": { "type": "string" } },
+        "protectedClaims": { "type": "array", "items": { "type": "string" } },
+        "mustIncludeFacts": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "creativeThesis": { "type": "string", "minLength": 1 },
+    "narrativeDirection": { "$ref": "#/$defs/narrativeDirection" },
+    "visualDirection": { "$ref": "#/$defs/visualDirection" },
+    "layoutStrategy": { "$ref": "#/$defs/layoutStrategy" },
+    "prototypes": {
+      "type": "object",
+      "required": ["items", "visualReviewRef", "status"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/prototype" }
+        },
+        "visualReviewRef": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["revise", "accepted"] }
+      },
+      "additionalProperties": false
+    },
+    "successCriteria": {
+      "type": "object",
+      "required": ["aesthetic", "content", "technical"],
+      "properties": {
+        "aesthetic": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "content": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "technical": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "narrativeDirection": {
+      "type": "object",
+      "required": ["mode", "rationale", "adaptations"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["library", "reference-led", "custom"]
+        },
+        "archetypeId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "rationale": { "type": "string", "minLength": 1 },
+        "sourceRefs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "adaptations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "mode": { "const": "library" } },
+            "required": ["mode"]
+          },
+          "then": { "required": ["archetypeId"] }
+        },
+        {
+          "if": {
+            "properties": { "mode": { "const": "reference-led" } },
+            "required": ["mode"]
+          },
+          "then": { "required": ["sourceRefs"] }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "layoutStrategy": {
+      "type": "object",
+      "required": ["coreLayoutIds", "selectionRationale", "customCompositionPolicy"],
+      "properties": {
+        "coreLayoutIds": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+        },
+        "riskLayoutIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+        },
+        "selectionRationale": { "type": "string", "minLength": 1 },
+        "customCompositionPolicy": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "visualDirection": {
+      "type": "object",
+      "required": [
+        "name",
+        "decisionMode",
+        "rationale",
+        "reviewRef",
+        "contentSpecificIdea",
+        "signatureMove",
+        "visualGrammar",
+        "themeDecision",
+        "realContentRefs",
+        "previewRefs"
+      ],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "decisionMode": {
+          "type": "string",
+          "enum": ["agent-selected", "user-selected"]
+        },
+        "rationale": { "type": "string", "minLength": 1 },
+        "reviewRef": { "type": "string", "minLength": 1 },
+        "contentSpecificIdea": { "type": "string", "minLength": 1 },
+        "signatureMove": { "type": "string", "minLength": 1 },
+        "visualGrammar": { "type": "string", "minLength": 1 },
+        "themeDecision": { "$ref": "#/$defs/themeDecision" },
+        "realContentRefs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "previewRefs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "userDecisionRef": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "decisionMode": { "const": "user-selected" } },
+            "required": ["decisionMode"]
+          },
+          "then": { "required": ["userDecisionRef"] }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "themeDecision": {
+      "type": "object",
+      "required": ["mode", "rationale", "adaptations"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["library", "reference-led", "custom"]
+        },
+        "themeId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "rationale": { "type": "string", "minLength": 1 },
+        "sourceRefs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "adaptations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "mode": { "const": "library" } },
+            "required": ["mode"]
+          },
+          "then": { "required": ["themeId"] }
+        },
+        {
+          "if": {
+            "properties": { "mode": { "const": "reference-led" } },
+            "required": ["mode"]
+          },
+          "then": { "required": ["sourceRefs"] }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "prototype": {
+      "type": "object",
+      "required": ["slideRef", "artifactRef", "roles"],
+      "properties": {
+        "slideRef": { "type": ["integer", "string"] },
+        "artifactRef": { "type": "string", "minLength": 1 },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "opening",
+              "normal",
+              "dense-data",
+              "visual-media",
+              "diagram-process",
+              "closing",
+              "highest-risk"
+            ]
+          }
+        },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "stage": { "const": "prototype-accepted" } },
+        "required": ["stage"]
+      },
+      "then": {
+        "required": ["prototypes"],
+        "properties": {
+          "prototypes": { "properties": { "status": { "const": "accepted" } } }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "studioMode": { "const": "unconstrained" } },
+        "required": ["studioMode"]
+      },
+      "then": {
+        "required": ["contentGuardrails"],
+        "not": { "required": ["preservationMatrixRef"] }
+      }
+    },
+    {
+      "if": {
+        "properties": { "studioMode": { "const": "constrained" } },
+        "required": ["studioMode"]
+      },
+      "then": {
+        "required": ["preservationMatrixRef"],
+        "not": { "required": ["contentGuardrails"] }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

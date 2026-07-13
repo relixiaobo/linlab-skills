@@ -1,0 +1,48 @@
+{
+  "taskContract": "surgeon",
+  "sourceArtifact": {
+    "path": "source/update.pptx",
+    "slideCount": 10
+  },
+  "outputArtifact": "output/update-fixed.pptx",
+  "request": "Change one quarter label on slide 7.",
+  "preservation": {
+    "policy": "preserve-everything-except-listed-operations",
+    "verificationScopes": [
+      "package-parts",
+      "slide-structure",
+      "content",
+      "style",
+      "geometry",
+      "relationships",
+      "timing",
+      "metadata"
+    ]
+  },
+  "operations": [
+    {
+      "id": "quarter-label",
+      "action": "replace-text",
+      "changeField": "object-content",
+      "target": {
+        "slide": 7,
+        "slidePart": "ppt/slides/slide7.xml",
+        "textMatch": "Q2",
+        "expectedMatchCount": 2,
+        "matchPolicy": "exactly-one"
+      },
+      "property": "text",
+      "expectedBefore": "Q2",
+      "intendedAfter": "Q3",
+      "requestedChange": "Replace one label despite two matches."
+    }
+  ],
+  "allowedPackageParts": [
+    {
+      "part": "ppt/slides/slide7.xml",
+      "reason": "Contains the requested label.",
+      "operationIds": ["quarter-label"]
+    }
+  ],
+  "acceptanceChecks": ["Only one target changes."]
+}

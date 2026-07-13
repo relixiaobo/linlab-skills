@@ -1,0 +1,61 @@
+{
+  "taskContract": "studio",
+  "studioMode": "constrained",
+  "sourceArtifact": {
+    "path": "source/board-update.pptx",
+    "slideCount": 10
+  },
+  "scope": "Preserve all audience-facing content while rebuilding the visual system.",
+  "rules": {
+    "slideCount": { "policy": "exact", "verification": ["Compare slide count."] },
+    "slideOrder": { "policy": "exact", "verification": ["Compare presentation order."] },
+    "slideContentAssignment": { "policy": "exact", "verification": ["Compare slide bindings."] },
+    "visibleText": { "policy": "exact", "verification": ["Compare complete visible text."] },
+    "numbersAndDates": { "policy": "exact", "verification": ["Compare displayed values."] },
+    "tables": { "policy": "exact", "verification": ["Compare cell matrices."] },
+    "chartData": { "policy": "exact", "verification": ["Compare chart series and workbooks."] },
+    "citations": { "policy": "exact", "verification": ["Compare citation text and links."] },
+    "speakerNotes": { "policy": "exact", "verification": ["Compare notes and slide association."] },
+    "hyperlinks": { "policy": "exact", "verification": ["Compare targets and object association."] },
+    "altText": { "policy": "exact", "verification": ["Compare accessibility metadata."] },
+    "mediaIdentity": { "policy": "exact", "verification": ["Compare media hashes."] },
+    "theme": { "policy": "allow-change", "verification": ["Review approved design changes."] },
+    "mastersAndLayouts": { "policy": "allow-change", "verification": ["Inspect rebuilt masters and layouts."] },
+    "animationsAndTransitions": { "policy": "exact", "verification": ["Compare timing and transition state."] },
+    "hiddenSlides": { "policy": "exact", "verification": ["Compare hidden-slide state."] },
+    "aspectRatio": { "policy": "exact", "verification": ["Compare presentation dimensions."] }
+  },
+  "allowedDesignChanges": [
+    "typography",
+    "color-application",
+    "geometry",
+    "spacing",
+    "alignment",
+    "shapes",
+    "z-order"
+  ],
+  "slideBindings": [
+    { "sourceSlide": 1, "outputSlide": 1 },
+    { "sourceSlide": 2, "outputSlide": 2 },
+    { "sourceSlide": 3, "outputSlide": 3 },
+    { "sourceSlide": 4, "outputSlide": 4 },
+    { "sourceSlide": 5, "outputSlide": 5 },
+    { "sourceSlide": 6, "outputSlide": 6 },
+    { "sourceSlide": 7, "outputSlide": 7 },
+    { "sourceSlide": 8, "outputSlide": 8 },
+    { "sourceSlide": 9, "outputSlide": 9 },
+    { "sourceSlide": 10, "outputSlide": 10 }
+  ],
+  "approvedExceptions": [
+    {
+      "field": "animationsAndTransitions",
+      "reason": "An exact preservation rule retains the source timing state as an accepted technical baseline condition.",
+      "approvedBy": "fixture-owner",
+      "scope": "Source timing state only; the redesign may introduce no new regression."
+    }
+  ],
+  "verificationPlan": [
+    "Run structured content and object comparisons.",
+    "Review every semantic or approved exception separately."
+  ]
+}

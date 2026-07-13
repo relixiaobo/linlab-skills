@@ -8,7 +8,7 @@ Personal Codex skills maintained by Linlab.
 - `data-analysis` - trustworthy analysis of files, tables, metrics, experiments, and trends.
 - `document` - source-first professional documents, DOCX/Word workflows, comments, redlines, and reader tests.
 - `pdf` - PDF-native inspection, extraction, page operations, rendering, OCR/form/redaction guidance, and QA.
-- `presentation` - source-first slide decks, PPTX/HTML decks, speaker notes, handouts, and deck QA.
+- `presentation` - one HTML-canonical Studio with narrative archetypes, executable themes, content-fit layouts, and verified exports, plus surgical OOXML editing for precise PPTX changes.
 - `feed-processing` - portable RSS/Atom/JSON Feed/OPML subscription processing into validated feed-content packs.
 - `shape-product-spec` - shapes product ideas, features, and business rules into decision-ready and execution-ready specs with goals, constraints, options, flows, acceptance criteria, and review audits.
 - `spreadsheet` - source-first spreadsheet workbooks, XLSX/CSV inspection, formulas, validation, and workbook QA.
@@ -53,6 +53,7 @@ Run repository-level eval checks:
 ```sh
 python3 evals/run_all_skill_checks.py
 python3 evals/run_artifact_skill_checks.py
+python3 evals/presentation/run_checks.py
 python3 evals/shape-product-spec/run_checks.py
 python3 evals/data-analysis/run_checks.py
 python3 evals/feed-processing/run_checks.py

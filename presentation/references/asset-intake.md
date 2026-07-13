@@ -1,135 +1,42 @@
 # Asset Intake
 
-Use this when a deck references real entities, products, brands, screenshots,
-charts, people, places, or current facts.
+Use this reference for photographs, screenshots, logos, maps, diagrams, charts,
+documents, videos, and assets extracted from an existing PPTX.
 
-## Fact Gate
+## Identity And Provenance
 
-- Verify recent or unstable facts before putting them on slides: product
-  availability, version numbers, specs, leadership, prices, regulations, dates,
-  market data, and news.
-- Prefer primary sources: official sites, docs, filings, press kits, source
-  documents, or user-provided material.
-- Record the source in the slide plan `evidence` field. Do not convert a fact
-  into a decorative number without a source note.
-- If facts cannot be verified and the deck depends on them, mark the item as an
-  assumption or ask the user for source material.
+Prefer official or user-provided assets when identity matters. Record source,
+owner, retrieval date, rights, local file, factual role, and every crop,
+recolor, cleanup, or annotation. Generated visuals may explain an idea; they
+must not impersonate a real product screenshot, person, place, logo, document,
+or event.
 
-## Brand And Product Assets
+An image is not evidence merely because it looks plausible. Link every factual
+asset to the claim it supports and to a source authoritative enough for that
+claim.
 
-When a brand, product, company, app, venue, or named tool is visible in the
-deck, build a small asset inventory before visual design:
+## Quality
 
-- logo: SVG or transparent PNG; required for any visible brand
-- product image: required for hardware, consumer goods, packaging, venues, and
-  object-focused decks
-- UI screenshot: required for apps, SaaS, dashboards, developer tools, and
-  software workflows
-- brand colors and fonts: useful after logo/product/UI assets are in place
-- source charts and tables: use real charts/data when the content depends on
-  quantitative evidence
-
-Use official channels first: brand/press pages, product pages, app stores,
-official docs, official social accounts, source decks, source PDFs, or the
-user's own screenshots. Icon aggregators and favicons are fallbacks for logos,
-not replacements for official artwork when official assets are available.
-
-Do not silently replace missing real assets with generic silhouettes, fake UI,
-stock atmosphere, decorative SVGs, or invented logos. Use a clearly labeled
-placeholder only when the user accepts the asset gap or no source is available.
-
-## Asset Quality
-
-For non-logo media, collect enough candidates to choose well:
-
-- prefer 1600px+ width for slide media; 2000px+ for hero images when possible
-- reject low-resolution, watermarked, distorted, outdated, or off-brand images
-- prefer two excellent images over many mediocre images
-- make every image earn a communication role: evidence, product reveal,
-  example, comparison, quote/source context, or emotional beat
-- choose stable ratios before layout: 21:9, 16:9, 16:10, 4:3, 3:2, 1:1, 3:4
-- reject generic images that conflict with the deck topic, geography, industry,
-  audience, or evidence claim
-- inspect asset dimensions before insertion when local files are available:
-  `python3 scripts/pptx_tool.py image-info path/to/image.jpg --out image-report.json`
-- record intrinsic width, height, aspect ratio, aspect class, crop permission,
-  focal point, and minimum readable size in the deck plan for important images
-
-## Asset Layout Roles
-
-Every planned image should have a role before it is inserted:
-
-- `background`: full-bleed or banded visual below text and overlays
-- `hero`: dominant slide visual with minimal text
-- `right-evidence` or `left-evidence`: split-layout proof beside text
-- `map`: geography, route, territory, basin, field, or market context
-- `chart`: quantitative evidence
-- `thumbnail`: gallery or evidence-wall item
-- `callout`: small support image or annotation
-- `logo`: brand mark in cover, section, or footer
-- `decorative-accepted`: decorative asset explicitly accepted by the user or
-  clearly harmless to the message
-
-Also specify fit, slot, and layer:
-
-- fit: contain, cover, stretch, or original
-- slot: visual-right, visual-left, hero, map-primary, gallery-tile, footer-logo,
-  or another recipe slot
-- layer: background, image, overlay, text, logo, or folio
-- cropAllowed: true only for photography or intentional editorial background
-  crops; false for logos, maps, charts, tables, and screenshots where detail
-  matters
-- minEffectivePpi: use at least 120 for normal slide images and 160+ for
-  screenshots, charts, maps, and other text/detail-bearing assets when possible
-
-Image insertion must trigger layout selection or relayout. Do not append a
-picture onto a finished slide without resizing or moving existing text, cards,
-and containers.
-
-If an image's aspect class conflicts with the available slot, change the recipe,
-paginate, choose a different asset, or decline the insertion. Do not make the
-image fit by stretching it or by uncontrolled cropping.
-
-When adding assets to an existing PPTX:
-
-- inspect the target slide before editing
-- classify the slide family before choosing a slot
-- do not add a foreground evidence image to a section divider unless the
-  section recipe is changed
-- for section dividers, use images only as background layer media with contrast
-  treatment, or move the image to a dedicated content slide
-- compare the before/after inspection reports and repair any new image layering
-  warnings before delivery
+- Inspect pixel dimensions, format, transparency, profile, aspect ratio, and
+  effective resolution at final size.
+- Use vector originals for logos, maps, and diagrams when reliable.
+- Use `contain` for screenshots, documents, maps, charts, and logos that must be
+  inspected; use `cover` only for photography with an intentional crop.
+- Never stretch an identity-bearing asset.
+- Keep labels and UI text legible at presentation size.
+- Reject unexplained watermarks, compression artifacts, soft images, and
+  decorative stock imagery that does not carry the subject.
 
 ## Screenshots
 
-For product screenshots, clarify or infer:
+Capture the real required state. Record product version, viewport, device, and
+capture date when material. Remove private data without changing the behavior
+being claimed. Do not composite controls or states in a way that looks like an
+authentic screenshot.
 
-- purpose: faithful display, annotation, beautification, or conceptual redraw
-- required fidelity: preserve all text/data, anonymize sensitive content, or
-  crop to the relevant state
-- target slot: 21:9, 16:10, 16:9, 4:3, 1:1, or full-bleed
-- readability: text in the screenshot must remain legible after scaling
+## Existing PPTX
 
-Use contain-fit for UI screenshots where text matters. Use cover-fit only for
-photography or when the crop is intentionally editorial.
-
-## Asset Manifest
-
-For substantial decks, maintain a short manifest in the working folder:
-
-```markdown
-# Asset Manifest
-
-| Asset | Role | Source | Local Path | Notes |
-| --- | --- | --- | --- | --- |
-| Brand logo | cover, footer | official press kit | assets/logo.svg | dark + light variants |
-| Product screenshot | feature reveal | user supplied | assets/feature.png | contains customer data: anonymized |
-| Market chart | proof slide | source PDF p.12 | assets/chart-q3.png | cite on slide |
-```
-
-For image-heavy decks, add dimensions to the manifest notes or adjacent columns:
-width, height, aspect class, cropAllowed, and intended slot.
-
-Reference local paths from the deck. Do not rely on remote assets for final
-delivery unless the user explicitly wants a network-dependent artifact.
+When a PPTX is a Studio evidence source, extract original media without
+resampling and retain the source slide/object relationship in the asset record.
+When Surgeon replaces media, record target object identity, relationship, media
+part, crop, alt text, hyperlink, and allowed side effects in the edit manifest.

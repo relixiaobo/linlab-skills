@@ -1,0 +1,67 @@
+{
+  "reportStage": "final-delivery",
+  "taskContract": "surgeon",
+  "references": {
+    "editManifestRef": "contracts/edit-manifest.json"
+  },
+  "deliverables": {
+    "pptx": {
+      "artifact": "output/updated.pptx",
+      "status": "passed",
+      "evidence": ["verification/technical-gate.json"]
+    }
+  },
+  "technicalGate": {
+    "policy": "baseline-no-regression",
+    "status": "passed",
+    "baselineArtifact": "verification/before-report.json",
+    "newRegressions": 0,
+    "regressionEvidence": ["verification/regression-comparison.json"],
+    "evidence": ["verification/technical-gate.json"]
+  },
+  "accuracyGate": {
+    "policy": "edit-manifest",
+    "status": "passed",
+    "targetAssertions": [
+      {
+        "operationId": "quarter-label",
+        "targetResolved": true,
+        "beforeMatched": true,
+        "intendedAfterMatched": true,
+        "expectedMatchCount": 1,
+        "actualMatchCount": 1,
+        "matchCountCorrect": true,
+        "unexpectedMatches": 0,
+        "status": "passed",
+        "evidence": ["verification/target-assertions.json#quarter-label"]
+      }
+    ],
+    "packageDiff": {
+      "status": "failed",
+      "unexpectedChanges": 2,
+      "evidence": ["verification/package-diff.json"]
+    },
+    "contentDiff": {
+      "status": "failed",
+      "unexpectedChanges": 1,
+      "evidence": ["verification/content-diff.json"]
+    },
+    "objectDiff": {
+      "status": "failed",
+      "unexpectedChanges": 3,
+      "evidence": ["verification/object-diff.json"]
+    },
+    "visualSanity": {
+      "required": true,
+      "status": "passed",
+      "reviewedSlides": [7],
+      "renderRefs": ["renders-before/slide-007.png", "renders-after/slide-007.png"],
+      "evidence": ["reviews/target-visual-sanity.json"]
+    },
+    "evidence": ["verification/precision-accuracy.json"]
+  },
+  "issues": [],
+  "limitations": [],
+  "deliveryEvidence": ["delivery/handoff.json"],
+  "finalStatus": "passed"
+}

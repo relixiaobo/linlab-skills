@@ -1,0 +1,45 @@
+:root {
+  --paper: #0b1115;
+  --surface: #151e24;
+  --ink: #edf4f5;
+  --muted: #9daeb4;
+  --muted-on-dark: #bac8cc;
+  --line: #33434b;
+  --line-strong: #7e959f;
+  --accent: #28c5c7;
+  --secondary: #8179ff;
+  --warning: #ffb84f;
+  --positive: #59d994;
+  --font-display: "Aptos Display", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-body: "Aptos", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --page-x: 112px;
+  --page-y: 86px;
+  --radius-small: 4px;
+}
+
+.slide-content.dark {
+  background: #070b0e;
+  color: var(--ink);
+}
+
+.dark .tag {
+  border-color: #52656e;
+}
+
+.flow-step,
+.coverage,
+.risk-frame {
+  border-color: var(--line);
+  background: #11191e;
+  color: var(--ink);
+}
+
+.risk-frame p,
+.flow-step p,
+.coverage p {
+  color: var(--muted);
+}
+
+.status {
+  color: var(--positive);
+}

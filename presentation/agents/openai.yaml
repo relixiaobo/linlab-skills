@@ -1,4 +1,4 @@
 interface:
   display_name: "Presentation"
-  short_description: "Create, inspect, repair, and verify decks."
-  default_prompt: "Use $presentation to create, inspect, repair, or improve this slide deck."
+  short_description: "Build beautiful decks or edit PPTX with precision."
+  default_prompt: "Use $presentation to build a beautiful HTML-canonical Studio deck with an intentional narrative archetype, adapted theme, content-fit layouts, evidence-bound verified exports, or make a surgical precision edit to this PPTX."

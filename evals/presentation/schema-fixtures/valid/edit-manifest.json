@@ -1,0 +1,62 @@
+{
+  "taskContract": "surgeon",
+  "sourceArtifact": {
+    "path": "source/update.pptx",
+    "slideCount": 10
+  },
+  "outputArtifact": "output/update-fixed.pptx",
+  "request": "Change the quarter label on slide 7 from Q2 to Q3.",
+  "preservation": {
+    "policy": "preserve-everything-except-listed-operations",
+    "verificationScopes": [
+      "package-parts",
+      "slide-structure",
+      "content",
+      "style",
+      "geometry",
+      "relationships",
+      "timing",
+      "metadata",
+      "fonts",
+      "data",
+      "notes",
+      "links-accessibility",
+      "media",
+      "comments-hidden-state",
+      "embedded-content",
+      "slide-size"
+    ],
+    "additionalChecks": ["No state outside the listed operation changes."]
+  },
+  "operations": [
+    {
+      "id": "quarter-label",
+      "action": "replace-text",
+      "changeField": "object-content",
+      "target": {
+        "slide": 7,
+        "slidePart": "ppt/slides/slide7.xml",
+        "objectId": 42,
+        "textMatch": "Q2",
+        "expectedMatchCount": 1,
+        "matchPolicy": "exactly-one"
+      },
+      "property": "text.runs[0].value",
+      "expectedBefore": "Q2",
+      "intendedAfter": "Q3",
+      "requestedChange": "Replace only the named quarter label."
+    }
+  ],
+  "allowedPackageParts": [
+    {
+      "part": "ppt/slides/slide7.xml",
+      "reason": "Contains the targeted text run.",
+      "operationIds": ["quarter-label"]
+    }
+  ],
+  "acceptanceChecks": [
+    "The named object contains Q3 exactly once.",
+    "No other package part changes."
+  ],
+  "targetRenderSlides": [7]
+}

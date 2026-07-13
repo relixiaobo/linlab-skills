@@ -1,0 +1,88 @@
+{
+  "reportStage": "final-delivery",
+  "taskContract": "studio",
+  "studioMode": "unconstrained",
+  "references": {
+    "studioBriefRef": "contracts/studio-brief.json"
+  },
+  "deliverables": {
+    "html": {
+      "artifact": "output/strategy-deck.html",
+      "status": "passed",
+      "evidence": ["verification/html-report.json"]
+    },
+    "pptx": {
+      "artifact": "output/strategy-deck.pptx",
+      "status": "passed",
+      "visualComparisonRef": "verification/html-pptx-comparison.json",
+      "evidence": ["verification/pptx-technical-gate.json"]
+    },
+    "pdf": {
+      "artifact": "output/strategy-deck.pdf",
+      "status": "passed",
+      "visualComparisonRef": "verification/html-pdf-comparison.json",
+      "evidence": ["verification/pdf-export.json"]
+    }
+  },
+  "pptxEditability": {
+    "status": "passed",
+    "nativeTextObjects": 54,
+    "nativeShapeObjects": 31,
+    "nativeTableObjects": 1,
+    "nativeChartObjects": 2,
+    "svgObjects": 6,
+    "rasterFallbackRegions": 2,
+    "fullSlideRasterCount": 0,
+    "notesStatus": "passed",
+    "hyperlinksStatus": "passed",
+    "evidence": ["verification/pptx-editability.json"]
+  },
+  "technicalGate": {
+    "policy": "clean",
+    "status": "passed",
+    "evidence": ["verification/technical-gate.json"]
+  },
+  "accuracyGate": {
+    "policy": "source-fidelity",
+    "status": "passed",
+    "sourceChecks": [
+      {
+        "subject": "Cycle-time reduction claim",
+        "sourceRef": "source/product-brief.md#cycle-time",
+        "status": "passed",
+        "evidence": ["verification/source-checks.json#cycle-time"]
+      }
+    ],
+    "evidence": ["verification/source-checks.json"]
+  },
+  "aestheticGate": {
+    "stage": "full-deck",
+    "status": "passed",
+    "renderManifestRef": "renders/render-manifest.json",
+    "contactSheetRef": "renders/contact-sheet.png",
+    "renderCoverage": {
+      "expectedSlides": 12,
+      "renderedSlides": 12,
+      "missingSlides": 0,
+      "complete": true,
+      "evidence": ["renders/render-manifest.json"]
+    },
+    "renderArtifacts": ["renders/slide-001.png", "renders/slide-012.png"],
+    "reviewedSlides": [1, 4, 7, 12],
+    "revisionPasses": 1,
+    "criteria": {
+      "contentSpecificConcept": 5,
+      "messageHierarchy": 4,
+      "compositionFocalPoint": 4,
+      "typographyAssetQuality": 4,
+      "informationDesign": 4,
+      "rhythmCoherence": 4,
+      "craftPolish": 4
+    },
+    "evidence": ["reviews/full-deck-review.json"]
+  },
+  "issues": [],
+  "limitations": [],
+  "deliveryEvidence": ["delivery/handoff.json"],
+  "finalStatus": "passed"
+}

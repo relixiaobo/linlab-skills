@@ -1,0 +1,26 @@
+:root {
+  --paper: #f7f8f4;
+  --surface: #e9eee8;
+  --ink: #162521;
+  --muted: #5c6d67;
+  --muted-on-dark: #b9cac4;
+  --line: #bcc8c3;
+  --line-strong: #46635a;
+  --accent: #009b77;
+  --secondary: #2c66b8;
+  --warning: #c55a24;
+  --positive: #167a59;
+  --font-display: "Aptos Display", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-body: "Aptos", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --page-x: 116px;
+  --page-y: 92px;
+  --radius-small: 3px;
+}
+
+.slide-content.dark {
+  background: #142722;
+}
+
+.dark .tag {
+  border-color: #607a71;
+}

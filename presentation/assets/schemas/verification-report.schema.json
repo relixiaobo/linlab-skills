@@ -1,186 +1,904 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Presentation Verification Report",
+  "title": "Final Presentation Verification Report",
+  "description": "Final-delivery evidence. Studio verifies canonical HTML and derived deliverables; Surgeon verifies a minimally patched PPTX.",
   "type": "object",
-  "required": ["artifact", "outputRoute", "checks", "issues", "limitations", "finalStatus"],
+  "required": [
+    "reportStage",
+    "taskContract",
+    "references",
+    "deliverables",
+    "technicalGate",
+    "accuracyGate",
+    "issues",
+    "limitations",
+    "deliveryEvidence",
+    "finalStatus"
+  ],
   "properties": {
-    "artifact": { "type": "string" },
-    "outputRoute": { "type": "string" },
-    "filesProduced": {
-      "type": "array",
-      "items": { "type": "string" }
+    "reportStage": { "const": "final-delivery" },
+    "taskContract": {
+      "type": "string",
+      "enum": ["studio", "surgeon"]
     },
-    "sourceMaterials": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "renderArtifacts": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
-    "buildProvenance": {
+    "studioMode": { "type": "string", "enum": ["unconstrained", "constrained"] },
+    "references": {
       "type": "object",
       "properties": {
-        "deckPlan": { "type": "string" },
-        "builder": { "type": "string" },
-        "singleWriter": { "type": "boolean" },
-        "appendModeUsed": { "type": "boolean" },
-        "finalPassCompleted": { "type": "boolean" }
+        "studioBriefRef": { "type": "string", "minLength": 1 },
+        "preservationMatrixRef": { "type": "string", "minLength": 1 },
+        "editManifestRef": { "type": "string", "minLength": 1 }
       },
       "additionalProperties": false
     },
-    "editProvenance": {
+    "deliverables": {
       "type": "object",
+      "minProperties": 1,
       "properties": {
-        "editMode": {
-          "type": "string",
-          "enum": ["none", "source-first-edit", "preserve-edit", "regenerate", "template-edit", "repair"]
+        "html": {
+          "allOf": [
+            { "$ref": "#/$defs/deliverableCheck" },
+            { "properties": { "artifact": { "pattern": "\\.html$" } } }
+          ]
         },
-        "sourceSpecUpdated": { "type": "boolean" },
-        "cleanRegeneration": { "type": "boolean" },
-        "preserveEditScoped": { "type": "boolean" },
-        "evidence": { "type": "string" }
-      },
-      "additionalProperties": false
-    },
-    "orderCheck": {
-      "type": "object",
-      "properties": {
-        "expectedSlides": { "type": "integer" },
-        "actualSlides": { "type": "integer" },
-        "closingSlideLast": { "type": "boolean" },
-        "matchesDeckPlan": { "type": "boolean" },
-        "evidence": { "type": "string" }
-      },
-      "additionalProperties": false
-    },
-    "pageNumberCheck": {
-      "type": "object",
-      "properties": {
-        "checked": { "type": "boolean" },
-        "mismatches": { "type": "integer" },
-        "evidence": { "type": "string" }
-      },
-      "additionalProperties": false
-    },
-    "packageDiffCheck": {
-      "type": "object",
-      "properties": {
-        "checked": { "type": "boolean" },
-        "passed": { "type": "boolean" },
-        "allowlist": {
-          "type": "array",
-          "items": { "type": "string" }
+        "pptx": {
+          "allOf": [
+            { "$ref": "#/$defs/deliverableCheck" },
+            { "properties": { "artifact": { "pattern": "\\.pptx$" } } }
+          ]
         },
-        "unexpectedChanges": { "type": "integer" },
-        "evidence": { "type": "string" }
-      },
-      "additionalProperties": false
-    },
-    "deliveryGate": {
-      "type": "object",
-      "properties": {
-        "checked": { "type": "boolean" },
-        "passed": { "type": "boolean" },
-        "blockingWarnings": {
-          "type": "array",
-          "items": { "type": "string" }
+        "pdf": {
+          "allOf": [
+            { "$ref": "#/$defs/deliverableCheck" },
+            { "properties": { "artifact": { "pattern": "\\.pdf$" } } }
+          ]
         },
-        "reviewWarnings": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "evidence": { "type": "string" }
+        "images": { "$ref": "#/$defs/deliverableCheck" }
       },
       "additionalProperties": false
     },
-    "layoutCheck": {
-      "type": "object",
-      "properties": {
-        "checked": { "type": "boolean" },
-        "outOfBoundsObjects": { "type": "integer" },
-        "overlapWarnings": { "type": "integer" },
-        "shapeOverflows": { "type": "integer" },
-        "pictureOverflows": { "type": "integer" },
-        "tableOverflows": { "type": "integer" },
-        "crowdedTables": { "type": "integer" },
-        "tinyTextWarnings": { "type": "integer" },
-        "timelineWarnings": { "type": "integer" },
-        "sparseStubSlides": { "type": "integer" },
-        "closingSlideNotLast": { "type": "integer" },
-        "textPictureOverlaps": { "type": "integer" },
-        "sectionPictureCollisions": { "type": "integer" },
-        "blankShapeOverPictures": { "type": "integer" },
-        "fullSlidePictureOverText": { "type": "integer" },
-        "imageAspectDistortions": { "type": "integer" },
-        "severeImageResolutionWarnings": { "type": "integer" },
-        "imageResolutionWarnings": { "type": "integer" },
-        "imageCropWarnings": { "type": "integer" },
-        "missingImageDimensions": { "type": "integer" },
-        "recipeViolations": { "type": "integer" },
-        "evidence": { "type": "string" }
-      },
-      "additionalProperties": false
+    "pptxEditability": { "$ref": "#/$defs/pptxEditability" },
+    "technicalGate": { "$ref": "#/$defs/technicalGate" },
+    "accuracyGate": {
+      "oneOf": [
+        { "$ref": "#/$defs/sourceAccuracyGate" },
+        { "$ref": "#/$defs/preservationAccuracyGate" },
+        { "$ref": "#/$defs/precisionAccuracyGate" }
+      ]
     },
-    "assetCheck": {
-      "type": "object",
-      "properties": {
-        "checked": { "type": "boolean" },
-        "missingAssets": { "type": "integer" },
-        "genericOrIrrelevantAssets": { "type": "integer" },
-        "layeringWarnings": { "type": "integer" },
-        "aspectWarnings": { "type": "integer" },
-        "resolutionWarnings": { "type": "integer" },
-        "cropWarnings": { "type": "integer" },
-        "dimensionWarnings": { "type": "integer" },
-        "evidence": { "type": "string" }
-      },
-      "additionalProperties": false
-    },
-    "renderCheck": {
-      "type": "object",
-      "properties": {
-        "checked": { "type": "boolean" },
-        "slidesRendered": { "type": "integer" },
-        "visualDefects": { "type": "integer" },
-        "evidence": { "type": "string" }
-      },
-      "additionalProperties": false
-    },
-    "checks": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["name", "status"],
-        "properties": {
-          "name": { "type": "string" },
-          "status": { "type": "string", "enum": ["passed", "warning", "failed", "skipped"] },
-          "tool": { "type": "string" },
-          "evidence": { "type": "string" },
-          "result": {}
-        },
-        "additionalProperties": false
-      }
-    },
+    "aestheticGate": { "$ref": "#/$defs/fullDeckAestheticGate" },
     "issues": {
       "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["severity", "description"],
-        "properties": {
-          "severity": { "type": "string", "enum": ["info", "warning", "error"] },
-          "description": { "type": "string" },
-          "fixed": { "type": "boolean" },
-          "status": { "type": "string", "enum": ["open", "fixed", "accepted"] }
-        },
-        "additionalProperties": false
-      }
+      "items": { "$ref": "#/$defs/issue" }
     },
     "limitations": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": { "type": "string", "minLength": 1 }
     },
+    "deliveryEvidence": { "$ref": "#/$defs/evidence" },
     "finalStatus": { "type": "string", "enum": ["passed", "warning", "failed"] }
   },
+  "$defs": {
+    "gateStatus": {
+      "type": "string",
+      "enum": ["passed", "warning", "failed"]
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "deliverableCheck": {
+      "type": "object",
+      "required": ["artifact", "status", "evidence"],
+      "properties": {
+        "artifact": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "visualComparisonRef": { "type": "string", "minLength": 1 },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "pptxEditability": {
+      "type": "object",
+      "required": [
+        "status",
+        "nativeTextObjects",
+        "nativeShapeObjects",
+        "nativeTableObjects",
+        "nativeChartObjects",
+        "svgObjects",
+        "rasterFallbackRegions",
+        "fullSlideRasterCount",
+        "notesStatus",
+        "hyperlinksStatus",
+        "evidence"
+      ],
+      "properties": {
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "nativeTextObjects": { "type": "integer", "minimum": 0 },
+        "nativeShapeObjects": { "type": "integer", "minimum": 0 },
+        "nativeTableObjects": { "type": "integer", "minimum": 0 },
+        "nativeChartObjects": { "type": "integer", "minimum": 0 },
+        "svgObjects": { "type": "integer", "minimum": 0 },
+        "rasterFallbackRegions": { "type": "integer", "minimum": 0 },
+        "fullSlideRasterCount": { "type": "integer", "minimum": 0 },
+        "notesStatus": {
+          "type": "string",
+          "enum": ["passed", "warning", "failed", "not-requested"]
+        },
+        "hyperlinksStatus": {
+          "type": "string",
+          "enum": ["passed", "warning", "failed", "not-requested"]
+        },
+        "limitations": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "technicalGate": {
+      "type": "object",
+      "required": ["policy", "status", "evidence"],
+      "properties": {
+        "policy": {
+          "type": "string",
+          "enum": ["clean", "accepted-baseline", "baseline-no-regression"]
+        },
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "baselineArtifact": { "type": "string", "minLength": 1 },
+        "baselineAcceptanceRef": { "type": "string", "minLength": 1 },
+        "newRegressions": { "type": "integer", "minimum": 0 },
+        "regressionEvidence": { "$ref": "#/$defs/evidence" },
+        "blockingIssues": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "policy": { "const": "baseline-no-regression" } },
+            "required": ["policy"]
+          },
+          "then": {
+            "required": ["baselineArtifact", "newRegressions", "regressionEvidence"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "policy": { "const": "accepted-baseline" } },
+            "required": ["policy"]
+          },
+          "then": {
+            "required": [
+              "baselineArtifact",
+              "baselineAcceptanceRef",
+              "newRegressions",
+              "regressionEvidence"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "policy": { "enum": ["accepted-baseline", "baseline-no-regression"] },
+              "status": { "const": "passed" }
+            },
+            "required": ["policy", "status"]
+          },
+          "then": { "properties": { "newRegressions": { "const": 0 } } }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "sourceCheck": {
+      "type": "object",
+      "required": ["subject", "sourceRef", "status", "evidence"],
+      "properties": {
+        "subject": { "type": "string", "minLength": 1 },
+        "sourceRef": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "sourceAccuracyGate": {
+      "type": "object",
+      "required": ["policy", "status", "sourceChecks", "evidence"],
+      "properties": {
+        "policy": { "const": "source-fidelity" },
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "sourceChecks": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/sourceCheck" }
+        },
+        "blockingIssues": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "matrixCoverage": {
+      "type": "object",
+      "required": [
+        "totalRules",
+        "verifiedRules",
+        "failedRules",
+        "unverifiedRules",
+        "coverageComplete",
+        "status",
+        "evidence"
+      ],
+      "properties": {
+        "totalRules": { "type": "integer", "minimum": 1 },
+        "verifiedRules": { "type": "integer", "minimum": 0 },
+        "failedRules": { "type": "integer", "minimum": 0 },
+        "unverifiedRules": { "type": "integer", "minimum": 0 },
+        "coverageComplete": { "type": "boolean" },
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "contentObjectDiff": {
+      "type": "object",
+      "required": ["contentStatus", "objectStatus", "unexpectedChanges", "evidence"],
+      "properties": {
+        "contentStatus": { "$ref": "#/$defs/gateStatus" },
+        "objectStatus": { "$ref": "#/$defs/gateStatus" },
+        "expectedChanges": { "type": "integer", "minimum": 0 },
+        "unexpectedChanges": { "type": "integer", "minimum": 0 },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "semanticReview": {
+      "type": "object",
+      "required": [
+        "totalItems",
+        "reviewedItems",
+        "failedItems",
+        "unreviewedItems",
+        "reviewComplete",
+        "status",
+        "evidence"
+      ],
+      "properties": {
+        "totalItems": { "type": "integer", "minimum": 0 },
+        "reviewedItems": { "type": "integer", "minimum": 0 },
+        "failedItems": { "type": "integer", "minimum": 0 },
+        "unreviewedItems": { "type": "integer", "minimum": 0 },
+        "reviewComplete": { "type": "boolean" },
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "beforeAfterReview": {
+      "type": "object",
+      "required": ["status", "beforeRenderRef", "afterRenderRef", "evidence"],
+      "properties": {
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "beforeRenderRef": { "type": "string", "minLength": 1 },
+        "afterRenderRef": { "type": "string", "minLength": 1 },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "preservationAccuracyGate": {
+      "type": "object",
+      "required": [
+        "policy",
+        "status",
+        "matrixCoverage",
+        "contentObjectDiff",
+        "semanticReview",
+        "beforeAfterReview",
+        "evidence"
+      ],
+      "properties": {
+        "policy": { "const": "preservation-matrix" },
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "matrixCoverage": { "$ref": "#/$defs/matrixCoverage" },
+        "contentObjectDiff": { "$ref": "#/$defs/contentObjectDiff" },
+        "semanticReview": { "$ref": "#/$defs/semanticReview" },
+        "beforeAfterReview": { "$ref": "#/$defs/beforeAfterReview" },
+        "blockingIssues": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "targetAssertion": {
+      "type": "object",
+      "required": [
+        "operationId",
+        "targetResolved",
+        "beforeMatched",
+        "intendedAfterMatched",
+        "expectedMatchCount",
+        "actualMatchCount",
+        "matchCountCorrect",
+        "unexpectedMatches",
+        "status",
+        "evidence"
+      ],
+      "properties": {
+        "operationId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "targetResolved": { "type": "boolean" },
+        "beforeMatched": { "type": "boolean" },
+        "intendedAfterMatched": { "type": "boolean" },
+        "expectedMatchCount": { "type": "integer", "minimum": 1 },
+        "actualMatchCount": { "type": "integer", "minimum": 0 },
+        "matchCountCorrect": { "type": "boolean" },
+        "unexpectedMatches": { "type": "integer", "minimum": 0 },
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "diffCheck": {
+      "type": "object",
+      "required": ["status", "unexpectedChanges", "evidence"],
+      "properties": {
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "expectedChanges": { "type": "integer", "minimum": 0 },
+        "unexpectedChanges": { "type": "integer", "minimum": 0 },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "visualSanity": {
+      "type": "object",
+      "required": ["required", "status", "evidence"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["passed", "failed", "not-required"] },
+        "reviewedSlides": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": ["integer", "string"] }
+        },
+        "renderRefs": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "omissionReason": { "type": "string", "minLength": 1 },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "required": { "const": true } },
+            "required": ["required"]
+          },
+          "then": {
+            "required": ["reviewedSlides", "renderRefs"],
+            "properties": { "status": { "enum": ["passed", "failed"] } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "required": { "const": false } },
+            "required": ["required"]
+          },
+          "then": {
+            "required": ["omissionReason"],
+            "properties": { "status": { "const": "not-required" } }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "precisionAccuracyGate": {
+      "type": "object",
+      "required": [
+        "policy",
+        "status",
+        "targetAssertions",
+        "packageDiff",
+        "contentDiff",
+        "objectDiff",
+        "visualSanity",
+        "evidence"
+      ],
+      "properties": {
+        "policy": { "const": "edit-manifest" },
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "targetAssertions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/targetAssertion" }
+        },
+        "packageDiff": { "$ref": "#/$defs/diffCheck" },
+        "contentDiff": { "$ref": "#/$defs/diffCheck" },
+        "objectDiff": { "$ref": "#/$defs/diffCheck" },
+        "visualSanity": { "$ref": "#/$defs/visualSanity" },
+        "blockingIssues": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "score": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "renderCoverage": {
+      "type": "object",
+      "required": ["expectedSlides", "renderedSlides", "missingSlides", "complete", "evidence"],
+      "properties": {
+        "expectedSlides": { "type": "integer", "minimum": 1 },
+        "renderedSlides": { "type": "integer", "minimum": 0 },
+        "missingSlides": { "type": "integer", "minimum": 0 },
+        "complete": { "type": "boolean" },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "fullDeckAestheticGate": {
+      "type": "object",
+      "required": [
+        "stage",
+        "status",
+        "renderManifestRef",
+        "contactSheetRef",
+        "renderCoverage",
+        "renderArtifacts",
+        "reviewedSlides",
+        "revisionPasses",
+        "criteria",
+        "evidence"
+      ],
+      "properties": {
+        "stage": { "const": "full-deck" },
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "renderManifestRef": { "type": "string", "minLength": 1 },
+        "contactSheetRef": { "type": "string", "minLength": 1 },
+        "renderCoverage": { "$ref": "#/$defs/renderCoverage" },
+        "renderArtifacts": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "reviewedSlides": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": ["integer", "string"] }
+        },
+        "revisionPasses": { "type": "integer", "minimum": 1 },
+        "criteria": {
+          "type": "object",
+          "required": [
+            "contentSpecificConcept",
+            "messageHierarchy",
+            "compositionFocalPoint",
+            "typographyAssetQuality",
+            "informationDesign",
+            "rhythmCoherence",
+            "craftPolish"
+          ],
+          "properties": {
+            "contentSpecificConcept": { "$ref": "#/$defs/score" },
+            "messageHierarchy": { "$ref": "#/$defs/score" },
+            "compositionFocalPoint": { "$ref": "#/$defs/score" },
+            "typographyAssetQuality": { "$ref": "#/$defs/score" },
+            "informationDesign": { "$ref": "#/$defs/score" },
+            "rhythmCoherence": { "$ref": "#/$defs/score" },
+            "craftPolish": { "$ref": "#/$defs/score" }
+          },
+          "additionalProperties": false
+        },
+        "blockingIssues": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
+    "issue": {
+      "type": "object",
+      "required": ["gate", "severity", "description", "status"],
+      "properties": {
+        "gate": { "type": "string", "enum": ["technical", "accuracy", "aesthetic"] },
+        "severity": { "type": "string", "enum": ["info", "warning", "error"] },
+        "description": { "type": "string", "minLength": 1 },
+        "slide": { "type": ["integer", "string"] },
+        "status": { "type": "string", "enum": ["open", "fixed", "accepted"] }
+      },
+      "additionalProperties": false
+    },
+    "passingSourceAccuracyGate": {
+      "allOf": [
+        { "$ref": "#/$defs/sourceAccuracyGate" },
+        {
+          "properties": {
+            "status": { "const": "passed" },
+            "blockingIssues": { "maxItems": 0 },
+            "sourceChecks": {
+              "items": {
+                "allOf": [
+                  { "$ref": "#/$defs/sourceCheck" },
+                  { "properties": { "status": { "const": "passed" } } }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "passingPreservationAccuracyGate": {
+      "allOf": [
+        { "$ref": "#/$defs/preservationAccuracyGate" },
+        {
+          "properties": {
+            "status": { "const": "passed" },
+            "blockingIssues": { "maxItems": 0 },
+            "matrixCoverage": {
+              "properties": {
+                "coverageComplete": { "const": true },
+                "failedRules": { "const": 0 },
+                "unverifiedRules": { "const": 0 },
+                "status": { "const": "passed" }
+              }
+            },
+            "contentObjectDiff": {
+              "properties": {
+                "contentStatus": { "const": "passed" },
+                "objectStatus": { "const": "passed" },
+                "unexpectedChanges": { "const": 0 }
+              }
+            },
+            "semanticReview": {
+              "properties": {
+                "failedItems": { "const": 0 },
+                "unreviewedItems": { "const": 0 },
+                "reviewComplete": { "const": true },
+                "status": { "const": "passed" }
+              }
+            },
+            "beforeAfterReview": {
+              "properties": { "status": { "const": "passed" } }
+            }
+          }
+        }
+      ]
+    },
+    "passingPrecisionAccuracyGate": {
+      "allOf": [
+        { "$ref": "#/$defs/precisionAccuracyGate" },
+        {
+          "properties": {
+            "status": { "const": "passed" },
+            "blockingIssues": { "maxItems": 0 },
+            "targetAssertions": {
+              "items": {
+                "allOf": [
+                  { "$ref": "#/$defs/targetAssertion" },
+                  {
+                    "properties": {
+                      "targetResolved": { "const": true },
+                      "beforeMatched": { "const": true },
+                      "intendedAfterMatched": { "const": true },
+                      "matchCountCorrect": { "const": true },
+                      "unexpectedMatches": { "const": 0 },
+                      "status": { "const": "passed" }
+                    }
+                  }
+                ]
+              }
+            },
+            "packageDiff": {
+              "properties": { "status": { "const": "passed" }, "unexpectedChanges": { "const": 0 } }
+            },
+            "contentDiff": {
+              "properties": { "status": { "const": "passed" }, "unexpectedChanges": { "const": 0 } }
+            },
+            "objectDiff": {
+              "properties": { "status": { "const": "passed" }, "unexpectedChanges": { "const": 0 } }
+            },
+            "visualSanity": {
+              "oneOf": [
+                {
+                  "properties": {
+                    "required": { "const": true },
+                    "status": { "const": "passed" }
+                  },
+                  "required": ["required", "status"]
+                },
+                {
+                  "properties": {
+                    "required": { "const": false },
+                    "status": { "const": "not-required" }
+                  },
+                  "required": ["required", "status"]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "passingFullDeckAestheticGate": {
+      "allOf": [
+        { "$ref": "#/$defs/fullDeckAestheticGate" },
+        {
+          "properties": {
+            "status": { "const": "passed" },
+            "blockingIssues": { "maxItems": 0 },
+            "renderCoverage": {
+              "properties": {
+                "missingSlides": { "const": 0 },
+                "complete": { "const": true }
+              }
+            },
+            "criteria": {
+              "properties": {
+                "contentSpecificConcept": { "minimum": 4 },
+                "messageHierarchy": { "minimum": 4 },
+                "compositionFocalPoint": { "minimum": 4 },
+                "typographyAssetQuality": { "minimum": 4 },
+                "informationDesign": { "minimum": 4 },
+                "rhythmCoherence": { "minimum": 4 },
+                "craftPolish": { "minimum": 4 }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "taskContract": { "const": "studio" } },
+        "required": ["taskContract"]
+      },
+      "then": { "required": ["studioMode"] }
+    },
+    {
+      "if": {
+        "properties": {
+          "taskContract": { "const": "studio" },
+          "studioMode": { "const": "unconstrained" }
+        },
+        "required": ["taskContract", "studioMode"]
+      },
+      "then": {
+        "required": ["aestheticGate"],
+        "properties": {
+          "references": {
+            "required": ["studioBriefRef"],
+            "not": {
+              "anyOf": [
+                { "required": ["preservationMatrixRef"] },
+                { "required": ["editManifestRef"] }
+              ]
+            }
+          },
+          "deliverables": {
+            "required": ["html"],
+            "properties": {
+              "pptx": { "required": ["visualComparisonRef"] },
+              "pdf": { "required": ["visualComparisonRef"] },
+              "images": { "required": ["visualComparisonRef"] }
+            }
+          },
+          "technicalGate": {
+            "allOf": [
+              { "$ref": "#/$defs/technicalGate" },
+              { "properties": { "policy": { "const": "clean" } } }
+            ]
+          },
+          "accuracyGate": { "$ref": "#/$defs/sourceAccuracyGate" },
+          "aestheticGate": { "$ref": "#/$defs/fullDeckAestheticGate" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "taskContract": { "const": "studio" },
+          "studioMode": { "const": "constrained" }
+        },
+        "required": ["taskContract", "studioMode"]
+      },
+      "then": {
+        "required": ["aestheticGate"],
+        "properties": {
+          "references": {
+            "required": ["studioBriefRef", "preservationMatrixRef"],
+            "not": { "required": ["editManifestRef"] }
+          },
+          "deliverables": {
+            "required": ["html"],
+            "properties": {
+              "pptx": { "required": ["visualComparisonRef"] },
+              "pdf": { "required": ["visualComparisonRef"] },
+              "images": { "required": ["visualComparisonRef"] }
+            }
+          },
+          "technicalGate": {
+            "allOf": [
+              { "$ref": "#/$defs/technicalGate" },
+              { "properties": { "policy": { "enum": ["clean", "accepted-baseline"] } } }
+            ]
+          },
+          "accuracyGate": { "$ref": "#/$defs/preservationAccuracyGate" },
+          "aestheticGate": { "$ref": "#/$defs/fullDeckAestheticGate" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "taskContract": { "const": "surgeon" } },
+        "required": ["taskContract"]
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            { "required": ["studioMode"] },
+            { "required": ["aestheticGate"] },
+            { "required": ["pptxEditability"] }
+          ]
+        },
+        "properties": {
+          "references": {
+            "required": ["editManifestRef"],
+            "not": {
+              "anyOf": [
+                { "required": ["studioBriefRef"] },
+                { "required": ["preservationMatrixRef"] }
+              ]
+            }
+          },
+          "deliverables": {
+            "minProperties": 1,
+            "maxProperties": 1,
+            "required": ["pptx"]
+          },
+          "technicalGate": {
+            "allOf": [
+              { "$ref": "#/$defs/technicalGate" },
+              { "properties": { "policy": { "const": "baseline-no-regression" } } }
+            ]
+          },
+          "accuracyGate": { "$ref": "#/$defs/precisionAccuracyGate" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "taskContract": { "const": "studio" },
+          "deliverables": { "required": ["pptx"] }
+        },
+        "required": ["taskContract", "deliverables"]
+      },
+      "then": { "required": ["pptxEditability"] },
+      "else": { "not": { "required": ["pptxEditability"] } }
+    },
+    {
+      "if": {
+        "properties": { "finalStatus": { "const": "passed" } },
+        "required": ["finalStatus"]
+      },
+      "then": {
+        "properties": {
+          "technicalGate": {
+            "properties": {
+              "status": { "const": "passed" },
+              "blockingIssues": { "maxItems": 0 }
+            }
+          },
+          "accuracyGate": { "properties": { "status": { "const": "passed" } } },
+          "deliverables": {
+            "properties": {
+              "html": { "properties": { "status": { "const": "passed" } } },
+              "pptx": { "properties": { "status": { "const": "passed" } } },
+              "pdf": { "properties": { "status": { "const": "passed" } } },
+              "images": { "properties": { "status": { "const": "passed" } } }
+            }
+          },
+          "issues": {
+            "not": {
+              "contains": {
+                "type": "object",
+                "properties": {
+                  "severity": { "const": "error" },
+                  "status": { "const": "open" }
+                },
+                "required": ["severity", "status"]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "taskContract": { "const": "studio" },
+          "finalStatus": { "const": "passed" },
+          "deliverables": { "required": ["pptx"] }
+        },
+        "required": ["taskContract", "finalStatus", "deliverables"]
+      },
+      "then": {
+        "properties": {
+          "pptxEditability": {
+            "properties": {
+              "status": { "const": "passed" },
+              "notesStatus": { "enum": ["passed", "not-requested"] },
+              "hyperlinksStatus": { "enum": ["passed", "not-requested"] }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "taskContract": { "const": "studio" },
+          "studioMode": { "const": "unconstrained" },
+          "finalStatus": { "const": "passed" }
+        },
+        "required": ["taskContract", "studioMode", "finalStatus"]
+      },
+      "then": {
+        "properties": {
+          "accuracyGate": { "$ref": "#/$defs/passingSourceAccuracyGate" },
+          "aestheticGate": { "$ref": "#/$defs/passingFullDeckAestheticGate" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "taskContract": { "const": "studio" },
+          "studioMode": { "const": "constrained" },
+          "finalStatus": { "const": "passed" }
+        },
+        "required": ["taskContract", "studioMode", "finalStatus"]
+      },
+      "then": {
+        "properties": {
+          "accuracyGate": { "$ref": "#/$defs/passingPreservationAccuracyGate" },
+          "aestheticGate": { "$ref": "#/$defs/passingFullDeckAestheticGate" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "taskContract": { "const": "surgeon" },
+          "finalStatus": { "const": "passed" }
+        },
+        "required": ["taskContract", "finalStatus"]
+      },
+      "then": {
+        "properties": {
+          "accuracyGate": { "$ref": "#/$defs/passingPrecisionAccuracyGate" }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }
