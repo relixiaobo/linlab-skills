@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Presentation Studio Config",
+  "description": "Deterministic runtime, rendering, and export settings for an HTML-canonical presentation project.",
+  "type": "object",
+  "required": ["schemaVersion", "entry", "slideSelector", "notesSelector", "exportQuery", "themeId", "archetypeId", "archetype", "layoutLibrary", "canvas", "compiler", "output"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "entry": { "type": "string", "pattern": "\\.html$" },
+    "slideSelector": { "type": "string", "minLength": 1 },
+    "stageSelector": { "type": "string", "minLength": 1 },
+    "controlsSelector": { "type": "string", "minLength": 1 },
+    "notesSelector": { "type": "string", "minLength": 1 },
+    "exportQuery": { "type": "string" },
+    "themeId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "archetypeId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "archetype": { "type": "string", "pattern": "\\.json$" },
+    "layoutLibrary": { "type": "string", "pattern": "\\.json$" },
+    "evidenceLedger": { "type": "string", "minLength": 1 },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "subject": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "canvas": {
+      "type": "object",
+      "required": ["widthPx", "heightPx", "widthIn", "heightIn"],
+      "properties": {
+        "widthPx": { "type": "integer", "minimum": 320 },
+        "heightPx": { "type": "integer", "minimum": 180 },
+        "widthIn": { "type": "number", "exclusiveMinimum": 0 },
+        "heightIn": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "compiler": {
+      "type": "object",
+      "required": ["package", "version", "svgAsVector"],
+      "properties": {
+        "package": { "const": "dom-to-pptx" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "svgAsVector": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "render": {
+      "type": "object",
+      "properties": {
+        "timeoutMs": { "type": "integer", "minimum": 1000, "maximum": 300000 }
+      },
+      "additionalProperties": false
+    },
+    "output": {
+      "type": "object",
+      "required": ["pptx", "htmlRenders", "pptxRenders", "comparison", "editability"],
+      "properties": {
+        "pptx": { "type": "string", "pattern": "\\.pptx$" },
+        "htmlRenders": { "type": "string", "minLength": 1 },
+        "pptxRenders": { "type": "string", "minLength": 1 },
+        "diffRenders": { "type": "string", "minLength": 1 },
+        "comparison": { "type": "string", "pattern": "\\.json$" },
+        "editability": { "type": "string", "pattern": "\\.json$" },
+        "pptxGate": { "type": "string", "pattern": "\\.json$" },
+        "compileReport": { "type": "string", "pattern": "\\.json$" },
+        "evidenceReport": { "type": "string", "pattern": "\\.json$" },
+        "qaDir": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

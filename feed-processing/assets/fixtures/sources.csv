@@ -1,0 +1,3 @@
+title,xmlUrl,htmlUrl,tags
+Example RSS,https://example.com/rss.xml,https://example.com,"ai,research"
+Example Site,,https://example.org,news

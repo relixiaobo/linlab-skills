@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en" style="--stage-width:1920px;--stage-height:1080px">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Presentation Studio</title>
+  <script>
+    const presentationParams = new URLSearchParams(window.location.search);
+    if (presentationParams.has('export')) document.documentElement.classList.add('export-mode');
+    if (presentationParams.has('capture')) document.documentElement.classList.add('capture-mode');
+  </script>
+  <link rel="stylesheet" href="styles/studio.css">
+  <link rel="stylesheet" href="theme/tokens.css">
+</head>
+<body>
+  <div class="deck-viewport" id="deckViewport">
+    <main class="deck-stage" id="deckStage" data-deck>
+      <section class="slide" id="slide-1" data-slide="1" data-layout="cover" aria-current="true">
+        <div class="slide-content dark">
+          <div class="cover-grid">
+            <div class="cover-copy">
+              <div>
+                <div class="eyebrow"><span class="swatch"></span>Presentation Studio</div>
+                <h1>One source.<br>Deliberate slides.</h1>
+                <p class="lede" style="margin-top:42px;">Build the argument in HTML, then verify every requested export against that source.</p>
+              </div>
+              <div class="meta-row">
+                <span class="tag">Canonical HTML</span>
+                <span class="tag">Evidence bound</span>
+                <span class="tag">Export verified</span>
+              </div>
+            </div>
+            <div class="cover-visual">
+              <div class="signal-stack">
+                <div class="signal-row"><strong>01</strong><span>Evidence</span></div>
+                <div class="signal-row"><strong>02</strong><span>Claim</span></div>
+                <div class="signal-row"><strong>03</strong><span>Decision</span></div>
+              </div>
+            </div>
+          </div>
+          <span class="slide-no">01</span>
+        </div>
+        <aside class="speaker-notes" hidden>Open with the source-of-truth principle, then move directly to the argument the audience needs.</aside>
+      </section>
+
+      <section class="slide" id="slide-2" data-slide="2" data-layout="diagram">
+        <div class="slide-content">
+          <div class="eyebrow"><span class="swatch"></span>Argument architecture</div>
+          <h2>A deck is an argument, not a stack of pages.</h2>
+          <div class="claim-flow diagram">
+            <div class="flow-step">
+              <div class="index">01 / EVIDENCE</div>
+              <h3>Start with what can be defended</h3>
+              <p>Sources, definitions, dates, assets, and caveats are explicit before layout decisions begin.</p>
+            </div>
+            <div class="flow-step">
+              <div class="index">02 / CLAIM</div>
+              <h3>Give each slide one job</h3>
+              <p>The headline states the conclusion. The composition explains, proves, compares, or advances it.</p>
+            </div>
+            <div class="flow-step">
+              <div class="index">03 / DECISION</div>
+              <h3>Resolve the opening promise</h3>
+              <p>Sequence and pacing should leave the audience with a judgment, action, or memorable model.</p>
+            </div>
+          </div>
+          <span class="slide-no">02</span>
+        </div>
+        <aside class="speaker-notes" hidden>Use this frame to test whether the story has a defensible chain from source to audience decision.</aside>
+      </section>
+
+      <section class="slide" id="slide-3" data-slide="3" data-layout="evidence-wall">
+        <div class="slide-content">
+          <div class="eyebrow"><span class="swatch"></span>Risk-first prototyping</div>
+          <h2>The hardest frame sets the quality bar.</h2>
+          <div class="ledger evidence-wall">
+            <div class="ledger-main">
+              <div class="ledger-row"><strong>SOURCE</strong><span>Authority and retrieval context</span><span class="status">BOUND</span></div>
+              <div class="ledger-row"><strong>CLAIM</strong><span>Statement, definition, and caveat</span><span class="status">VERIFIED</span></div>
+              <div class="ledger-row"><strong>ASSET</strong><span>Identity, rights, and transformation</span><span class="status">TRACEABLE</span></div>
+              <div class="ledger-row"><strong>SLIDE</strong><span>Visible binding to the evidence ledger</span><span class="status">REVIEWED</span></div>
+            </div>
+            <div class="ledger-side">
+              <div class="risk-frame">
+                <div class="eyebrow" style="color:var(--secondary);"><span class="swatch"></span>Prototype gate</div>
+                <h3>Dense data, long labels, maps, diagrams, and real screenshots expose the system.</h3>
+                <p>Do not let a sparse cover certify a visual language that fails on the slides carrying the actual work.</p>
+              </div>
+            </div>
+          </div>
+          <span class="slide-no">03</span>
+        </div>
+        <aside class="speaker-notes" hidden>Prototype the content that is most likely to wrap, crowd, flatten, or lose meaning during export.</aside>
+      </section>
+
+      <section class="slide" id="slide-4" data-slide="4" data-layout="compare">
+        <div class="slide-content">
+          <div class="eyebrow"><span class="swatch"></span>Editability evidence</div>
+          <h2>Editable is reported, not assumed.</h2>
+          <div class="coverage-grid compare">
+            <div class="coverage">
+              <div class="marker"></div>
+              <h3>Native PowerPoint</h3>
+              <p>Text, drawing shapes, links, notes, and semantic objects where the compiler creates them.</p>
+            </div>
+            <div class="coverage vector">
+              <div class="marker"></div>
+              <h3>SVG vector</h3>
+              <p>Sharp and transformable, but not automatically a semantic PowerPoint chart or diagram.</p>
+            </div>
+            <div class="coverage raster">
+              <div class="marker"></div>
+              <h3>Raster fallback</h3>
+              <p>Reserved for visual regions that cannot be represented faithfully as native or vector objects.</p>
+            </div>
+          </div>
+          <span class="slide-no">04</span>
+        </div>
+        <aside class="speaker-notes" hidden>Describe downstream editing honestly by object class instead of applying one deck-level editable label.</aside>
+      </section>
+
+      <section class="slide" id="slide-5" data-slide="5" data-layout="close">
+        <div class="slide-content dark">
+          <div class="close-grid">
+            <div>
+              <div class="eyebrow"><span class="swatch"></span>Production principle</div>
+              <h2>Build from the hardest frame outward.</h2>
+              <p class="lede" style="margin-top:42px;">One selected direction, one canonical source, and evidence for every claim made at delivery.</p>
+            </div>
+            <div class="close-mark" aria-label="Verified progression">
+              <svg viewBox="0 0 240 240" role="img" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                <path d="M42 126 L96 180 L202 62" fill="none" stroke="currentColor" stroke-width="24" stroke-linecap="square" stroke-linejoin="miter"/>
+              </svg>
+            </div>
+          </div>
+          <span class="slide-no">05</span>
+        </div>
+        <aside class="speaker-notes" hidden>Close by restating the operating discipline rather than repeating a generic thank-you page.</aside>
+      </section>
+    </main>
+  </div>
+
+  <nav class="deck-controls" aria-label="Slide navigation">
+    <button type="button" id="previousSlide" title="Previous slide" aria-label="Previous slide">&#x2039;</button>
+    <output class="slide-counter" id="slideCounter" aria-live="polite">1 / 5</output>
+    <button type="button" id="nextSlide" title="Next slide" aria-label="Next slide">&#x203A;</button>
+    <button type="button" id="fullscreenToggle" title="Full screen" aria-label="Full screen">&#x26F6;</button>
+  </nav>
+
+  <script>
+    const viewport = document.getElementById('deckViewport');
+    const stage = document.getElementById('deckStage');
+    const slides = [...stage.querySelectorAll('.slide')];
+    const previousButton = document.getElementById('previousSlide');
+    const nextButton = document.getElementById('nextSlide');
+    const counter = document.getElementById('slideCounter');
+    const fullscreenButton = document.getElementById('fullscreenToggle');
+    let index = 0;
+    let touchStartX = 0;
+
+    function fitStage() {
+      if (document.documentElement.classList.contains('export-mode')) return;
+      const scale = Math.min(viewport.clientWidth / 1920, viewport.clientHeight / 1080);
+      const x = (viewport.clientWidth - 1920 * scale) / 2;
+      const y = (viewport.clientHeight - 1080 * scale) / 2;
+      stage.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+    }
+
+    function show(next, updateHash = true) {
+      if (document.documentElement.classList.contains('export-mode')) return;
+      index = Math.max(0, Math.min(slides.length - 1, next));
+      slides.forEach((slide, slideIndex) => {
+        const current = slideIndex === index;
+        slide.setAttribute('aria-current', String(current));
+        slide.setAttribute('aria-hidden', String(!current));
+      });
+      counter.value = `${index + 1} / ${slides.length}`;
+      counter.textContent = counter.value;
+      previousButton.disabled = index === 0;
+      nextButton.disabled = index === slides.length - 1;
+      if (updateHash) history.replaceState(null, '', `#/${index + 1}`);
+    }
+
+    function showFromHash() {
+      const match = window.location.hash.match(/\/(\d+)/);
+      if (match) show(Number(match[1]) - 1, false);
+    }
+
+    previousButton.addEventListener('click', () => show(index - 1));
+    nextButton.addEventListener('click', () => show(index + 1));
+    fullscreenButton.addEventListener('click', () => document.documentElement.requestFullscreen?.());
+    window.addEventListener('resize', fitStage);
+    window.addEventListener('hashchange', showFromHash);
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') {
+        event.preventDefault();
+        show(index + 1);
+      }
+      if (event.key === 'ArrowLeft' || event.key === 'PageUp') show(index - 1);
+      if (event.key === 'Home') show(0);
+      if (event.key === 'End') show(slides.length - 1);
+      if (event.key === 'f' || event.key === 'F') document.documentElement.requestFullscreen?.();
+    });
+    viewport.addEventListener('touchstart', (event) => {
+      touchStartX = event.changedTouches[0]?.clientX || 0;
+    }, { passive: true });
+    viewport.addEventListener('touchend', (event) => {
+      const end = event.changedTouches[0]?.clientX || touchStartX;
+      if (Math.abs(end - touchStartX) > 48) show(index + (end < touchStartX ? 1 : -1));
+    }, { passive: true });
+
+    window.deckRuntime = Object.freeze({ show, next: () => show(index + 1), previous: () => show(index - 1) });
+    window.__PRESENTATION_READY__ = document.fonts?.ready || Promise.resolve();
+    showFromHash();
+    show(index, false);
+    fitStage();
+    document.fonts?.ready.then(fitStage);
+  </script>
+</body>
+</html>

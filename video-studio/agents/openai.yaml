@@ -1,4 +1,4 @@
 interface:
   display_name: "Video Studio"
   short_description: "Manifest-driven video production skill."
-  default_prompt: "Use video-studio to edit, render, package, or QA a video from local media, subtitles, transcripts, scripts, or webpages."
+  default_prompt: "Use $video-studio to edit, render, package, or QA a video from local media, subtitles, transcripts, scripts, or webpages."

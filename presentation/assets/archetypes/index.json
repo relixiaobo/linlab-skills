@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "1.0",
+  "archetypes": [
+    {
+      "id": "research-report",
+      "label": "Research Report",
+      "fit": ["industry research", "strategy", "policy", "technical review", "long-form evidence"],
+      "avoid": ["short reveal keynote", "pure portfolio"],
+      "density": "high",
+      "defaultThemeIds": ["analytical-ledger", "institutional-editorial", "technical-blueprint"],
+      "sequence": [
+        { "job": "frame the question and answer", "range": "1-2", "layoutIds": ["cover", "statement"] },
+        { "job": "establish definitions and context", "range": "1-3", "layoutIds": ["section", "timeline", "map-callout"] },
+        { "job": "present the evidence", "range": "variable", "layoutIds": ["chart", "evidence-wall", "table-takeaway", "diagram"] },
+        { "job": "synthesize mechanisms and implications", "range": "2-5", "layoutIds": ["compare", "diagram", "split"] },
+        { "job": "resolve decisions, risks, and next moves", "range": "1-3", "layoutIds": ["metric", "statement", "close"] }
+      ],
+      "prototypeRoles": ["opening", "normal", "dense-data", "diagram-process", "closing"]
+    },
+    {
+      "id": "investment-case",
+      "label": "Investment Case",
+      "fit": ["investment committee", "M&A", "asset review", "capital allocation", "board decision"],
+      "avoid": ["introductory training", "celebration"],
+      "density": "high",
+      "defaultThemeIds": ["analytical-ledger", "institutional-editorial", "stage-keynote"],
+      "sequence": [
+        { "job": "state the investment thesis", "range": "1", "layoutIds": ["cover", "statement"] },
+        { "job": "define the asset, market, and timing", "range": "2-4", "layoutIds": ["map-callout", "timeline", "chart"] },
+        { "job": "show value drivers and operating case", "range": "3-6", "layoutIds": ["metric", "diagram", "table-takeaway"] },
+        { "job": "test downside, scenarios, and risks", "range": "2-4", "layoutIds": ["compare", "evidence-wall", "chart"] },
+        { "job": "make the decision explicit", "range": "1-2", "layoutIds": ["statement", "close"] }
+      ],
+      "prototypeRoles": ["opening", "dense-data", "highest-risk", "closing"]
+    },
+    {
+      "id": "product-launch",
+      "label": "Product Launch",
+      "fit": ["product reveal", "company launch", "new capability", "press briefing", "all-hands"],
+      "avoid": ["legal evidence pack", "dense audit report"],
+      "density": "low-medium",
+      "defaultThemeIds": ["stage-keynote", "dark-technology", "modern-swiss"],
+      "sequence": [
+        { "job": "create tension", "range": "1-2", "layoutIds": ["cover", "statement"] },
+        { "job": "reveal the product or capability", "range": "1-2", "layoutIds": ["product-stage", "hero-media"] },
+        { "job": "show the value through use", "range": "2-4", "layoutIds": ["split", "scripted-demo", "feature-grid"] },
+        { "job": "prove performance and trust", "range": "1-3", "layoutIds": ["metric", "compare", "chart"] },
+        { "job": "explain adoption and next action", "range": "1-2", "layoutIds": ["timeline", "close"] }
+      ],
+      "prototypeRoles": ["opening", "visual-media", "normal", "closing"]
+    },
+    {
+      "id": "sales-proposal",
+      "label": "Sales Proposal",
+      "fit": ["enterprise sales", "advisory proposal", "solution pitch", "partnership", "client workshop"],
+      "avoid": ["neutral academic review", "internal incident report"],
+      "density": "medium",
+      "defaultThemeIds": ["modern-swiss", "analytical-ledger", "photo-editorial"],
+      "sequence": [
+        { "job": "name the client change and stakes", "range": "1-2", "layoutIds": ["cover", "statement"] },
+        { "job": "diagnose the present state", "range": "1-3", "layoutIds": ["compare", "evidence-wall", "chart"] },
+        { "job": "show the proposed future state", "range": "2-4", "layoutIds": ["diagram", "feature-grid", "split"] },
+        { "job": "prove credibility and outcomes", "range": "1-3", "layoutIds": ["hero-media", "metric", "gallery"] },
+        { "job": "make implementation and decision easy", "range": "1-3", "layoutIds": ["timeline", "table-takeaway", "close"] }
+      ],
+      "prototypeRoles": ["opening", "normal", "visual-media", "highest-risk", "closing"]
+    },
+    {
+      "id": "learning-workshop",
+      "label": "Learning Workshop",
+      "fit": ["training", "course", "onboarding", "workshop", "teaching"],
+      "avoid": ["board approval", "formal transaction memorandum"],
+      "density": "medium",
+      "defaultThemeIds": ["soft-humanist", "modern-swiss", "institutional-editorial"],
+      "sequence": [
+        { "job": "hook and orient learners", "range": "1-2", "layoutIds": ["cover", "section"] },
+        { "job": "set objectives and mental model", "range": "1-2", "layoutIds": ["feature-grid", "diagram"] },
+        { "job": "explain the concept", "range": "variable", "layoutIds": ["split", "diagram", "statement"] },
+        { "job": "work through an example", "range": "1-3", "layoutIds": ["scripted-demo", "compare", "timeline"] },
+        { "job": "practice and check understanding", "range": "1-3", "layoutIds": ["feature-grid", "table-takeaway", "quote"] },
+        { "job": "recap and transfer", "range": "1-2", "layoutIds": ["statement", "close"] }
+      ],
+      "prototypeRoles": ["opening", "normal", "diagram-process", "closing"]
+    },
+    {
+      "id": "operating-review",
+      "label": "Operating Review",
+      "fit": ["weekly review", "QBR", "portfolio review", "program status", "management meeting"],
+      "avoid": ["brand manifesto", "photo essay"],
+      "density": "high",
+      "defaultThemeIds": ["analytical-ledger", "modern-swiss", "dark-technology"],
+      "sequence": [
+        { "job": "state the period and headline", "range": "1", "layoutIds": ["cover", "statement"] },
+        { "job": "show the scorecard and trend", "range": "1-3", "layoutIds": ["metric", "chart", "table-takeaway"] },
+        { "job": "explain delivery and variance", "range": "2-4", "layoutIds": ["timeline", "compare", "evidence-wall"] },
+        { "job": "surface blockers and decisions", "range": "1-3", "layoutIds": ["split", "diagram", "statement"] },
+        { "job": "commit the next operating cycle", "range": "1-2", "layoutIds": ["timeline", "close"] }
+      ],
+      "prototypeRoles": ["opening", "dense-data", "normal", "closing"]
+    },
+    {
+      "id": "conference-talk",
+      "label": "Conference Talk",
+      "fit": ["keynote", "conference session", "thought leadership", "founder talk", "technical talk"],
+      "avoid": ["silent reading report", "appendix-heavy review"],
+      "density": "low-medium",
+      "defaultThemeIds": ["stage-keynote", "expressive-neo-grid", "dark-technology", "photo-editorial"],
+      "sequence": [
+        { "job": "open with a memorable tension", "range": "1-2", "layoutIds": ["cover", "statement"] },
+        { "job": "establish the old model", "range": "1-2", "layoutIds": ["quote", "compare"] },
+        { "job": "introduce the central idea", "range": "1-3", "layoutIds": ["diagram", "statement", "hero-media"] },
+        { "job": "prove it through cases or evidence", "range": "2-5", "layoutIds": ["gallery", "scripted-demo", "chart", "hero-media"] },
+        { "job": "resolve the tension into takeaways", "range": "1-3", "layoutIds": ["feature-grid", "statement", "close"] }
+      ],
+      "prototypeRoles": ["opening", "normal", "visual-media", "closing"]
+    }
+  ]
+}

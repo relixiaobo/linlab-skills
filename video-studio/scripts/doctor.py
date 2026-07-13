@@ -8,10 +8,11 @@ import importlib.util
 import json
 import shutil
 import subprocess
+import sys
 from typing import Any
 
 
-REQUIRED_BINS = ["ffmpeg", "ffprobe", "python3"]
+REQUIRED_BINS = ["ffmpeg", "ffprobe"]
 # `manim` (math overlay engine) and `latex` (MathTex/Tex) are optional: only the
 # manim math-overlay path needs them. `latex` covers the typical TeX entry point.
 OPTIONAL_BINS = ["node", "npm", "npx", "manim", "latex"]
@@ -23,7 +24,6 @@ def version_for(binary: str) -> str | None:
     if not path:
         return None
     version_args = {
-        "python3": ["--version"],
         "node": ["--version"],
         "npm": ["--version"],
         "npx": ["--version"],
@@ -101,6 +101,10 @@ def check() -> dict[str, Any]:
     return {
         "status": "pass" if not errors else "fail",
         "binaries": bins,
+        "pythonRuntime": {
+            "executable": sys.executable,
+            "version": sys.version.split()[0],
+        },
         "pythonPackages": py,
         "ffmpegFilters": filters,
         "errors": errors,
@@ -118,6 +122,8 @@ def main() -> int:
         print(json.dumps(result, indent=2, ensure_ascii=False))
     else:
         print(f"video-studio doctor: {result['status'].upper()}")
+        runtime = result["pythonRuntime"]
+        print(f"  python runtime: {runtime['executable']} ({runtime['version']})")
         for name, info in result["binaries"].items():
             mark = "✓" if info["path"] else "✗"
             req = "required" if info["required"] else "optional"

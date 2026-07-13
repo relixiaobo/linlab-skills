@@ -1,0 +1,110 @@
+{
+  "reportStage": "final-delivery",
+  "taskContract": "studio",
+  "studioMode": "constrained",
+  "references": {
+    "studioBriefRef": "contracts/studio-brief.json",
+    "preservationMatrixRef": "contracts/preservation-matrix.json"
+  },
+  "deliverables": {
+    "html": {
+      "artifact": "output/redesigned.html",
+      "status": "passed",
+      "evidence": ["verification/html-report.json"]
+    },
+    "pptx": {
+      "artifact": "output/redesigned.pptx",
+      "status": "passed",
+      "visualComparisonRef": "verification/html-pptx-comparison.json",
+      "evidence": ["verification/pptx-technical-gate.json"]
+    }
+  },
+  "pptxEditability": {
+    "status": "passed",
+    "nativeTextObjects": 48,
+    "nativeShapeObjects": 42,
+    "nativeTableObjects": 2,
+    "nativeChartObjects": 3,
+    "svgObjects": 4,
+    "rasterFallbackRegions": 1,
+    "fullSlideRasterCount": 0,
+    "notesStatus": "passed",
+    "hyperlinksStatus": "passed",
+    "evidence": ["verification/pptx-editability.json"]
+  },
+  "technicalGate": {
+    "policy": "accepted-baseline",
+    "status": "passed",
+    "baselineArtifact": "verification/source-inspection.json",
+    "baselineAcceptanceRef": "contracts/preservation-matrix.json#/approvedExceptions/0",
+    "newRegressions": 0,
+    "regressionEvidence": ["verification/regression-comparison.json"],
+    "evidence": ["verification/technical-gate.json"]
+  },
+  "accuracyGate": {
+    "policy": "preservation-matrix",
+    "status": "passed",
+    "matrixCoverage": {
+      "totalRules": 17,
+      "verifiedRules": 17,
+      "failedRules": 0,
+      "unverifiedRules": 0,
+      "coverageComplete": true,
+      "status": "passed",
+      "evidence": ["verification/matrix-coverage.json"]
+    },
+    "contentObjectDiff": {
+      "contentStatus": "passed",
+      "objectStatus": "passed",
+      "expectedChanges": 24,
+      "unexpectedChanges": 0,
+      "evidence": ["verification/content-object-diff.json"]
+    },
+    "semanticReview": {
+      "totalItems": 2,
+      "reviewedItems": 2,
+      "failedItems": 0,
+      "unreviewedItems": 0,
+      "reviewComplete": true,
+      "status": "passed",
+      "evidence": ["verification/semantic-review.json"]
+    },
+    "beforeAfterReview": {
+      "status": "passed",
+      "beforeRenderRef": "renders-before/contact-sheet.png",
+      "afterRenderRef": "renders-after/contact-sheet.png",
+      "evidence": ["reviews/before-after.json"]
+    },
+    "evidence": ["verification/preservation-accuracy.json"]
+  },
+  "aestheticGate": {
+    "stage": "full-deck",
+    "status": "passed",
+    "renderManifestRef": "renders-after/render-manifest.json",
+    "contactSheetRef": "renders-after/contact-sheet.png",
+    "renderCoverage": {
+      "expectedSlides": 10,
+      "renderedSlides": 10,
+      "missingSlides": 0,
+      "complete": true,
+      "evidence": ["renders-after/render-manifest.json"]
+    },
+    "renderArtifacts": ["renders-after/slide-001.png", "renders-after/slide-010.png"],
+    "reviewedSlides": [1, 3, 6, 10],
+    "revisionPasses": 1,
+    "criteria": {
+      "contentSpecificConcept": 4,
+      "messageHierarchy": 5,
+      "compositionFocalPoint": 4,
+      "typographyAssetQuality": 4,
+      "informationDesign": 4,
+      "rhythmCoherence": 4,
+      "craftPolish": 4
+    },
+    "evidence": ["reviews/full-deck-review.json"]
+  },
+  "issues": [],
+  "limitations": [],
+  "deliveryEvidence": ["delivery/handoff.json"],
+  "finalStatus": "passed"
+}

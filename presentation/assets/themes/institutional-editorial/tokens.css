@@ -1,0 +1,30 @@
+:root {
+  --paper: #f5f2ec;
+  --surface: #e7e1d8;
+  --ink: #202126;
+  --muted: #6b6966;
+  --muted-on-dark: #d2cec5;
+  --line: #c9c1b7;
+  --line-strong: #56565b;
+  --accent: #b22632;
+  --secondary: #176a78;
+  --warning: #b86d18;
+  --positive: #34704d;
+  --font-display: "Iowan Old Style", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+  --font-body: "Aptos", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --page-x: 120px;
+  --page-y: 88px;
+  --radius-small: 2px;
+}
+
+.slide-content.dark {
+  background: #24252a;
+}
+
+.dark .tag {
+  border-color: #77777c;
+}
+
+.eyebrow {
+  font-family: var(--font-body);
+}

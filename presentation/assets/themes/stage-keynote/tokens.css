@@ -1,0 +1,54 @@
+:root {
+  --paper: #09090a;
+  --surface: #19191c;
+  --ink: #f5f2ea;
+  --muted: #aaa7a0;
+  --muted-on-dark: #c8c4bb;
+  --line: #3a3a3e;
+  --line-strong: #f5f2ea;
+  --accent: #ff5a36;
+  --secondary: #63a7ff;
+  --warning: #ffd45a;
+  --positive: #5fd19a;
+  --font-display: "Aptos Display", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-body: "Aptos", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --page-x: 124px;
+  --page-y: 94px;
+  --radius-small: 0px;
+}
+
+.slide-content.dark {
+  background: #000000;
+  color: #f7f4ed;
+}
+
+.dark .tag {
+  border-color: #6d6b66;
+}
+
+h1 {
+  max-width: 1500px;
+  font-size: 124px;
+  font-weight: 820;
+  line-height: 0.94;
+}
+
+h2 {
+  max-width: 1680px;
+  font-size: 76px;
+  line-height: 1;
+}
+
+.flow-step,
+.coverage {
+  background: transparent;
+}
+
+.risk-frame {
+  background: #f5f2ea;
+  color: #09090a;
+}
+
+.risk-frame p {
+  color: #53514d;
+}

@@ -1,0 +1,63 @@
+{
+  "reportStage": "final-delivery",
+  "taskContract": "studio",
+  "studioMode": "unconstrained",
+  "references": {
+    "studioBriefRef": "contracts/studio-brief.json"
+  },
+  "deliverables": {
+    "html": {
+      "artifact": "output/strategy-deck.html",
+      "status": "passed",
+      "evidence": ["verification/html-report.json"]
+    }
+  },
+  "technicalGate": {
+    "policy": "clean",
+    "status": "passed",
+    "evidence": ["verification/technical-gate.json"]
+  },
+  "accuracyGate": {
+    "policy": "source-fidelity",
+    "status": "passed",
+    "sourceChecks": [
+      {
+        "subject": "All source claims",
+        "sourceRef": "source/brief.md",
+        "status": "passed",
+        "evidence": ["verification/source-checks.json"]
+      }
+    ],
+    "evidence": ["verification/source-checks.json"]
+  },
+  "aestheticGate": {
+    "stage": "concept",
+    "status": "passed",
+    "renderManifestRef": "renders/concept-manifest.json",
+    "contactSheetRef": "renders/concepts.png",
+    "renderCoverage": {
+      "expectedSlides": 12,
+      "renderedSlides": 12,
+      "missingSlides": 0,
+      "complete": true,
+      "evidence": ["renders/concept-manifest.json"]
+    },
+    "renderArtifacts": ["renders/concept-a.png"],
+    "reviewedSlides": [1],
+    "revisionPasses": 1,
+    "criteria": {
+      "contentSpecificConcept": 5,
+      "messageHierarchy": 5,
+      "compositionFocalPoint": 5,
+      "typographyAssetQuality": 5,
+      "informationDesign": 5,
+      "rhythmCoherence": 5,
+      "craftPolish": 5
+    },
+    "evidence": ["reviews/concept-review.json"]
+  },
+  "issues": [],
+  "limitations": [],
+  "deliveryEvidence": ["delivery/handoff.json"],
+  "finalStatus": "passed"
+}

@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    const themeId = new URLSearchParams(window.location.search).get('theme') || 'analytical-ledger';
+    document.documentElement.dataset.theme = themeId;
+    document.write(`<link rel="stylesheet" href="../themes/${encodeURIComponent(themeId)}/tokens.css">`);
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 1200px;
+      height: 675px;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      padding: 22px;
+      background: #17191c;
+      color: var(--ink);
+      font-family: var(--font-body);
+      letter-spacing: 0;
+    }
+
+    h1,
+    h2,
+    h3,
+    p { margin: 0; }
+
+    h1,
+    h2,
+    h3 { font-family: var(--font-display); }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 16px;
+      width: 100%;
+      height: 100%;
+    }
+
+    .frame {
+      position: relative;
+      min-width: 0;
+      overflow: hidden;
+      padding: 30px 34px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-small);
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .frame-dark {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .kicker {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 760;
+      text-transform: uppercase;
+    }
+
+    .kicker::before {
+      width: 19px;
+      height: 4px;
+      background: currentColor;
+      content: "";
+    }
+
+    .frame-dark .kicker { color: var(--secondary); }
+
+    .cover {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .cover h1 {
+      align-self: center;
+      max-width: 500px;
+      font-size: 55px;
+      font-weight: 760;
+      line-height: 0.98;
+    }
+
+    .cover .zh {
+      color: var(--muted-on-dark);
+      font-size: 17px;
+    }
+
+    .metric h2 {
+      max-width: 450px;
+      margin-top: 18px;
+      font-size: 33px;
+      line-height: 1.04;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .metric-item {
+      min-height: 112px;
+      padding: 15px;
+      border-top: 5px solid var(--accent);
+      background: var(--surface);
+    }
+
+    .metric-item:nth-child(2) { border-color: var(--secondary); }
+    .metric-item:nth-child(3) { border-color: var(--warning); }
+
+    .metric-item strong {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .metric-item span {
+      display: block;
+      margin-top: 13px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .media {
+      padding: 0;
+      background: #1b1c1d;
+    }
+
+    .media img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 52%;
+    }
+
+    .media-copy {
+      position: absolute;
+      left: 28px;
+      bottom: 26px;
+      width: min(390px, calc(100% - 56px));
+      padding: 17px 19px;
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .media-copy h2 {
+      margin-top: 8px;
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .close {
+      display: grid;
+      grid-template-columns: 1fr 112px;
+      align-items: end;
+      gap: 24px;
+    }
+
+    .close h2 {
+      max-width: 430px;
+      margin-top: 18px;
+      font-size: 42px;
+      line-height: 0.98;
+    }
+
+    .close-mark {
+      display: grid;
+      place-items: center;
+      width: 106px;
+      height: 106px;
+      border: 8px solid var(--accent);
+      color: var(--accent);
+      font-size: 50px;
+      font-weight: 800;
+    }
+
+    html[data-theme="stage-keynote"] .frame,
+    html[data-theme="dark-technology"] .frame {
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    html[data-theme="stage-keynote"] .cover h1 {
+      max-width: 520px;
+      font-size: 66px;
+    }
+
+    html[data-theme="stage-keynote"] .metric-item {
+      border: 0;
+      background: #18181b;
+    }
+
+    html[data-theme="stage-keynote"] .metric-item strong { color: var(--accent); }
+
+    html[data-theme="photo-editorial"] .media-copy {
+      left: auto;
+      right: 24px;
+      bottom: 24px;
+      width: 290px;
+    }
+
+    html[data-theme="photo-editorial"] .cover h1,
+    html[data-theme="photo-editorial"] .close h2 {
+      font-weight: 600;
+    }
+
+    html[data-theme="soft-humanist"] .frame,
+    html[data-theme="soft-humanist"] .metric-item,
+    html[data-theme="soft-humanist"] .media-copy {
+      border-radius: 8px;
+    }
+
+    html[data-theme="expressive-neo-grid"] .frame {
+      border: 4px solid var(--ink);
+      box-shadow: 8px 8px 0 var(--secondary);
+    }
+
+    html[data-theme="expressive-neo-grid"] .metric-item {
+      border: 3px solid var(--ink);
+      box-shadow: 5px 5px 0 var(--secondary);
+    }
+
+    html[data-theme="expressive-neo-grid"] .media-copy {
+      border: 4px solid var(--ink);
+      box-shadow: 7px 7px 0 var(--secondary);
+    }
+
+    html[data-theme="dark-technology"] .frame {
+      border-color: var(--line);
+    }
+
+    html[data-theme="dark-technology"] .metric-item,
+    html[data-theme="dark-technology"] .media-copy {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    html[data-theme="dark-technology"] .metric-item span { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main class="preview-grid">
+    <article class="frame frame-dark cover">
+      <div class="kicker">Opening promise</div>
+      <h1>Signal becomes action.</h1>
+      <p class="zh">从证据到决策</p>
+    </article>
+
+    <article class="frame metric">
+      <div class="kicker">Decision system</div>
+      <h2>Three moves change the outcome.</h2>
+      <div class="metric-grid">
+        <div class="metric-item"><strong>01</strong><span>Frame the evidence</span></div>
+        <div class="metric-item"><strong>02</strong><span>Expose the mechanism</span></div>
+        <div class="metric-item"><strong>03</strong><span>Commit the move</span></div>
+      </div>
+    </article>
+
+    <article class="frame media">
+      <img src="editorial-photo.jpg" alt="Modern concrete architecture">
+      <div class="media-copy">
+        <div class="kicker">Real evidence</div>
+        <h2>Give the subject room.</h2>
+      </div>
+    </article>
+
+    <article class="frame close">
+      <div>
+        <div class="kicker">Resolve the promise</div>
+        <h2>Make the next move visible.</h2>
+      </div>
+      <div class="close-mark">+</div>
+    </article>
+  </main>
+</body>
+</html>

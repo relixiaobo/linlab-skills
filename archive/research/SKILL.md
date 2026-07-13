@@ -1,6 +1,9 @@
 ---
 name: research
 description: Source-grounded general research and deep research kernel. Use when the user asks to research, investigate, compare, verify, gather current information, produce a cited report, conduct literature review, entity due diligence, trend/pulse analysis, patent/grant research, standards/regulatory research, or combine external sources with code/docs. The skill defaults to a general research method and loads domain paths only when the domain needs a distinct source matrix, judgment standard, or output shape.
+metadata:
+  author: lin
+  version: "0.1.0"
 ---
 
 # Research

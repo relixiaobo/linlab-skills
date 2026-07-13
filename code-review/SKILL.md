@@ -1,6 +1,9 @@
 ---
 name: code-review
 description: Review GitHub pull requests, branches, or local git diffs with high-signal, confidence-scored findings. Use when asked to run a code review, review a PR or diff, perform a PR gate, find bugs/regressions/security issues/project-rule violations, assess whether comments should be posted to GitHub, or create inline PR review comments.
+metadata:
+  author: lin
+  version: "0.1.0"
 ---
 
 # Code Review

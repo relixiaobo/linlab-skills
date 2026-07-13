@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feed Processing"
+  short_description: "Process feeds into validated content packs."
+  default_prompt: "Use $feed-processing to process these subscription feeds into a validated feed-content pack."

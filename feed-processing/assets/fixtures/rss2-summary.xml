@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Summary RSS</title>
+    <link>https://summary.example</link>
+    <description>Summary fixture</description>
+    <item>
+      <title>Summary Only Item</title>
+      <link>https://summary.example/story</link>
+      <guid>summary-1</guid>
+      <pubDate>Tue, 07 Jul 2026 09:00:00 GMT</pubDate>
+      <description>Only a teaser.</description>
+    </item>
+  </channel>
+</rss>

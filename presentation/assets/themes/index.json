@@ -1,0 +1,158 @@
+{
+  "schemaVersion": "1.0",
+  "themes": [
+    {
+      "id": "analytical-ledger",
+      "label": "Analytical Ledger",
+      "fit": ["strategy", "investment", "research", "board", "data-dense"],
+      "avoid": ["children", "celebration", "entertainment"],
+      "energy": "quiet",
+      "density": "high",
+      "assetBias": "data-and-evidence",
+      "tokens": "analytical-ledger/tokens.css",
+      "design": "analytical-ledger/design.md",
+      "preview": "analytical-ledger/preview.webp",
+      "cjk": {
+        "preferred": ["Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei"],
+        "tested": true
+      },
+      "exportRisks": ["Keep dense labels at 30px or larger on a 1920x1080 stage.", "Use real elements for legends and markers; avoid pseudo-elements."]
+    },
+    {
+      "id": "institutional-editorial",
+      "label": "Institutional Editorial",
+      "fit": ["policy", "institutional", "history", "executive narrative", "thought leadership"],
+      "avoid": ["dense operational dashboard", "playful consumer launch"],
+      "energy": "quiet",
+      "density": "medium-high",
+      "assetBias": "documents-and-archives",
+      "tokens": "institutional-editorial/tokens.css",
+      "design": "institutional-editorial/design.md",
+      "preview": "institutional-editorial/preview.webp",
+      "cjk": {
+        "preferred": ["Noto Serif CJK SC", "Songti SC", "Noto Sans CJK SC"],
+        "tested": true
+      },
+      "exportRisks": ["Confirm serif fallback metrics before final export.", "Keep accent rules rectangular and explicit in the DOM."]
+    },
+    {
+      "id": "modern-swiss",
+      "label": "Modern Swiss",
+      "fit": ["product", "operating model", "conference", "transformation", "short live talk"],
+      "avoid": ["heritage luxury", "long-form legal evidence"],
+      "energy": "medium",
+      "density": "medium",
+      "assetBias": "type-and-diagrams",
+      "tokens": "modern-swiss/tokens.css",
+      "design": "modern-swiss/design.md",
+      "preview": "modern-swiss/preview.webp",
+      "cjk": {
+        "preferred": ["Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei"],
+        "tested": true
+      },
+      "exportRisks": ["CJK headlines need wider boxes than Latin headlines.", "Do not use CSS clipping as a substitute for intentional cropping."]
+    },
+    {
+      "id": "technical-blueprint",
+      "label": "Technical Blueprint",
+      "fit": ["engineering", "architecture", "energy", "operations", "technical due diligence"],
+      "avoid": ["fashion", "lifestyle", "soft culture narrative"],
+      "energy": "quiet-medium",
+      "density": "high",
+      "assetBias": "systems-and-diagrams",
+      "tokens": "technical-blueprint/tokens.css",
+      "design": "technical-blueprint/design.md",
+      "preview": "technical-blueprint/preview.webp",
+      "cjk": {
+        "preferred": ["Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei"],
+        "tested": true
+      },
+      "exportRisks": ["Use SVG paths for connectors and arrowheads.", "Thin construction lines must remain at least 2px on the HTML stage."]
+    },
+    {
+      "id": "stage-keynote",
+      "label": "Stage Keynote",
+      "fit": ["product launch", "keynote", "town hall", "major announcement", "live reveal"],
+      "avoid": ["dense reading deck", "audit appendix", "long table sequence"],
+      "energy": "high",
+      "density": "low",
+      "assetBias": "type-product-and-media",
+      "tokens": "stage-keynote/tokens.css",
+      "design": "stage-keynote/design.md",
+      "preview": "stage-keynote/preview.webp",
+      "cjk": {
+        "preferred": ["Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei"],
+        "tested": true
+      },
+      "exportRisks": ["Do not force long CJK headlines onto one line.", "Prototype full-scale media and product evidence before expanding the deck."]
+    },
+    {
+      "id": "photo-editorial",
+      "label": "Photo Editorial",
+      "fit": ["architecture", "brand story", "culture", "portfolio", "case study", "place"],
+      "avoid": ["no usable imagery", "dense technical appendix", "generic stock-photo treatment"],
+      "energy": "quiet-medium",
+      "density": "low-medium",
+      "assetBias": "real-photography",
+      "tokens": "photo-editorial/tokens.css",
+      "design": "photo-editorial/design.md",
+      "preview": "photo-editorial/preview.webp",
+      "cjk": {
+        "preferred": ["Noto Serif CJK SC", "Songti SC", "Noto Sans CJK SC"],
+        "tested": true
+      },
+      "exportRisks": ["Use explicit img elements for production media rather than CSS backgrounds.", "Verify crop and caption relationships in PPTX renders."]
+    },
+    {
+      "id": "soft-humanist",
+      "label": "Soft Humanist",
+      "fit": ["learning", "training", "healthcare", "people and culture", "public interest", "consumer"],
+      "avoid": ["formal transaction", "legal brief", "severe engineering review"],
+      "energy": "warm-medium",
+      "density": "medium",
+      "assetBias": "people-examples-and-models",
+      "tokens": "soft-humanist/tokens.css",
+      "design": "soft-humanist/design.md",
+      "preview": "soft-humanist/preview.webp",
+      "cjk": {
+        "preferred": ["Noto Serif CJK SC", "Songti SC", "Noto Sans CJK SC"],
+        "tested": true
+      },
+      "exportRisks": ["Keep rounded containers at 8px or less.", "Reserve extra height for CJK instructional copy and examples."]
+    },
+    {
+      "id": "expressive-neo-grid",
+      "label": "Expressive Neo Grid",
+      "fit": ["creative pitch", "founder talk", "brand review", "conference", "design-led research"],
+      "avoid": ["regulated disclosure", "quiet legal brief", "heritage formality"],
+      "energy": "high",
+      "density": "medium-high",
+      "assetBias": "type-data-and-flat-graphics",
+      "tokens": "expressive-neo-grid/tokens.css",
+      "design": "expressive-neo-grid/design.md",
+      "preview": "expressive-neo-grid/preview.webp",
+      "cjk": {
+        "preferred": ["Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei"],
+        "tested": true
+      },
+      "exportRisks": ["Keep hard shadows and borders as real box geometry.", "Do not apply Latin uppercase or tracking rules to CJK text."]
+    },
+    {
+      "id": "dark-technology",
+      "label": "Dark Technology",
+      "fit": ["AI", "developer tools", "data product", "cybersecurity", "technical launch", "demo"],
+      "avoid": ["print-first policy report", "warm cultural story", "technology mentioned only in passing"],
+      "energy": "medium-high",
+      "density": "medium-high",
+      "assetBias": "interfaces-traces-and-diagrams",
+      "tokens": "dark-technology/tokens.css",
+      "design": "dark-technology/design.md",
+      "preview": "dark-technology/preview.webp",
+      "cjk": {
+        "preferred": ["Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei"],
+        "tested": true
+      },
+      "exportRisks": ["Avoid browser-only glow and blend effects.", "Verify thin dark-field labels after PPTX rendering."]
+    }
+  ]
+}

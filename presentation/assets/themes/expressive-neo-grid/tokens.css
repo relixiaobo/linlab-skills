@@ -1,0 +1,71 @@
+:root {
+  --paper: #f3f0e8;
+  --surface: #e2dfd6;
+  --ink: #0c0c0d;
+  --muted: #61615e;
+  --muted-on-dark: #d7d4cb;
+  --line: #aaa79f;
+  --line-strong: #0c0c0d;
+  --accent: #075ad8;
+  --secondary: #d9ee12;
+  --warning: #ff5138;
+  --positive: #16835f;
+  --font-display: "Space Grotesk", "Aptos Display", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-body: "Aptos", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --page-x: 92px;
+  --page-y: 76px;
+  --radius-small: 0px;
+}
+
+.slide-content.dark {
+  background: #0c0c0d;
+}
+
+.dark .tag {
+  border-color: #77756e;
+}
+
+.slide-content.dark .cover-grid {
+  grid-template-columns: minmax(0, 1.2fr) minmax(500px, 0.8fr);
+  gap: 48px;
+}
+
+.slide-content.dark .cover-visual {
+  padding: 44px;
+  background: var(--secondary);
+  color: var(--ink);
+}
+
+.slide-content.dark .signal-row {
+  border-color: var(--ink);
+}
+
+.slide-content.dark .signal-row strong {
+  color: var(--ink);
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 820;
+}
+
+.flow-step,
+.coverage,
+.risk-frame {
+  border: 4px solid var(--ink);
+  box-shadow: 12px 12px 0 var(--secondary);
+}
+
+.flow-step {
+  border-top: 10px solid var(--accent);
+}
+
+.risk-frame {
+  background: var(--secondary);
+  color: var(--ink);
+}
+
+.risk-frame p {
+  color: #31312e;
+}

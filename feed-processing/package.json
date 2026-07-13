@@ -1,0 +1,8 @@
+{
+  "name": "@linlab/feed-processing-skill",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check scripts/*.mjs scripts/lib/*.mjs"
+  }
+}

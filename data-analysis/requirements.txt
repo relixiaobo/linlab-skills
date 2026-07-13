@@ -1,16 +1,18 @@
 # Python dependencies for data-analysis skill scripts.
-# Install everything with: python3 -m pip install -r requirements.txt
+# Install only when a Python-script path needs these packages:
+# python3 -m pip install -r requirements.txt
+# or use the equivalent Python 3 interpreter for the active environment.
 #
 # The list is tiered. The CORE tier is analysis + verification — the skill's
 # reason to exist — and depends only on pandas + duckdb. The OPTIONAL tiers add
 # output layers (reports, charts, tables) and extra file formats. Core analysis
 # and all four verification gates run without any optional package; a script that
-# needs one exits with a clear "X is required: pip install X" message rather than
-# failing obscurely. Install only the tiers you need.
+# needs one exits with a clear "X is required: pip install X" message rather
+# than failing obscurely. Install only the tiers you need.
 
-# ── CORE — analysis + verification (always install) ───────────────────────────
+# ── CORE — analysis + verification (minimal Python package set) ───────────────
 # profile_dataset.py, query_duckdb.py, check_join_fanout.py, triangulate.py,
-# validate_findings.py. This is the trust machinery; it must run everywhere.
+# validate_findings.py. This is the trust machinery for Python-backed runs.
 pandas>=2.0
 duckdb>=0.9
 

@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PPTX Surgeon Edit Manifest",
+  "description": "Exact targets, listed mutations, preserve-by-default policy, and package scope for a surgical PPTX edit.",
+  "type": "object",
+  "required": [
+    "taskContract",
+    "sourceArtifact",
+    "outputArtifact",
+    "request",
+    "preservation",
+    "operations",
+    "allowedPackageParts",
+    "acceptanceChecks"
+  ],
+  "properties": {
+    "taskContract": { "const": "surgeon" },
+    "sourceArtifact": { "$ref": "#/$defs/artifact" },
+    "outputArtifact": { "type": "string", "minLength": 1 },
+    "request": { "type": "string", "minLength": 1 },
+    "requestRef": { "type": "string", "minLength": 1 },
+    "preservation": {
+      "type": "object",
+      "required": ["policy", "verificationScopes"],
+      "properties": {
+        "policy": { "const": "preserve-everything-except-listed-operations" },
+        "verificationScopes": {
+          "type": "array",
+          "minItems": 8,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/verificationScope" },
+          "allOf": [
+            { "contains": { "const": "package-parts" } },
+            { "contains": { "const": "slide-structure" } },
+            { "contains": { "const": "content" } },
+            { "contains": { "const": "style" } },
+            { "contains": { "const": "geometry" } },
+            { "contains": { "const": "relationships" } },
+            { "contains": { "const": "timing" } },
+            { "contains": { "const": "metadata" } }
+          ]
+        },
+        "additionalChecks": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/operation" }
+    },
+    "allowedPackageParts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["part", "reason", "operationIds"],
+        "properties": {
+          "part": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 },
+          "operationIds": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "acceptanceChecks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "targetRenderSlides": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": ["integer", "string"] }
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "slideCount": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "verificationScope": {
+      "type": "string",
+      "enum": [
+        "package-parts",
+        "slide-structure",
+        "content",
+        "style",
+        "geometry",
+        "relationships",
+        "timing",
+        "metadata",
+        "fonts",
+        "data",
+        "notes",
+        "links-accessibility",
+        "media",
+        "comments-hidden-state",
+        "embedded-content",
+        "slide-size"
+      ]
+    },
+    "operation": {
+      "type": "object",
+      "required": [
+        "id",
+        "action",
+        "target",
+        "changeField",
+        "property",
+        "expectedBefore",
+        "intendedAfter",
+        "requestedChange"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "action": {
+          "type": "string",
+          "enum": [
+            "replace-text",
+            "restyle",
+            "move-resize",
+            "replace-media",
+            "add-object",
+            "delete-object",
+            "edit-notes",
+            "edit-slide",
+            "edit-package-part"
+          ]
+        },
+        "target": { "$ref": "#/$defs/target" },
+        "changeField": { "$ref": "#/$defs/changeField" },
+        "property": { "type": "string", "minLength": 1 },
+        "expectedBefore": {},
+        "intendedAfter": {},
+        "requestedChange": { "type": "string", "minLength": 1 },
+        "verification": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "notes": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "action": { "const": "replace-text" } }, "required": ["action"] },
+          "then": { "properties": { "changeField": { "const": "object-content" } } }
+        },
+        {
+          "if": { "properties": { "action": { "const": "restyle" } }, "required": ["action"] },
+          "then": { "properties": { "changeField": { "const": "object-style" } } }
+        },
+        {
+          "if": { "properties": { "action": { "const": "move-resize" } }, "required": ["action"] },
+          "then": { "properties": { "changeField": { "const": "geometry" } } }
+        },
+        {
+          "if": { "properties": { "action": { "const": "replace-media" } }, "required": ["action"] },
+          "then": { "properties": { "changeField": { "const": "media" } } }
+        },
+        {
+          "if": { "properties": { "action": { "const": "edit-notes" } }, "required": ["action"] },
+          "then": { "properties": { "changeField": { "const": "speaker-notes" } } }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "changeField": {
+      "type": "string",
+      "enum": [
+        "slide-count",
+        "slide-order",
+        "object-content",
+        "object-style",
+        "geometry",
+        "fonts",
+        "data",
+        "theme",
+        "masters-layouts",
+        "relationships",
+        "speaker-notes",
+        "hyperlinks-alt-text",
+        "media",
+        "timing-transitions",
+        "comments-hidden-state",
+        "embedded-custom-xml",
+        "package-metadata",
+        "slide-size"
+      ]
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "slide": { "type": "integer", "minimum": 1 },
+        "slidePart": { "type": "string", "pattern": "^ppt/slides/slide[0-9]+\\.xml$" },
+        "objectId": { "type": ["integer", "string"] },
+        "objectName": { "type": "string", "minLength": 1 },
+        "textMatch": { "type": "string", "minLength": 1 },
+        "expectedMatchCount": { "type": "integer", "minimum": 1 },
+        "relationshipId": { "type": "string", "minLength": 1 },
+        "packagePart": { "type": "string", "minLength": 1 },
+        "propertyPath": { "type": "string", "minLength": 1 },
+        "matchPolicy": { "type": "string", "enum": ["exactly-one", "all"] }
+      },
+      "anyOf": [
+        { "required": ["slidePart", "objectId"] },
+        { "required": ["slidePart", "objectName"] },
+        { "required": ["slidePart", "textMatch"] },
+        { "required": ["slidePart", "relationshipId"] },
+        { "required": ["slidePart", "propertyPath"] },
+        { "required": ["packagePart", "propertyPath"] }
+      ],
+      "allOf": [
+        {
+          "if": { "required": ["textMatch"] },
+          "then": { "required": ["expectedMatchCount", "matchPolicy"] }
+        },
+        {
+          "if": { "required": ["matchPolicy"] },
+          "then": { "required": ["textMatch", "expectedMatchCount"] }
+        },
+        {
+          "if": {
+            "properties": { "matchPolicy": { "const": "exactly-one" } },
+            "required": ["matchPolicy"]
+          },
+          "then": {
+            "required": ["expectedMatchCount"],
+            "properties": { "expectedMatchCount": { "const": 1 } }
+          }
+        }
+      ],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

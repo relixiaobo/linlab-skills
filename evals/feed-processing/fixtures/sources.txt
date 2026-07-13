@@ -1,0 +1,3 @@
+https://example.com/rss.xml
+https://example.org/
+not-a-url

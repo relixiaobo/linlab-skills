@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1.0",
+  "entry": "deck.html",
+  "slideSelector": ".slide",
+  "stageSelector": ".deck-stage",
+  "controlsSelector": ".deck-controls",
+  "notesSelector": ".speaker-notes",
+  "exportQuery": "?export=1",
+  "themeId": "analytical-ledger",
+  "archetypeId": "research-report",
+  "archetype": "narrative/archetype.json",
+  "layoutLibrary": "layout-library.json",
+  "evidenceLedger": "evidence-ledger.json",
+  "metadata": {
+    "title": "Presentation Studio",
+    "author": ""
+  },
+  "canvas": {
+    "widthPx": 1920,
+    "heightPx": 1080,
+    "widthIn": 13.333,
+    "heightIn": 7.5
+  },
+  "compiler": {
+    "package": "dom-to-pptx",
+    "version": "2.0.3",
+    "svgAsVector": true
+  },
+  "render": {
+    "timeoutMs": 30000
+  },
+  "output": {
+    "pptx": "output/deck.pptx",
+    "htmlRenders": "renders/html",
+    "pptxRenders": "renders/pptx",
+    "diffRenders": "renders/diff",
+    "comparison": "qa/visual-comparison.json",
+    "editability": "qa/pptx-editability.json",
+    "pptxGate": "qa/pptx-gate.json",
+    "compileReport": "qa/compile-report.json",
+    "evidenceReport": "qa/evidence-report.json",
+    "qaDir": "qa"
+  }
+}

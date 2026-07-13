@@ -1,0 +1,77 @@
+{
+  "reportStage": "final-delivery",
+  "taskContract": "studio",
+  "studioMode": "constrained",
+  "references": {
+    "studioBriefRef": "contracts/studio-brief.json",
+    "preservationMatrixRef": "contracts/preservation-matrix.json"
+  },
+  "deliverables": {
+    "html": {
+      "artifact": "output/redesigned.html",
+      "status": "passed",
+      "evidence": ["verification/html-report.json"]
+    }
+  },
+  "technicalGate": {
+    "policy": "clean",
+    "status": "passed",
+    "evidence": ["verification/technical-gate.json"]
+  },
+  "accuracyGate": {
+    "policy": "preservation-matrix",
+    "status": "passed",
+    "matrixCoverage": {
+      "totalRules": 17,
+      "verifiedRules": 17,
+      "failedRules": 0,
+      "unverifiedRules": 0,
+      "coverageComplete": true,
+      "status": "passed",
+      "evidence": ["verification/matrix-coverage.json"]
+    },
+    "contentObjectDiff": {
+      "contentStatus": "passed",
+      "objectStatus": "passed",
+      "unexpectedChanges": 0,
+      "evidence": ["verification/content-object-diff.json"]
+    },
+    "beforeAfterReview": {
+      "status": "passed",
+      "beforeRenderRef": "renders-before/contact-sheet.png",
+      "afterRenderRef": "renders-after/contact-sheet.png",
+      "evidence": ["reviews/before-after.json"]
+    },
+    "evidence": ["verification/preservation-accuracy.json"]
+  },
+  "aestheticGate": {
+    "stage": "full-deck",
+    "status": "passed",
+    "renderManifestRef": "renders-after/render-manifest.json",
+    "contactSheetRef": "renders-after/contact-sheet.png",
+    "renderCoverage": {
+      "expectedSlides": 1,
+      "renderedSlides": 1,
+      "missingSlides": 0,
+      "complete": true,
+      "evidence": ["renders-after/render-manifest.json"]
+    },
+    "renderArtifacts": ["renders-after/slide-001.png"],
+    "reviewedSlides": [1],
+    "revisionPasses": 1,
+    "criteria": {
+      "contentSpecificConcept": 4,
+      "messageHierarchy": 4,
+      "compositionFocalPoint": 4,
+      "typographyAssetQuality": 4,
+      "informationDesign": 4,
+      "rhythmCoherence": 4,
+      "craftPolish": 4
+    },
+    "evidence": ["reviews/full-deck-review.json"]
+  },
+  "issues": [],
+  "limitations": [],
+  "deliveryEvidence": ["delivery/handoff.json"],
+  "finalStatus": "passed"
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Data Analysis"
+  short_description: "Analyze datasets with auditable checks."
+  default_prompt: "Use $data-analysis to profile this dataset, compute the requested findings, and verify the key numbers."

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Full Content RSS</title>
+    <link>https://full.example</link>
+    <description>Full content fixture</description>
+    <item>
+      <title>Full Feed Article</title>
+      <link>https://full.example/full</link>
+      <guid>full-1</guid>
+      <pubDate>Tue, 07 Jul 2026 08:00:00 GMT</pubDate>
+      <description>This is a short summary.</description>
+      <content:encoded><![CDATA[
+        <p>This fixture contains a deliberately long feed-provided article body.
+        It has enough text to be treated as complete by the portable extractor.
+        The paragraph repeats useful context about feeds, source provenance,
+        validation, windows, cursors, and article extraction. The purpose is to
+        ensure the full-text script can choose feed_content before trying page
+        extraction. This article body is synthetic and intentionally verbose so
+        the character count crosses the complete-content threshold for tests.</p>
+      ]]></content:encoded>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Shape Product Spec"
+  short_description: "Turn product ideas into decision-ready specs."
+  default_prompt: "Use $shape-product-spec to turn this idea into a decision-ready and execution-ready product spec with goals, constraints, options, flows, acceptance criteria, and verification plan."

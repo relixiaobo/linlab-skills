@@ -2,7 +2,9 @@
 name: data-analysis
 description: >-
   Use when the user already has data — a file (CSV, Excel, Parquet, JSON) or a read-only database — and wants to understand or analyze it, not build software around it. Trigger whenever they want to make sense of a dataset: profiling a messy table to see what's in it, how clean it is, and which columns are actually usable; investigating why a metric moved (revenue, churn, conversion, signups); reconciling numbers that disagree across sources; comparing channels, segments, or cohorts to find what's driving a result; checking or debugging an A/B test, including segment reversals like Simpson's paradox; running SQL or statistical analysis; producing charts, reports, or written findings. Do NOT use for training or deploying ML models, building ETL or data pipelines, web scraping, creating dashboard UI components, database administration (users, grants), or teaching statistics concepts.
-metadata: { "openclaw": { "requires": { "bins": ["python3"] }, "envVars": [{ "name": "DATABASE_URL", "required": false, "description": "Optional read-only database URL for analysis tasks." }] } }
+metadata:
+  author: sider.ai
+  version: "0.1.0"
 ---
 
 # Data Analysis
@@ -11,13 +13,28 @@ Use this skill when the user asks to analyze files, tables, metrics, experiments
 
 This skill's value is not doing analysis the model cannot do — it is making analysis **trustworthy and auditable**: profiling before trusting data, verifying every number by a second path (implementation) and triangulating it against an independent reference (specification), and leaving behind artifacts — queries, scripts, checks, a ledger — someone else can re-run and check. Those deterministic artifacts are reproducible; the model's judgment is logged, not bit-identical, so do not overclaim "reproducible" for the analysis as a whole. Spend that rigor where the decision warrants it (see **Start Here**); do not run the full machinery on a one-line question — but never drop below the floor.
 
-## Setup
+## Runtime Dependencies
 
-Scripts need Python packages beyond the standard library. Install once:
+Treat the execution environment as unknown. Do not assume Python, Python
+packages, database drivers, or shell utilities are already installed, and do not
+run a full preflight by default.
 
-`python3 -m pip install -r {baseDir}/requirements.txt`
+Invoke the task-specific path first. If a bundled script, runtime, package, or
+driver is missing, treat that failure as part of the task: install or enable the
+minimum local dependency when appropriate, switch to another available tool when
+that preserves the analysis contract, or report the exact missing dependency and
+install command. Do not require dependencies for workflows you did not use.
 
-Dependencies are tiered (see `requirements.txt`). **Core** analysis + verification — `profile_dataset.py`, `query_duckdb.py`, `check_join_fanout.py`, `triangulate.py`, `validate_findings.py` — needs only **pandas + duckdb** and runs everywhere. The output layers are **optional**: `build_report.py` needs jinja2, `render_chart.py` needs vl-convert-python, `render_table.py` needs great-tables + polars; Parquet/xlsx need pyarrow/openpyxl, and `query_database.py` needs sqlalchemy plus a driver. A script that needs an absent package exits with a clear "X is required" message — install just that one; the trust machinery never depends on the presentation layer.
+When using the Python scripts, `requirements.txt` is tiered. The core analysis
+and verification scripts — `profile_dataset.py`, `query_duckdb.py`,
+`check_join_fanout.py`, `triangulate.py`, `validate_findings.py` — need only
+`pandas` + `duckdb` once a Python 3 runtime is available. The output layers are
+optional: `build_report.py` needs `jinja2`, `render_chart.py` needs
+`vl-convert-python`, `render_table.py` needs `great-tables` + `polars`;
+Parquet/xlsx need `pyarrow`/`openpyxl`, and `query_database.py` needs
+`sqlalchemy` plus a driver. A script that needs an absent package exits with a
+clear "X is required" message — install just that one; the trust machinery never
+depends on the presentation layer.
 
 ## Start Here
 

@@ -1,6 +1,9 @@
 ---
 name: document
 description: Create, edit, analyze, review, or polish professional documents including source-first Markdown drafts, Word/DOCX files, reports, memos, briefs, proposals, policies, contracts, PDF handouts, comments, redlines, reader tests, and summaries. Use when the primary artifact is written communication for reading or review, not when the user needs a calculable workbook, formula model, slide deck, or PDF-native file operation.
+metadata:
+  author: lin
+  version: "0.1.0"
 ---
 
 # Document
@@ -13,6 +16,18 @@ and layout risk.
 Default to source-first artifacts that another agent can inspect, revise, and
 regenerate. Use DOCX/PDF as delivery exports unless the user explicitly needs
 the Word file itself to be the source of truth.
+
+## Runtime Dependencies
+
+Treat the execution environment as unknown. Do not assume Python, Node, DOCX
+libraries, office automation, converters, or rendering tools are installed, and
+do not run a full dependency preflight by default.
+
+Start with the task-specific command or host tool. If a runtime, package,
+binary, or office capability is missing, handle that execution-time failure by
+installing/enabling the minimum local dependency when appropriate, switching to
+an equivalent available tool that preserves the document contract, or reporting
+the exact missing dependency and install command.
 
 ## Route
 

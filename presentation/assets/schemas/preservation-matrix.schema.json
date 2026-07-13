@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Constrained Studio Preservation Matrix",
+  "type": "object",
+  "required": [
+    "taskContract",
+    "studioMode",
+    "sourceArtifact",
+    "scope",
+    "rules",
+    "allowedDesignChanges",
+    "verificationPlan"
+  ],
+  "properties": {
+    "taskContract": { "const": "studio" },
+    "studioMode": { "const": "constrained" },
+    "sourceArtifact": {
+      "type": "object",
+      "required": ["path", "slideCount"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "slideCount": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "scope": { "type": "string", "minLength": 1 },
+    "rules": {
+      "type": "object",
+      "required": [
+        "slideCount",
+        "slideOrder",
+        "slideContentAssignment",
+        "visibleText",
+        "numbersAndDates",
+        "tables",
+        "chartData",
+        "citations",
+        "speakerNotes",
+        "hyperlinks",
+        "altText",
+        "mediaIdentity",
+        "theme",
+        "mastersAndLayouts",
+        "animationsAndTransitions",
+        "hiddenSlides",
+        "aspectRatio"
+      ],
+      "properties": {
+        "slideCount": { "$ref": "#/$defs/rule" },
+        "slideOrder": { "$ref": "#/$defs/rule" },
+        "slideContentAssignment": { "$ref": "#/$defs/rule" },
+        "visibleText": { "$ref": "#/$defs/rule" },
+        "numbersAndDates": { "$ref": "#/$defs/rule" },
+        "tables": { "$ref": "#/$defs/rule" },
+        "chartData": { "$ref": "#/$defs/rule" },
+        "citations": { "$ref": "#/$defs/rule" },
+        "speakerNotes": { "$ref": "#/$defs/rule" },
+        "hyperlinks": { "$ref": "#/$defs/rule" },
+        "altText": { "$ref": "#/$defs/rule" },
+        "mediaIdentity": { "$ref": "#/$defs/rule" },
+        "theme": { "$ref": "#/$defs/rule" },
+        "mastersAndLayouts": { "$ref": "#/$defs/rule" },
+        "animationsAndTransitions": { "$ref": "#/$defs/rule" },
+        "hiddenSlides": { "$ref": "#/$defs/rule" },
+        "aspectRatio": { "$ref": "#/$defs/rule" },
+        "embeddedFiles": { "$ref": "#/$defs/rule" },
+        "comments": { "$ref": "#/$defs/rule" },
+        "customXml": { "$ref": "#/$defs/rule" }
+      },
+      "additionalProperties": false
+    },
+    "allowedDesignChanges": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "typography",
+          "color-application",
+          "geometry",
+          "spacing",
+          "alignment",
+          "shapes",
+          "z-order",
+          "image-crop",
+          "chart-styling",
+          "table-styling",
+          "backgrounds"
+        ]
+      }
+    },
+    "slideBindings": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["sourceSlide", "outputSlide"],
+        "properties": {
+          "sourceSlide": { "type": "integer", "minimum": 1 },
+          "outputSlide": { "type": "integer", "minimum": 1 },
+          "sourcePart": { "type": "string" },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "approvedExceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["field", "reason", "approvedBy"],
+        "properties": {
+          "field": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 },
+          "approvedBy": { "type": "string", "minLength": 1 },
+          "scope": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "verificationPlan": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "required": ["policy", "verification"],
+      "properties": {
+        "policy": {
+          "type": "string",
+          "enum": ["exact", "semantic", "allow-change"]
+        },
+        "scope": { "type": "string", "minLength": 1 },
+        "semanticRule": { "type": "string", "minLength": 1 },
+        "verification": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "policy": { "const": "semantic" } },
+            "required": ["policy"]
+          },
+          "then": { "required": ["semanticRule"] }
+        }
+      ],
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "rules": {
+            "properties": {
+              "slideContentAssignment": {
+                "properties": { "policy": { "const": "exact" } },
+                "required": ["policy"]
+              }
+            },
+            "required": ["slideContentAssignment"]
+          }
+        },
+        "required": ["rules"]
+      },
+      "then": { "required": ["slideBindings"] }
+    }
+  ],
+  "additionalProperties": false
+}

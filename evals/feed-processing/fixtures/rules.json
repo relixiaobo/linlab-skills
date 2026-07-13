@@ -1,0 +1,4 @@
+{
+  "includeKeywords": ["RSS", "Atom", "JSON"],
+  "excludeKeywords": ["Old"]
+}

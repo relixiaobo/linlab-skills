@@ -1,0 +1,47 @@
+:root {
+  --paper: #f4f0e8;
+  --surface: #ded7cb;
+  --ink: #202724;
+  --muted: #6f716c;
+  --muted-on-dark: #d9d5cc;
+  --line: #c7beb0;
+  --line-strong: #4a514d;
+  --accent: #a43b31;
+  --secondary: #226874;
+  --warning: #b87922;
+  --positive: #3f7456;
+  --font-display: "Iowan Old Style", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+  --font-body: "Aptos", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --page-x: 104px;
+  --page-y: 78px;
+  --radius-small: 0px;
+}
+
+.slide-content.dark {
+  background: #202724;
+}
+
+.dark .tag {
+  border-color: #777d78;
+}
+
+h1,
+h2 {
+  font-weight: 620;
+}
+
+.cover-grid {
+  grid-template-columns: minmax(0, 0.82fr) minmax(620px, 1.18fr);
+  gap: 58px;
+}
+
+.cover-visual {
+  border-left: 2px solid var(--line);
+  padding-left: 48px;
+}
+
+.flow-step,
+.coverage {
+  border-top-width: 3px;
+  background: transparent;
+}

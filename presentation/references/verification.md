@@ -1,59 +1,70 @@
-# Presentation Verification
+# Verification
 
-Approach verification as a bug hunt. First renders often have concrete issues.
+Verification follows the route. Studio proves communication quality, factual
+fidelity, export fidelity, and declared preservation. Surgeon proves the listed
+change and the absence of unintended changes.
 
-## Universal Checks
+## Studio Gates
 
-- source claims are represented faithfully
-- recent or unstable facts have sources or are marked as assumptions
-- slide order supports the story
-- no lorem, TODO, placeholder, sample, dummy, or xxxx text remains
-- no broken local asset references
-- text does not overflow or overlap
-- repeated layouts are intentional
-- contrast is projector-readable
-- images are cropped intentionally
-- named brands/products have real logos or explicitly accepted placeholders
-- screenshots and charts remain readable at final slide size
-- final artifact opens or renders when local tools allow it
-- every designed slide has a registered layout recipe
-- the deck uses one visual system instead of slide-by-slide styling
-- the source of truth is clear, inspectable, and available for future agent
-  revisions
-- live-talk decks keep presenter-only material out of visible slide content
+### Accuracy
 
-## PPTX Checks
+- Every factual or quantitative claim resolves to accepted evidence.
+- Dates, definitions, units, caveats, citations, quotes, and branded assets are
+  preserved.
+- Post-cutoff sources are limited to declared retrospective use.
+- A constrained redesign verifies every preservation-matrix rule and slide
+  binding.
 
-- inspect package structure with `scripts/pptx_tool.py`
-- render thumbnails or slides when possible
-- check slide relationships and content types
-- check notes/media/chart references
-- open or convert the file when possible
-- if human PowerPoint editability was explicitly required, verify text is not
-  flattened into slide images
+### Aesthetic
 
-## HTML Checks
+Review prototypes and the full deck at contact-sheet and full-size views. Score
+1-5, but let any blocking 1 or 2 veto the average:
 
-- inspect static structure with `scripts/html_tool.mjs`
-- open in a browser when possible
-- check desktop and narrow viewport framing
-- verify keyboard navigation
-- verify notes are hidden in audience view and available where expected
-- search generated files for placeholders
-- review visual warnings: layout variety, missing `data-layout`, text-only
-  slides, bullet density, tiny text, remote dependencies, and broken local assets
+- content-specific concept;
+- message hierarchy;
+- composition and focal point;
+- typography and asset quality;
+- information design;
+- rhythm and coherence;
+- craft and export polish.
 
-## Delivery Report
+A strong Studio deck should reach at least 4 in each category. Revise when the
+hardest slide is materially weaker than the cover, the visual device is generic,
+or the sequence accumulates pages without building and resolving an argument.
 
-When emitting JSON, follow `assets/schemas/verification-report.schema.json`.
+### Runtime And Export
 
-Include:
+- HTML inspection has no errors, placeholders, broken local assets, visible
+  notes, nested slides, or missing fixed-stage geometry.
+- Browser render has no console or request failures.
+- Every expected slide is rendered.
+- PPTX passes the technical gate.
+- HTML/PPTX comparison has no blocking fidelity mismatch.
+- Notes and links survive when requested.
+- Editability evidence reports native, SVG, raster, semantic table/chart, and
+  full-slide raster counts with limitations.
 
-- `artifact`: final artifact path
-- `outputRoute`: artifact route such as HTML deck or PPTX
-- `filesProduced`: produced deliverables
-- `sourceMaterials`: source inputs used
-- `checks`: check objects with name, status, tool, and evidence or result
-- `issues`: issues found, including fixed issues
-- `limitations`: checks not possible in the current environment
-- `finalStatus`: passed, warning, or failed
+Pixel comparison is evidence for large visual drift, not proof of beauty.
+Inspect text wrapping, crop, hierarchy, alignment, density, and coherence with
+human visual judgment.
+
+## Surgeon Gates
+
+- The target was unique before editing and matches the intended result after.
+- The old value is absent at the target.
+- Package changes are restricted to manifest-authorized parts.
+- Object/content diffs contain only expected changes.
+- No new technical regression appears against the baseline.
+- A rendered sanity check shows no local visual damage.
+
+Any unexplained package, relationship, object, text, geometry, animation, notes,
+or metadata change fails the edit.
+
+## Delivery Evidence
+
+Keep a final verification report compatible with
+`assets/schemas/verification-report.schema.json`. Reference the Studio brief or
+edit manifest, preservation matrix when applicable, evidence report, render
+manifest, contact sheet, visual comparison, PPTX gate, editability report, and
+remaining limitations. Do not mark final status passed while a required gate
+is failed or an error remains open.
