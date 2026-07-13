@@ -2,23 +2,8 @@
 
 Studio uses `studio.config.json` and `scripts/studio_tool.mjs` as one thin
 orchestration layer around HTML inspection, evidence checks, browser rendering,
-PPTX compilation, notes patching, PPTX inspection, and visual comparison.
-
-## Commands
-
-```bash
-node scripts/studio_tool.mjs themes
-node scripts/studio_tool.mjs archetypes
-node scripts/studio_tool.mjs layouts
-node scripts/studio_tool.mjs init work/deck \
-  --theme analytical-ledger --archetype research-report
-cd work/deck && npm install
-node studio.mjs doctor .
-node studio.mjs check .
-node studio.mjs render-html .
-node studio.mjs compile .
-node studio.mjs compare .
-```
+PPTX compilation, notes patching, and PPTX inspection. Office-rendered visual
+comparison is an optional export-fidelity adapter.
 
 `compile` calls the pinned `dom-to-pptx` browser bundle directly and passes
 `width` and `height`. Do not use the package's v2.0.3 CLI for custom dimensions;
@@ -35,9 +20,8 @@ window.__PRESENTATION_READY__ = Promise.all([
 ]);
 ```
 
-Use this for ECharts, Mermaid, D3, web components, and other asynchronous
-regions. Bundle dependencies locally and remove remote runtime dependencies
-before delivery.
+Use this for asynchronous charts, diagrams, media, or web components. Bundle
+dependencies locally and remove remote runtime dependencies before delivery.
 
 ## CSS And DOM Safety
 
@@ -50,8 +34,8 @@ before delivery.
   to reveal wrapping defects.
 - Avoid browser-only filters, blend modes, masks, and clipping unless their
   exported representation has been tested.
-- CJK font metrics differ between Chrome, PowerPoint, and LibreOffice. Reserve
-  width, avoid forced one-line headlines, and verify rendered PPTX line breaks.
+- CJK font metrics differ between browser and office renderers. Reserve width,
+  avoid forced one-line headlines, and verify rendered PPTX line breaks.
 
 ## Element Strategy
 
@@ -63,11 +47,10 @@ strongest faithful representation available:
 3. raster regions where fidelity cannot be preserved otherwise;
 4. full-slide raster only with explicit acceptance.
 
-ECharts and Mermaid are welcome authoring tools, but choose their output mode
-deliberately. Prefer stable SVG for vector diagrams; canvas output is raster.
-SVG remains a vector object, not automatically a semantic PowerPoint chart.
-HTML tables and charts may compile as editable shape collections rather than
-native semantic objects.
+Prefer stable SVG for vector diagrams; canvas output is raster. SVG remains a
+vector object, not automatically a semantic PowerPoint chart. HTML tables and
+charts may compile as editable shape collections rather than native semantic
+objects.
 
 ## Notes And Editability
 
@@ -77,9 +60,14 @@ PPTX editability report records native object, SVG, raster, full-slide raster,
 hyperlink, and notes coverage. Report these facts instead of promising that an
 entire PPTX is simply editable.
 
-## Visual Comparison
+## Optional Office Comparison
 
 `compare` renders HTML and PPTX, normalizes each pair to 480x270, computes pixel
-delta metrics, and writes diff images. This detects shifts, missing objects,
-font-wrap changes, and large crop/fidelity failures. It is a triage gate, not an
-aesthetic judge; inspect contact sheets and risky slides at full size.
+delta metrics, and writes diff images. Use it for strict export fidelity or
+risky slides involving charts, dense CJK text, media, or unusual CSS. It is a
+triage signal, not an aesthetic judge; inspect contact sheets and risky slides
+at full size.
+
+If no Office renderer is available, complete the HTML review and PPTX technical
+gate, then record that Office-rendered comparison was not run. Do not add a
+browser PPTX renderer solely to turn this optional check into a mandatory one.

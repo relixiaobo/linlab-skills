@@ -11,6 +11,7 @@ ROOT = REPO / "presentation"
 REFERENCES = ROOT / "references"
 SCHEMAS = ROOT / "assets" / "schemas"
 FIXTURES = Path(__file__).resolve().parent / "schema-fixtures" / "valid"
+THEME_PREVIEW_EVAL = Path(__file__).resolve().parent / "theme-previews"
 
 EXPECTED_REFERENCES = {
     "asset-intake.md",
@@ -144,7 +145,9 @@ class PresentationSkillStructureTests(unittest.TestCase):
         brief_delivery = brief["properties"]["delivery"]["properties"]
         self.assertIn("deliverables", brief_delivery)
         self.assertIn("html", brief_delivery["deliverables"]["items"]["enum"])
+        self.assertNotIn("pdf", brief_delivery["deliverables"]["items"]["enum"])
         self.assertEqual(brief_delivery["deliverables"]["contains"]["const"], "html")
+        self.assertNotIn("pdf", report["properties"]["deliverables"]["properties"])
         self.assertIn("pptxEditability", report["properties"])
         self.assertNotIn("artifact", report["properties"])
         self.assertIn("visualDirection", brief["properties"])
@@ -187,13 +190,15 @@ class PresentationSkillStructureTests(unittest.TestCase):
 
     def test_studio_tool_template_and_catalogs_are_executable(self) -> None:
         self.assertTrue((ROOT / "scripts" / "studio_tool.mjs").is_file())
-        self.assertTrue((ROOT / "scripts" / "render_theme_previews.mjs").is_file())
+        self.assertFalse((ROOT / "scripts" / "render_theme_previews.mjs").exists())
+        self.assertFalse((ROOT / "assets" / "theme-preview").exists())
         template = ROOT / "assets" / "templates" / "html-studio"
         for name in (
             "deck.html",
             "studio.config.json",
             "evidence-ledger.json",
             "package.json",
+            "package-lock.json",
             "studio.mjs",
             "styles/studio.css",
         ):
@@ -219,9 +224,15 @@ class PresentationSkillStructureTests(unittest.TestCase):
             self.assertIn("energy", theme)
             self.assertIn("density", theme)
             self.assertIn("assetBias", theme)
+            self.assertNotIn("preview", theme)
             directory = ROOT / "assets" / "themes" / theme["id"]
-            for name in ("tokens.css", "design.md", "preview.webp"):
+            for name in ("tokens.css", "design.md"):
                 self.assertTrue((directory / name).is_file(), f"{theme['id']}/{name}")
+            self.assertFalse((directory / "preview.webp").exists())
+
+        self.assertTrue((Path(__file__).resolve().parent / "render_theme_previews.mjs").is_file())
+        baseline_names = {path.stem for path in (THEME_PREVIEW_EVAL / "baselines").glob("*.webp")}
+        self.assertEqual(baseline_names, theme_ids)
 
         archetype_index = json.loads(
             (ROOT / "assets" / "archetypes" / "index.json").read_text()

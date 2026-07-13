@@ -15,4 +15,4 @@ Key points:
 - Skills should avoid assuming that other skills are present.
 - Verification reports are part of the product value.
 
-Deliverable requested by sales: a short shareable deck and optional PDF handout.
+Deliverable requested by sales: a short shareable HTML and PPTX deck.

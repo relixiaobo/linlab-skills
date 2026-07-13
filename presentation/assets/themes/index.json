@@ -11,7 +11,6 @@
       "assetBias": "data-and-evidence",
       "tokens": "analytical-ledger/tokens.css",
       "design": "analytical-ledger/design.md",
-      "preview": "analytical-ledger/preview.webp",
       "cjk": {
         "preferred": ["Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei"],
         "tested": true
@@ -28,7 +27,6 @@
       "assetBias": "documents-and-archives",
       "tokens": "institutional-editorial/tokens.css",
       "design": "institutional-editorial/design.md",
-      "preview": "institutional-editorial/preview.webp",
       "cjk": {
         "preferred": ["Noto Serif CJK SC", "Songti SC", "Noto Sans CJK SC"],
         "tested": true
@@ -45,7 +43,6 @@
       "assetBias": "type-and-diagrams",
       "tokens": "modern-swiss/tokens.css",
       "design": "modern-swiss/design.md",
-      "preview": "modern-swiss/preview.webp",
       "cjk": {
         "preferred": ["Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei"],
         "tested": true
@@ -62,7 +59,6 @@
       "assetBias": "systems-and-diagrams",
       "tokens": "technical-blueprint/tokens.css",
       "design": "technical-blueprint/design.md",
-      "preview": "technical-blueprint/preview.webp",
       "cjk": {
         "preferred": ["Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei"],
         "tested": true
@@ -79,7 +75,6 @@
       "assetBias": "type-product-and-media",
       "tokens": "stage-keynote/tokens.css",
       "design": "stage-keynote/design.md",
-      "preview": "stage-keynote/preview.webp",
       "cjk": {
         "preferred": ["Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei"],
         "tested": true
@@ -96,7 +91,6 @@
       "assetBias": "real-photography",
       "tokens": "photo-editorial/tokens.css",
       "design": "photo-editorial/design.md",
-      "preview": "photo-editorial/preview.webp",
       "cjk": {
         "preferred": ["Noto Serif CJK SC", "Songti SC", "Noto Sans CJK SC"],
         "tested": true
@@ -113,7 +107,6 @@
       "assetBias": "people-examples-and-models",
       "tokens": "soft-humanist/tokens.css",
       "design": "soft-humanist/design.md",
-      "preview": "soft-humanist/preview.webp",
       "cjk": {
         "preferred": ["Noto Serif CJK SC", "Songti SC", "Noto Sans CJK SC"],
         "tested": true
@@ -130,7 +123,6 @@
       "assetBias": "type-data-and-flat-graphics",
       "tokens": "expressive-neo-grid/tokens.css",
       "design": "expressive-neo-grid/design.md",
-      "preview": "expressive-neo-grid/preview.webp",
       "cjk": {
         "preferred": ["Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei"],
         "tested": true
@@ -147,7 +139,6 @@
       "assetBias": "interfaces-traces-and-diagrams",
       "tokens": "dark-technology/tokens.css",
       "design": "dark-technology/design.md",
-      "preview": "dark-technology/preview.webp",
       "cjk": {
         "preferred": ["Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei"],
         "tested": true

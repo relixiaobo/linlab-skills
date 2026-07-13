@@ -17,6 +17,7 @@ async function exists(file) {
 const roots = [
   process.env.PRESENTATION_SKILL_DIR,
   path.join(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'), 'skills', 'presentation'),
+  path.join(process.env.OPENCLAW_HOME || path.join(os.homedir(), '.openclaw'), 'skills', 'presentation'),
 ].filter(Boolean);
 
 let tool = null;
@@ -29,7 +30,7 @@ for (const root of roots) {
 }
 
 if (!tool) {
-  console.error('Cannot locate presentation/scripts/studio_tool.mjs. Set PRESENTATION_SKILL_DIR.');
+  console.error('Cannot locate presentation/scripts/studio_tool.mjs in the configured, Codex, or OpenClaw skill directories. Set PRESENTATION_SKILL_DIR.');
   process.exit(1);
 }
 

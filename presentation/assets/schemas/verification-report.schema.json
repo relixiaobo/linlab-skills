@@ -47,12 +47,6 @@
             { "properties": { "artifact": { "pattern": "\\.pptx$" } } }
           ]
         },
-        "pdf": {
-          "allOf": [
-            { "$ref": "#/$defs/deliverableCheck" },
-            { "properties": { "artifact": { "pattern": "\\.pdf$" } } }
-          ]
-        },
         "images": { "$ref": "#/$defs/deliverableCheck" }
       },
       "additionalProperties": false
@@ -693,14 +687,7 @@
               ]
             }
           },
-          "deliverables": {
-            "required": ["html"],
-            "properties": {
-              "pptx": { "required": ["visualComparisonRef"] },
-              "pdf": { "required": ["visualComparisonRef"] },
-              "images": { "required": ["visualComparisonRef"] }
-            }
-          },
+          "deliverables": { "required": ["html"] },
           "technicalGate": {
             "allOf": [
               { "$ref": "#/$defs/technicalGate" },
@@ -727,14 +714,7 @@
             "required": ["studioBriefRef", "preservationMatrixRef"],
             "not": { "required": ["editManifestRef"] }
           },
-          "deliverables": {
-            "required": ["html"],
-            "properties": {
-              "pptx": { "required": ["visualComparisonRef"] },
-              "pdf": { "required": ["visualComparisonRef"] },
-              "images": { "required": ["visualComparisonRef"] }
-            }
-          },
+          "deliverables": { "required": ["html"] },
           "technicalGate": {
             "allOf": [
               { "$ref": "#/$defs/technicalGate" },
@@ -813,7 +793,6 @@
             "properties": {
               "html": { "properties": { "status": { "const": "passed" } } },
               "pptx": { "properties": { "status": { "const": "passed" } } },
-              "pdf": { "properties": { "status": { "const": "passed" } } },
               "images": { "properties": { "status": { "const": "passed" } } }
             }
           },

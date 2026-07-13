@@ -16,12 +16,6 @@
       "status": "passed",
       "visualComparisonRef": "verification/html-pptx-comparison.json",
       "evidence": ["verification/pptx-technical-gate.json"]
-    },
-    "pdf": {
-      "artifact": "output/strategy-deck.pdf",
-      "status": "passed",
-      "visualComparisonRef": "verification/html-pdf-comparison.json",
-      "evidence": ["verification/pdf-export.json"]
     }
   },
   "pptxEditability": {
@@ -59,7 +53,7 @@
     "stage": "full-deck",
     "status": "passed",
     "renderManifestRef": "renders/render-manifest.json",
-    "contactSheetRef": "renders/contact-sheet.png",
+    "contactSheetRef": "renders/contact-sheet.html",
     "renderCoverage": {
       "expectedSlides": 12,
       "renderedSlides": 12,

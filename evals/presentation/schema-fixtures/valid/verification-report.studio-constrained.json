@@ -71,8 +71,8 @@
     },
     "beforeAfterReview": {
       "status": "passed",
-      "beforeRenderRef": "renders-before/contact-sheet.png",
-      "afterRenderRef": "renders-after/contact-sheet.png",
+      "beforeRenderRef": "renders-before/contact-sheet.html",
+      "afterRenderRef": "renders-after/contact-sheet.html",
       "evidence": ["reviews/before-after.json"]
     },
     "evidence": ["verification/preservation-accuracy.json"]
@@ -81,7 +81,7 @@
     "stage": "full-deck",
     "status": "passed",
     "renderManifestRef": "renders-after/render-manifest.json",
-    "contactSheetRef": "renders-after/contact-sheet.png",
+    "contactSheetRef": "renders-after/contact-sheet.html",
     "renderCoverage": {
       "expectedSlides": 10,
       "renderedSlides": 10,

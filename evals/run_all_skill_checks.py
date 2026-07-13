@@ -112,7 +112,7 @@ def main() -> int:
         for script in [
             "document/scripts/markdown_tool.mjs",
             "presentation/scripts/html_tool.mjs",
-            "presentation/scripts/render_theme_previews.mjs",
+            "evals/presentation/render_theme_previews.mjs",
             "presentation/scripts/studio_tool.mjs",
             "feed-processing/scripts/feed_diff.mjs",
             "feed-processing/scripts/feed_discover.mjs",

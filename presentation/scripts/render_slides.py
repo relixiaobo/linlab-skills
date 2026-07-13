@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render PPTX or PDF files to per-slide PNGs and a contact sheet."""
+"""Render a PPTX to per-slide PNGs and an HTML contact sheet."""
 
 from __future__ import annotations
 
@@ -7,7 +7,6 @@ import argparse
 import base64
 import html
 import json
-import math
 import os
 import re
 import shlex
@@ -72,18 +71,8 @@ def libreoffice_tool() -> Optional[Tool]:
     return executable(("soffice", "libreoffice"), candidates)
 
 
-def pdf_renderer_tool() -> Optional[Tool]:
-    return executable(("pdftoppm",)) or executable(("mutool",))
-
-
-def montage_command() -> Optional[tuple[Tool, list[str]]]:
-    montage = executable(("montage",))
-    if montage:
-        return montage, [montage.path]
-    magick = executable(("magick",))
-    if magick:
-        return magick, [magick.path, "montage"]
-    return None
+def poppler_tool() -> Optional[Tool]:
+    return executable(("pdftoppm",))
 
 
 def command_detail(completed: subprocess.CompletedProcess[str]) -> str:
@@ -254,58 +243,16 @@ def render_with_pdftoppm(
     return rendered
 
 
-def render_with_mutool(
-    tool: Tool, pdf: Path, work_dir: Path, pages: Optional[list[int]], dpi: int
-) -> list[tuple[int, Path]]:
-    output_dir = work_dir / "png"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    base = [tool.path, "draw", "-q", "-F", "png", "-r", str(dpi)]
-    if pages is None:
-        pattern = output_dir / "page-%d.png"
-        run_command(base + ["-o", str(pattern), str(pdf)], "MuPDF PDF rendering")
-        rendered = numbered_pngs(output_dir, "page")
-        if not rendered:
-            raise RenderError(
-                "`mutool draw` exited successfully but produced no PNG pages. "
-                "The PDF may be empty or unreadable."
-            )
-        return rendered
-
-    rendered = []
-    for page in pages:
-        output = output_dir / f"selected-{page:06d}.png"
-        try:
-            run_command(
-                base + ["-o", str(output), str(pdf), str(page)],
-                f"MuPDF rendering of requested slide {page}",
-            )
-        except RenderError as exc:
-            raise RenderError(
-                f"Requested slide {page} could not be rendered. Check that the PDF contains "
-                f"that page.\n{exc}"
-            ) from exc
-        if not output.is_file():
-            raise RenderError(
-                f"`mutool draw` did not produce an image for requested slide {page}. "
-                "Check that the PDF contains that page."
-            )
-        rendered.append((page, output))
-    return rendered
-
-
-def render_pdf(
+def render_pdf_intermediate(
     pdf: Path, work_dir: Path, pages: Optional[list[int]], dpi: int
 ) -> tuple[list[tuple[int, Path]], Tool]:
-    tool = pdf_renderer_tool()
+    tool = poppler_tool()
     if tool is None:
         raise RenderError(
-            "PDF rendering requires either Poppler's `pdftoppm` or MuPDF's `mutool`, but "
-            "neither was found on PATH. Install Poppler (for example `brew install poppler` "
-            "or `apt install poppler-utils`) or install MuPDF, then retry."
+            "PPTX visual rendering requires Poppler's `pdftoppm`, but it was not found "
+            "on PATH. Install Poppler and retry."
         )
-    if tool.name.lower().startswith("pdftoppm"):
-        return render_with_pdftoppm(tool, pdf, work_dir, pages, dpi), tool
-    return render_with_mutool(tool, pdf, work_dir, pages, dpi), tool
+    return render_with_pdftoppm(tool, pdf, work_dir, pages, dpi), tool
 
 
 def png_size(path: Path) -> tuple[int, int]:
@@ -567,86 +514,6 @@ def publish_staged_render(staging_dir: Path, output_dir: Path) -> Path:
     return output_dir / MANIFEST_NAME
 
 
-def pillow_contact_sheet(
-    slides: list[RenderedSlide], destination: Path
-) -> tuple[Optional[dict[str, str]], Optional[str]]:
-    try:
-        from PIL import Image, ImageDraw, __version__ as pillow_version
-    except ImportError:
-        return None, None
-
-    try:
-        thumb_width, thumb_height = 320, 200
-        margin, label_height = 14, 30
-        cell_width = thumb_width + margin * 2
-        cell_height = thumb_height + label_height + margin * 2
-        columns = min(4, len(slides))
-        rows = math.ceil(len(slides) / columns)
-        sheet = Image.new("RGB", (columns * cell_width, rows * cell_height), "#e8eaed")
-        draw = ImageDraw.Draw(sheet)
-        resampling = getattr(getattr(Image, "Resampling", Image), "LANCZOS")
-
-        for index, slide in enumerate(slides):
-            column, row = index % columns, index // columns
-            left = column * cell_width + margin
-            top = row * cell_height + margin
-            with Image.open(slide.path) as opened:
-                image = opened.convert("RGB")
-                image.thumbnail((thumb_width, thumb_height), resampling)
-                image_left = left + (thumb_width - image.width) // 2
-                image_top = top + (thumb_height - image.height) // 2
-                draw.rectangle(
-                    (left, top, left + thumb_width, top + thumb_height),
-                    fill="white",
-                    outline="#c5c9ce",
-                    width=1,
-                )
-                sheet.paste(image, (image_left, image_top))
-            draw.text((left, top + thumb_height + 10), f"Slide {slide.page}", fill="#202124")
-
-        sheet.save(destination, format="PNG", optimize=True)
-        return (
-            {
-                "file": destination.name,
-                "format": "png",
-                "renderer": f"Pillow {pillow_version}",
-            },
-            None,
-        )
-    except Exception as exc:  # Pillow is optional; retain a portable fallback.
-        return None, f"Pillow contact-sheet generation failed: {exc}"
-
-
-def montage_contact_sheet(
-    slides: list[RenderedSlide], destination: Path
-) -> tuple[Optional[dict[str, str]], Optional[str]]:
-    discovered = montage_command()
-    if discovered is None:
-        return None, None
-    tool, command = discovered
-    command += [
-        "-thumbnail",
-        "320x200",
-        "-background",
-        "#e8eaed",
-        "-tile",
-        "4x",
-        "-geometry",
-        "+14+24",
-    ]
-    command += [str(slide.path) for slide in slides]
-    command.append(str(destination))
-    try:
-        run_command(command, "ImageMagick contact-sheet generation")
-        png_size(destination)
-        return (
-            {"file": destination.name, "format": "png", "renderer": tool.name},
-            None,
-        )
-    except RenderError as exc:
-        return None, str(exc)
-
-
 def html_contact_sheet(slides: list[RenderedSlide], destination: Path, source_name: str) -> dict[str, str]:
     figures = []
     for slide in slides:
@@ -689,27 +556,12 @@ figcaption {{ padding-top: 8px; color: #303134; font-size: 13px; }}
 def create_contact_sheet(
     slides: list[RenderedSlide], output_dir: Path, source_name: str
 ) -> tuple[dict[str, str], list[str]]:
-    warnings = []
-    png_destination = output_dir / "contact-sheet.png"
-    result, warning = pillow_contact_sheet(slides, png_destination)
-    if warning:
-        warnings.append(warning)
-    if result:
-        return result, warnings
-
-    result, warning = montage_contact_sheet(slides, png_destination)
-    if warning:
-        warnings.append(warning)
-    if result:
-        return result, warnings
-
     html_destination = output_dir / "contact-sheet.html"
-    return html_contact_sheet(slides, html_destination, source_name), warnings
+    return html_contact_sheet(slides, html_destination, source_name), []
 
 
 def write_manifest(
     source: Path,
-    source_type: str,
     output_dir: Path,
     requested_pages: Optional[list[int]],
     dpi: int,
@@ -722,7 +574,7 @@ def write_manifest(
     manifest = {
         "schema_version": 1,
         "generator": "render_slides.py",
-        "source": {"path": str(source), "type": source_type},
+        "source": {"path": str(source), "type": "pptx"},
         "request": {"slides": requested_pages if requested_pages is not None else "all", "dpi": dpi},
         "tools": {
             "pptx_to_pdf": (
@@ -750,9 +602,9 @@ def write_manifest(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Render a PPTX or PDF to per-slide PNGs, a contact sheet, and a manifest."
+        description="Render a PPTX to per-slide PNGs, an HTML contact sheet, and a manifest."
     )
-    parser.add_argument("input", type=Path, help="source .pptx or .pdf file")
+    parser.add_argument("input", type=Path, help="source .pptx file")
     parser.add_argument(
         "--out-dir",
         type=Path,
@@ -778,9 +630,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     source = args.input.expanduser().resolve()
     if not source.is_file():
         parser.error(f"input file does not exist: {source}")
-    source_type = source.suffix.lower().lstrip(".")
-    if source_type not in {"pptx", "pdf"}:
-        parser.error("input must have a .pptx or .pdf extension")
+    if source.suffix.lower() != ".pptx":
+        parser.error("input must have a .pptx extension")
     if args.dpi < 36 or args.dpi > 600:
         parser.error("--dpi must be between 36 and 600")
     try:
@@ -803,16 +654,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             staging_dir = transaction_dir / "staged"
             work_dir.mkdir()
             staging_dir.mkdir()
-            office_tool = None
-            pdf = source
-            if source_type == "pptx":
-                pdf, office_tool = convert_pptx_to_pdf(source, work_dir)
-            rendered, pdf_tool = render_pdf(pdf, work_dir, requested_pages, args.dpi)
+            pdf, office_tool = convert_pptx_to_pdf(source, work_dir)
+            rendered, pdf_tool = render_pdf_intermediate(
+                pdf, work_dir, requested_pages, args.dpi
+            )
             slides = copy_rendered_pages(rendered, staging_dir)
             contact_sheet, warnings = create_contact_sheet(slides, staging_dir, source.name)
             write_manifest(
                 source,
-                source_type,
                 staging_dir,
                 requested_pages,
                 args.dpi,

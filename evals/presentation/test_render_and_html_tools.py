@@ -61,7 +61,7 @@ def write_render_bundle(
     manifest = {
         "schema_version": 1,
         "generator": "render_slides.py",
-        "source": {"path": "fixture.pdf", "type": "pdf"},
+        "source": {"path": "fixture.pptx", "type": "pptx"},
         "request": {"slides": pages, "dpi": 72},
         "tools": {},
         "slides": slides,
@@ -82,41 +82,18 @@ def read_files(directory: Path, names: set[str]) -> dict[str, bytes]:
     return {name: (directory / name).read_bytes() for name in names}
 
 
-def one_page_pdf() -> bytes:
-    content = b"0.95 g 0 0 720 405 re f\n"
-    objects = [
-        b"<< /Type /Catalog /Pages 2 0 R >>",
-        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 720 405] /Contents 4 0 R >>",
-        f"<< /Length {len(content)} >>\nstream\n".encode() + content + b"endstream",
-    ]
-    output = bytearray(b"%PDF-1.4\n")
-    offsets = [0]
-    for index, body in enumerate(objects, start=1):
-        offsets.append(len(output))
-        output.extend(f"{index} 0 obj\n".encode())
-        output.extend(body)
-        output.extend(b"\nendobj\n")
-    xref = len(output)
-    output.extend(f"xref\n0 {len(objects) + 1}\n".encode())
-    output.extend(b"0000000000 65535 f \n")
-    for offset in offsets[1:]:
-        output.extend(f"{offset:010d} 00000 n \n".encode())
-    output.extend(
-        f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n".encode()
-    )
-    return bytes(output)
-
-
 class RenderPublishTests(unittest.TestCase):
-    def test_real_pdf_render_publishes_complete_bundle(self) -> None:
-        if render_slides.pdf_renderer_tool() is None:
-            self.skipTest("pdftoppm or mutool is unavailable")
+    def test_real_pptx_render_publishes_complete_bundle(self) -> None:
+        if render_slides.libreoffice_tool() is None or render_slides.poppler_tool() is None:
+            self.skipTest("LibreOffice or Poppler is unavailable")
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            source = root / "one-page.pdf"
+            source = root / "board-deck.pptx"
             output = root / "rendered"
-            source.write_bytes(one_page_pdf())
+            shutil.copyfile(
+                ROOT / "evals" / "artifact-skills" / "presentation" / "source" / "board_deck.pptx",
+                source,
+            )
 
             with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
                 result = render_slides.main(
@@ -127,9 +104,10 @@ class RenderPublishTests(unittest.TestCase):
             manifest = json.loads(
                 (output / render_slides.MANIFEST_NAME).read_text(encoding="utf-8")
             )
-            self.assertEqual([slide["page"] for slide in manifest["slides"]], [1])
+            self.assertEqual([slide["page"] for slide in manifest["slides"]], list(range(1, 10)))
             self.assertTrue((output / "slide-001.png").is_file())
             self.assertTrue((output / manifest["contact_sheet"]["file"]).is_file())
+            self.assertEqual(manifest["contact_sheet"]["format"], "html")
 
     def test_unowned_filename_collision_is_rejected_without_overwrite(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -283,13 +261,18 @@ class RenderPublishTests(unittest.TestCase):
             root = Path(temporary)
             output = root / "output"
             old_files = write_render_bundle(output, pages=[1], marker="old")
-            invalid_pdf = root / "invalid.pdf"
-            invalid_pdf.write_bytes(b"not a PDF")
+            invalid_pptx = root / "invalid.pptx"
+            invalid_pptx.write_bytes(b"not a PPTX")
 
-            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-                result = render_slides.main(
-                    [str(invalid_pdf), "--out-dir", str(output), "--dpi", "72"]
-                )
+            with mock.patch.object(
+                render_slides,
+                "convert_pptx_to_pdf",
+                side_effect=render_slides.RenderError("injected render failure"),
+            ):
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    result = render_slides.main(
+                        [str(invalid_pptx), "--out-dir", str(output), "--dpi", "72"]
+                    )
 
             self.assertEqual(result, 2)
             self.assertEqual(read_files(output, set(old_files)), old_files)

@@ -6,7 +6,7 @@
   "audience": "Product leadership",
   "objective": "Make the operating model memorable and decision-ready.",
   "delivery": {
-    "deliverables": ["html", "pptx", "pdf"],
+    "deliverables": ["html", "pptx"],
     "editabilityRequirement": "Headlines and charts remain editable.",
     "aspectRatio": "16:9"
   },

@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 
 import { spawn } from 'node:child_process';
-import { access, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.dirname(SCRIPT_DIR);
-const THEMES_ROOT = path.join(ROOT, 'assets', 'themes');
+const REPO_ROOT = path.dirname(path.dirname(SCRIPT_DIR));
+const THEMES_ROOT = path.join(REPO_ROOT, 'presentation', 'assets', 'themes');
 const INDEX_PATH = path.join(THEMES_ROOT, 'index.json');
-const PREVIEW_PAGE = path.join(ROOT, 'assets', 'theme-preview', 'index.html');
+const PREVIEW_ROOT = path.join(SCRIPT_DIR, 'theme-previews');
+const PREVIEW_PAGE = path.join(PREVIEW_ROOT, 'index.html');
+const BASELINE_ROOT = path.join(PREVIEW_ROOT, 'baselines');
 
 async function exists(file) {
   try {
@@ -98,9 +100,10 @@ async function main() {
   const temporary = await mkdtemp(path.join(os.tmpdir(), 'presentation-theme-previews-'));
   const rendered = [];
   try {
+    await mkdir(BASELINE_ROOT, { recursive: true });
     for (const id of ids) {
       const png = path.join(temporary, `${id}.png`);
-      const output = path.join(THEMES_ROOT, id, 'preview.webp');
+      const output = path.join(BASELINE_ROOT, `${id}.webp`);
       const url = new URL(pathToFileURL(PREVIEW_PAGE));
       url.searchParams.set('theme', id);
       await run(chrome, [

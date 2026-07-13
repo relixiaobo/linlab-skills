@@ -1,56 +1,23 @@
-# Layout Library
+# Layout Selection
 
-Layouts solve the shape of one slide. Select them after the claim and evidence
-are known. Themes control visual grammar; archetypes control sequence; layouts
-control composition.
+Layouts solve the shape of one slide. Themes control visual grammar;
+archetypes control sequence; layouts control composition. Treat
+`assets/layouts/index.json` as the catalog authority. Inspect it with:
 
-The executable catalog is `assets/layouts/index.json`. Run
-`node scripts/studio_tool.mjs layouts` to inspect the metadata. Every slide must
-declare `data-layout`; use `custom-composition` only when the registered library
-cannot express the content faithfully.
+```bash
+node scripts/studio_tool.mjs layouts
+```
 
-## Content-To-Layout Map
+Every slide must declare `data-layout`.
 
-| Content shape | Layout |
-| --- | --- |
-| Deck promise | `cover` |
-| Dominant real image or document | `hero-media` |
-| Real product or interface reveal | `product-stage` |
-| Narrative reset | `section` |
-| Claim/evidence or concept/example | `split` |
-| One to four verified values | `metric` |
-| Exactly two aligned alternatives | `compare` |
-| Chronology or linear sequence | `timeline` |
-| Mechanism, hierarchy, system, or loop | `diagram` |
-| Quantitative proof | `chart` |
-| Geography, route, basin, or region | `map-callout` |
-| Three to six parallel ideas | `feature-grid` |
-| Two to six related visual examples | `gallery` |
-| One earned sentence or number | `statement` |
-| One sourced voice | `quote` |
-| Exact lookup plus conclusion | `table-takeaway` |
-| Final judgment or action | `close` |
-| Interface, code, or workflow walkthrough | `scripted-demo` |
-| Multi-source proof or risk field | `evidence-wall` |
-| Content shape outside the registered set | `custom-composition` |
+- Match the layout to the content's real structure. Do not invent numbers,
+  options, chronology, or relationships to fit a composition.
+- Respect catalog limits. Split or redesign overloaded grids, timelines,
+  tables, and screenshot walls instead of shrinking them.
+- Give each slide one dominant visual job.
+- Use `custom-composition` only when registered layouts cannot express the
+  content faithfully, and record why.
+- Reuse alignment, typography, and explanatory devices across layouts.
 
-## Hard Rules
-
-- Match the layout to the content's real structure. Do not invent numbers to
-  justify `metric` or `chart`, force three options into `compare`, or use a
-  linear timeline for a feedback loop.
-- Respect catalog limits. Split or redesign an eight-card grid, a twelve-node
-  timeline, an unreadable table, or a screenshot wall instead of shrinking it.
-- Use one dominant visual job per slide. A table, map, chart, and process should
-  not compete on the same frame unless one is clearly subordinate.
-- Let custom compositions earn their complexity through explanation or memory.
-  Record why a registered layout was insufficient.
-- Reuse alignment, typography, and recurring explanatory devices across
-  different layouts. Variety should create rhythm, not visual discontinuity.
-
-## Deck-Level Strategy
-
-Choose a small core set, usually four to eight layout ids, that fits the
-archetype and hardest evidence. Add a layout only when the content introduces a
-new shape. A long deck may use many instances of the same layout id while still
-varying composition through hierarchy, scale, media, and theme-specific moves.
+Choose four to eight core layout ids for most decks. Add another only when the
+content introduces a genuinely new shape.

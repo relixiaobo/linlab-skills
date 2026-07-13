@@ -6,7 +6,7 @@
   <script>
     const themeId = new URLSearchParams(window.location.search).get('theme') || 'analytical-ledger';
     document.documentElement.dataset.theme = themeId;
-    document.write(`<link rel="stylesheet" href="../themes/${encodeURIComponent(themeId)}/tokens.css">`);
+    document.write(`<link rel="stylesheet" href="../../../presentation/assets/themes/${encodeURIComponent(themeId)}/tokens.css">`);
   </script>
   <style>
     * { box-sizing: border-box; }

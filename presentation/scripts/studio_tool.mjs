@@ -947,8 +947,9 @@ async function which(command) {
 async function doctor(projectInfo, options) {
   const checks = [];
   const add = (name, required, status, detail) => checks.push({ name, required, status, detail });
-  const nodeMajor = Number(process.versions.node.split('.')[0]);
-  add('node', true, nodeMajor >= 20 ? 'passed' : 'failed', process.version);
+  const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(Number);
+  const supportedNode = nodeMajor > 22 || (nodeMajor === 22 && nodeMinor >= 12);
+  add('node', true, supportedNode ? 'passed' : 'failed', `${process.version}; requires >=22.12.0`);
   try {
     const runtime = resolveRuntime(projectInfo.project);
     add('dom-to-pptx', true, runtime.compilerPackage.version === projectInfo.config.compiler.version ? 'passed' : 'failed', runtime.compilerPackage.version);
@@ -974,8 +975,8 @@ async function doctor(projectInfo, options) {
   ];
   const libreOffice = (await Promise.all(libreOfficeCandidates.filter(Boolean).map(async (candidate) => await pathExists(candidate) ? candidate : null))).find(Boolean);
   add('LibreOffice', false, libreOffice ? 'passed' : 'warning', libreOffice || 'required for PPTX rendering');
-  const pdfRenderer = await which('pdftoppm') || await which('mutool');
-  add('PDF renderer', false, pdfRenderer ? 'passed' : 'warning', pdfRenderer || 'pdftoppm or mutool is required for PPTX rendering');
+  const pptxRasterizer = await which('pdftoppm');
+  add('PPTX visual renderer', false, pptxRasterizer ? 'passed' : 'warning', pptxRasterizer || 'LibreOffice and Poppler are required for PPTX visual comparison');
   const report = {
     schemaVersion: '1.0',
     project: projectInfo.project,
@@ -1026,7 +1027,6 @@ async function initProject(target, options) {
   await mkdir(themeTarget, { recursive: true });
   await cp(path.join(THEMES_ROOT, themeId, 'tokens.css'), path.join(themeTarget, 'tokens.css'), { force: true });
   await cp(path.join(THEMES_ROOT, themeId, 'design.md'), path.join(themeTarget, 'design.md'), { force: true });
-  await cp(path.join(THEMES_ROOT, themeId, 'preview.webp'), path.join(themeTarget, 'preview.webp'), { force: true });
   const narrativeTarget = path.join(target, 'narrative');
   await mkdir(narrativeTarget, { recursive: true });
   await writeJson(path.join(narrativeTarget, 'archetype.json'), {
@@ -1045,6 +1045,13 @@ async function initProject(target, options) {
   const packageJson = await readJson(packagePath);
   packageJson.name = packageName(target);
   await writeJson(packagePath, packageJson);
+  const lockPath = path.join(target, 'package-lock.json');
+  if (await pathExists(lockPath)) {
+    const lock = await readJson(lockPath);
+    lock.name = packageJson.name;
+    if (lock.packages?.['']) lock.packages[''].name = packageJson.name;
+    await writeJson(lockPath, lock);
+  }
   return { project: target, theme: themeId, archetype: archetypeId, files: await readdir(target) };
 }
 

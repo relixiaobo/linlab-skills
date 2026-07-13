@@ -95,17 +95,17 @@
       ]
     },
     {
-      "id": "presentation-pdf-handout-boundary",
-      "name": "pdf-handout-from-deck-source",
-      "prompt": "Use $presentation to create a short reading/share deck from evals/artifact-skills/presentation/source/product_brief.md and export or describe the PDF handout route. Keep the deck source editable for future agent revisions. The PDF is only the handout deliverable, not the source of truth.",
+      "id": "presentation-reading-deck",
+      "name": "shareable-deck-from-product-brief",
+      "prompt": "Use $presentation to create a short reading/share deck from evals/artifact-skills/presentation/source/product_brief.md. Deliver canonical HTML and PPTX while keeping the deck source maintainable for future agent revisions.",
       "files": [
         "evals/artifact-skills/presentation/source/product_brief.md"
       ],
       "expected_skill": "presentation",
       "assertions": [
-        "Keeps a deck source of truth instead of treating PDF as the primary artifact",
+        "Keeps canonical HTML as the deck source of truth",
         "Plans a reading/share deck, not a long-form document",
-        "Uses PDF only as export/handout after deck source is stable",
+        "Produces requested exports only after the deck source is stable",
         "Includes deck verification steps before handoff"
       ]
     },

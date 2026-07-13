@@ -39,10 +39,12 @@ or the sequence accumulates pages without building and resolving an argument.
 - Browser render has no console or request failures.
 - Every expected slide is rendered.
 - PPTX passes the technical gate.
-- HTML/PPTX comparison has no blocking fidelity mismatch.
 - Notes and links survive when requested.
 - Editability evidence reports native, SVG, raster, semantic table/chart, and
   full-slide raster counts with limitations.
+- For strict export fidelity, Office-rendered HTML/PPTX comparison has no
+  blocking mismatch. Otherwise record that this optional comparison was not
+  run.
 
 Pixel comparison is evidence for large visual drift, not proof of beauty.
 Inspect text wrapping, crop, hierarchy, alignment, density, and coherence with
@@ -65,6 +67,7 @@ or metadata change fails the edit.
 Keep a final verification report compatible with
 `assets/schemas/verification-report.schema.json`. Reference the Studio brief or
 edit manifest, preservation matrix when applicable, evidence report, render
-manifest, contact sheet, visual comparison, PPTX gate, editability report, and
-remaining limitations. Do not mark final status passed while a required gate
-is failed or an error remains open.
+manifest, contact sheet, PPTX gate, editability report, and any visual
+comparison that was requested. If the optional comparison was not run, record
+that limitation explicitly. Do not mark final status passed while a required
+gate is failed or an error remains open.

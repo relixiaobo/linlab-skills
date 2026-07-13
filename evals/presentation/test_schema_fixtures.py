@@ -284,7 +284,7 @@ class SchemaFixtureTests(unittest.TestCase):
         cases.append(("surgeon-with-mode", "verification-report.schema.json", surgeon_with_mode, "must NOT be valid"))
 
         brief_without_html = copy.deepcopy(full_brief)
-        brief_without_html["delivery"]["deliverables"] = ["pptx", "pdf"]
+        brief_without_html["delivery"]["deliverables"] = ["pptx", "images"]
         cases.append(("brief-without-html", "studio-brief.schema.json", brief_without_html, "/delivery/deliverables"))
 
         brief_with_backend = copy.deepcopy(full_brief)
@@ -307,9 +307,14 @@ class SchemaFixtureTests(unittest.TestCase):
         irrelevant_reference["references"]["editManifestRef"] = "contracts/edit-manifest.json"
         cases.append(("irrelevant-reference", "verification-report.schema.json", irrelevant_reference, "/references"))
 
-        missing_visual_comparison = copy.deepcopy(creative_report)
-        del missing_visual_comparison["deliverables"]["pptx"]["visualComparisonRef"]
-        cases.append(("missing-visual-comparison", "verification-report.schema.json", missing_visual_comparison, "visualComparisonRef"))
+        optional_visual_comparison = copy.deepcopy(creative_report)
+        del optional_visual_comparison["deliverables"]["pptx"]["visualComparisonRef"]
+        optional_visual_comparison["limitations"].append(
+            "Office-rendered HTML/PPTX comparison was not run."
+        )
+        self.assert_valid(
+            SCHEMAS / "verification-report.schema.json", optional_visual_comparison
+        )
 
         html_only_with_editability = copy.deepcopy(creative_report)
         html_only_with_editability["deliverables"] = {
@@ -318,8 +323,8 @@ class SchemaFixtureTests(unittest.TestCase):
         cases.append(("html-only-with-editability", "verification-report.schema.json", html_only_with_editability, "must NOT be valid"))
 
         wrong_extension = copy.deepcopy(creative_report)
-        wrong_extension["deliverables"]["pdf"]["artifact"] = "output/strategy-deck.pptx"
-        cases.append(("wrong-deliverable-extension", "verification-report.schema.json", wrong_extension, "/deliverables/pdf/artifact"))
+        wrong_extension["deliverables"]["pptx"]["artifact"] = "output/strategy-deck.html"
+        cases.append(("wrong-deliverable-extension", "verification-report.schema.json", wrong_extension, "/deliverables/pptx/artifact"))
 
         incomplete_render = copy.deepcopy(creative_report)
         incomplete_render["aestheticGate"]["renderCoverage"].update(

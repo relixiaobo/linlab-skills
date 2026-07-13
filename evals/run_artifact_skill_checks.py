@@ -92,9 +92,11 @@ def smoke_checks() -> list[str]:
     commands.append([
         "python3",
         "presentation/scripts/render_slides.py",
-        "evals/artifact-skills/pdf/source/one_page.pdf",
+        "evals/artifact-skills/presentation/source/board_deck.pptx",
         "--out-dir",
         str(render_dir),
+        "--slides",
+        "1",
         "--dpi",
         "72",
     ])

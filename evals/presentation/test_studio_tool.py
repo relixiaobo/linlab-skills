@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -35,6 +37,7 @@ class StudioToolTests(unittest.TestCase):
 
             config = json.loads((project / "studio.config.json").read_text())
             package = json.loads((project / "package.json").read_text())
+            lock = json.loads((project / "package-lock.json").read_text())
             archetype = json.loads((project / "narrative" / "archetype.json").read_text())
             layouts = json.loads((project / "layout-library.json").read_text())
             self.assertEqual(config["themeId"], "modern-swiss")
@@ -45,8 +48,12 @@ class StudioToolTests(unittest.TestCase):
             self.assertEqual(len(layouts["layouts"]), 20)
             self.assertEqual(config["compiler"]["version"], "2.0.3")
             self.assertEqual(package["dependencies"]["dom-to-pptx"], "2.0.3")
+            self.assertEqual(package["engines"]["node"], ">=22.12.0")
+            self.assertEqual(lock["name"], package["name"])
+            self.assertEqual(lock["packages"][""]["name"], package["name"])
             self.assertTrue((project / "theme" / "tokens.css").is_file())
-            self.assertTrue((project / "theme" / "preview.webp").is_file())
+            self.assertTrue((project / "theme" / "design.md").is_file())
+            self.assertFalse((project / "theme" / "preview.webp").exists())
 
             check = self.run_tool("check", str(project))
             self.assertEqual(check.returncode, 0, check.stderr)
@@ -83,6 +90,30 @@ class StudioToolTests(unittest.TestCase):
         self.assertIn("photo-editorial", {theme["id"] for theme in themes})
         self.assertIn("learning-workshop", {item["id"] for item in archetypes})
         self.assertIn("table-takeaway", {layout["id"] for layout in layouts})
+
+    def test_project_wrapper_resolves_openclaw_skill_directory(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            project = root / "deck-project"
+            init = self.run_tool("init", str(project))
+            self.assertEqual(init.returncode, 0, init.stderr)
+
+            openclaw_home = root / "openclaw"
+            installed = openclaw_home / "skills" / "presentation"
+            shutil.copytree(REPO / "presentation", installed)
+            env = os.environ.copy()
+            env.pop("PRESENTATION_SKILL_DIR", None)
+            env["CODEX_HOME"] = str(root / "missing-codex")
+            env["OPENCLAW_HOME"] = str(openclaw_home)
+            result = subprocess.run(
+                ["node", "studio.mjs", "themes"],
+                cwd=project,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(len(json.loads(result.stdout)), 9)
 
 
 if __name__ == "__main__":
