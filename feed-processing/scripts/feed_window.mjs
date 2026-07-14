@@ -67,7 +67,10 @@ if (mode === 'all') {
 }
 
 await writeJson(args.out, {
+  schemaVersion: input.schemaVersion,
   generatedAt: new Date().toISOString(),
+  implementation: input.implementation,
+  strictness: input.strictness,
   scope: { mode, days: args.days ? Number(args.days) : undefined, count: args.count ? Number(args.count) : undefined, start: args.start, end: args.end },
   sources: input.sources || [],
   items: included,
@@ -75,6 +78,7 @@ await writeJson(args.out, {
   errors,
   warnings: [...inputWarnings, ...warnings],
   coverage: {
+    ...(input.coverage || {}),
     requested: input.coverage?.requested,
     fetched: input.coverage?.fetched,
     notModified: input.coverage?.notModified,

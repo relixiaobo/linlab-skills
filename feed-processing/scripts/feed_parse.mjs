@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { parseArgs, asArray, readText, writeJson, parseFeedContent } from './lib/feed_common.mjs';
+import { classifyPayload, makeFeedError } from './lib/feed_runtime.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const inputs = asArray(args.input);
@@ -16,6 +17,8 @@ let sawFetchOutput = false;
 let requested = 0;
 let fetched = 0;
 let notModified = 0;
+let parsedSources = 0;
+let emptySources = 0;
 
 for (const [index, input] of inputs.entries()) {
   const feedUrl = asArray(args.url)[index] || `file://${input}`;
@@ -32,13 +35,11 @@ for (const [index, input] of inputs.entries()) {
   try {
     recordParsed(parseFeedContent(text, feedUrl));
   } catch (error) {
-    errors.push({
+    errors.push(makeFeedError('parse_error', {
+      stage: 'parse',
       url: feedUrl,
-      code: 'parse_error',
-      severity: 'error',
-      retryable: false,
       message: error.message,
-    });
+    }));
   }
 }
 
@@ -50,9 +51,15 @@ await writeJson(args.out, {
   errors,
   coverage: {
     requested: sawFetchOutput ? requested : undefined,
+    requestedSources: sawFetchOutput ? requested : sources.length + errors.length,
     fetched: sawFetchOutput ? fetched : undefined,
     notModified: sawFetchOutput ? notModified : undefined,
     sourceCount: sources.length,
+    parsedSources,
+    emptySources,
+    failedSources: errors.length,
+    notModifiedSources: notModified,
+    skippedSources: 0,
     parsedItems: items.length,
     erroredSources: errors.length,
   },
@@ -71,18 +78,25 @@ function maybeFetchOutput(text) {
 
 function parseFetchedResponse(response) {
   if (!response.ok) {
-    errors.push({
-      sourceId: response.sourceId,
-      url: response.url,
-      finalUrl: response.finalUrl,
-      code: response.error?.code || 'fetch_error',
-      severity: 'error',
-      retryable: response.error?.code !== 'http_error',
-      message: response.error?.message || `HTTP ${response.status || 'error'}`,
-    });
+    errors.push({ sourceId: response.sourceId, ...normalizeResponseError(response) });
     return;
   }
   if (response.notModified) return;
+  const contentKind = response.contentKind || classifyPayload(response.body || '', response.contentType);
+  if (contentKind === 'html') {
+    errors.push({
+      sourceId: response.sourceId,
+      ...makeFeedError('unsupported_content_type', {
+        stage: 'parse',
+        url: response.url,
+        finalUrl: response.finalUrl,
+        message: 'The response is HTML, not a feed. Run feed discovery against the final URL or fetched HTML.',
+        nextAction: 'discover_feed',
+        details: { contentType: response.contentType, contentKind },
+      }),
+    });
+    return;
+  }
   try {
     const feedUrl = response.finalUrl || response.url;
     const parsed = parseFeedContent(response.body || '', feedUrl);
@@ -94,12 +108,12 @@ function parseFetchedResponse(response) {
   } catch (error) {
     errors.push({
       sourceId: response.sourceId,
-      url: response.url,
-      finalUrl: response.finalUrl,
-      code: 'parse_error',
-      severity: 'error',
-      retryable: false,
-      message: error.message,
+      ...makeFeedError('parse_error', {
+        stage: 'parse',
+        url: response.url,
+        finalUrl: response.finalUrl,
+        message: error.message,
+      }),
     });
   }
 }
@@ -113,10 +127,26 @@ function recordParsed(parsed, provenance = {}) {
     finalUrl: provenance.finalUrl,
   };
   sources.push(source);
+  if (parsed.items.length) parsedSources += 1;
+  else emptySources += 1;
   items = items.concat(parsed.items.map((item) => ({
     ...item,
     sourceId,
     feedUrl: source.feedUrl,
   })));
   warnings.push(...parsed.warnings.map((warning) => ({ ...warning, sourceId })));
+}
+
+function normalizeResponseError(response) {
+  if (response.error?.stage && response.error?.nextAction) return response.error;
+  return makeFeedError(response.error?.code || 'network_error', {
+    stage: 'fetch',
+    url: response.url,
+    finalUrl: response.finalUrl,
+    status: response.status,
+    retryable: response.error?.retryable,
+    severity: response.error?.severity,
+    message: response.error?.message || `HTTP ${response.status || 'error'}`,
+    nextAction: response.error?.nextAction,
+  });
 }

@@ -6,7 +6,7 @@
 - Rate-limit live batches and use conditional requests when cache metadata is
   available.
 - Keep verbatim excerpts short and purposeful.
-- Prefer summaries, citations, and local paths over dumping full copyrighted
-  article bodies into chat.
+- Prefer summaries, citations, and artifact references over dumping full
+  copyrighted article bodies into chat.
 - Treat site-specific feed bridges as brittle and potentially governed by
   different terms or licenses.

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:feed-processing:result:1.0",
+  "title": "Portable Feed Processing Result",
+  "$defs": {
+    "error": {
+      "type": "object",
+      "required": ["code", "stage", "retryable", "severity", "message", "nextAction"],
+      "properties": {
+        "code": { "type": "string" },
+        "stage": { "type": "string" },
+        "retryable": { "type": "boolean" },
+        "severity": { "type": "string" },
+        "message": { "type": "string" },
+        "nextAction": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "type": "object",
+  "required": ["schemaVersion", "generatedAt", "scope", "sources", "items", "skipped", "errors", "warnings", "coverage", "validation"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "scope": { "type": "object" },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sourceId", "inputUrl", "status", "attempts", "warnings", "errors"],
+        "properties": {
+          "sourceId": { "type": "string" },
+          "inputUrl": { "type": "string" },
+          "status": { "enum": ["parsed", "empty", "not_modified", "failed", "skipped"] },
+          "recovered": { "type": "boolean" },
+          "redirected": { "type": "boolean" },
+          "duplicateOfSourceId": { "type": "string" },
+          "attempts": { "type": "array" },
+          "warnings": { "type": "array" },
+          "errors": { "type": "array", "items": { "$ref": "#/$defs/error" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "items": { "type": "array" },
+    "skipped": { "type": "array" },
+    "errors": { "type": "array", "items": { "$ref": "#/$defs/error" } },
+    "warnings": { "type": "array" },
+    "coverage": {
+      "type": "object",
+      "required": ["requestedSources", "parsedSources", "emptySources", "notModifiedSources", "failedSources", "skippedSources", "parsedItems", "selectedItems"],
+      "properties": {
+        "requestedSources": { "type": "integer", "minimum": 0 },
+        "parsedSources": { "type": "integer", "minimum": 0 },
+        "emptySources": { "type": "integer", "minimum": 0 },
+        "notModifiedSources": { "type": "integer", "minimum": 0 },
+        "failedSources": { "type": "integer", "minimum": 0 },
+        "skippedSources": { "type": "integer", "minimum": 0 },
+        "recoveredSources": { "type": "integer", "minimum": 0 },
+        "transportSucceeded": { "type": "integer", "minimum": 0 },
+        "parsedItems": { "type": "integer", "minimum": 0 },
+        "selectedItems": { "type": "integer", "minimum": 0 },
+        "skippedItems": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": true
+    },
+    "validation": {
+      "type": "object",
+      "required": ["ok", "errors", "warnings"],
+      "properties": {
+        "ok": { "type": "boolean" },
+        "errors": { "type": "array", "items": { "type": "string" } },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "additionalProperties": true
+}

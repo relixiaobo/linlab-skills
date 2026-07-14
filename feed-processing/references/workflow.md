@@ -1,32 +1,42 @@
-# RSS Workflow
+# Portable Workflow
 
-Use the lightest workflow that preserves provenance and validation.
+Use the lightest execution mode that preserves the portable contract.
 
-## On-Demand Feed Pack
+## Reference CLI
 
-1. Normalize inputs with `source_list.mjs`.
-2. Discover feed URLs for page URLs with `feed_discover.mjs`.
-3. Fetch feed payloads with `feed_fetch.mjs` when live network access is needed.
-4. Parse feed payloads with `feed_parse.mjs`.
-5. Apply the requested scope with `feed_window.mjs`.
-6. Optionally apply rules and full-text extraction.
-7. Build and validate a feed-content pack.
+1. Normalize request sources.
+2. Fetch explicit or likely feed URLs with bounded redirects.
+3. Classify the returned payload.
+4. Parse RSS, Atom, and JSON Feed directly.
+5. For HTML, discover candidates using the final URL as the base.
+6. Fetch and parse candidates before accepting them.
+7. Apply the requested scope.
+8. Return terminal source states, attempts, errors, warnings, items, and
+   reconcilable coverage.
+9. Validate the result.
 
-## Health Audit
+Run this path with `feed_process.mjs`.
 
-Use `source_list.mjs`, `feed_discover.mjs`, `feed_fetch.mjs`, `feed_parse.mjs`,
-and `feed_profile.mjs`. Report dead feeds, parse warnings, stale feeds, duplicate
-identity risks, missing dates, and likely summary-only feeds.
+## Protocol Adapter
 
-## Research Packet
+Allow another runtime, MCP server, HTTP service, or native implementation to
+replace the reference CLI only when it conforms to `portable-contract.md` and
+the request/result schemas. Keep the same error codes and coverage invariant.
 
-Run the on-demand pack workflow, then apply `feed_rules.mjs` and
-`full_text_extract.mjs` only to selected candidates. Keep attempt ledgers so the
-user can see whether text came from feed content, static extraction, or failed
-routes.
+## Restricted Processing
 
-## Host Collections
+When live HTTP or process execution is unavailable, accept caller-supplied feed
+payloads. Do not claim that remote sources were fetched. Report missing
+capabilities explicitly.
 
-Host adapters such as Tenon `#subscribe` are read-only source collectors. Convert
-host records to a source list, then use the same portable scripts. Do not let RSS
-scripts create, edit, or delete host objects.
+## Post-Processing
+
+Apply rule filtering and selected full-text extraction after the portable
+processor. Build and validate a feed-content pack before passing data to a
+downstream consumer.
+
+## Host Boundary
+
+Let a host collect sources, persist state, schedule runs, and write results.
+Keep host-specific APIs, object identifiers, sessions, and mutation instructions
+outside this skill.

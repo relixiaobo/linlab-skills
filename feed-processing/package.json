@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check scripts/*.mjs scripts/lib/*.mjs"
+    "check": "node --check scripts/*.mjs scripts/lib/*.mjs",
+    "test": "python3 ../evals/feed-processing/run_checks.py"
   }
 }

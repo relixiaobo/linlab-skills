@@ -200,8 +200,10 @@ export function parseOpmlSources(text) {
     if (isFeed) {
       sources.push({
         sourceId: stableHash(attrs.xmlUrl || attrs.htmlUrl || label),
+        inputUrl: attrs.xmlUrl || attrs.htmlUrl,
         feedUrl: attrs.xmlUrl,
         siteUrl: attrs.htmlUrl,
+        urlKind: attrs.xmlUrl ? 'feed' : 'page',
         title: label,
         folders: stack.filter(Boolean),
         tags: stack.filter(Boolean),
@@ -214,15 +216,19 @@ export function parseOpmlSources(text) {
 }
 
 export function sourceFromRow(row, ref = {}) {
-  const feedUrl = row.xmlUrl || row.feedUrl || row.rssUrl || row.atomUrl || row.feed || '';
-  const siteUrl = row.url || row.siteUrl || row.htmlUrl || row.homepage || '';
-  const url = feedUrl || siteUrl;
-  if (!url) return { error: { code: 'missing_url', row: ref, message: 'Row has no feed or site URL.' } };
-  const looksFeed = Boolean(feedUrl || /\.(xml|rss|atom|json)$/i.test(url) || /\/(feed|rss|atom)(\/|$)/i.test(url));
+  const explicitFeedUrl = row.xmlUrl || row.feedUrl || row.rssUrl || row.atomUrl || row.feed || '';
+  const explicitSiteUrl = row.siteUrl || row.htmlUrl || row.homepage || '';
+  const genericUrl = row.url || '';
+  const inputUrl = explicitFeedUrl || genericUrl || explicitSiteUrl;
+  if (!inputUrl) return { error: { code: 'missing_url', row: ref, message: 'Row has no feed or site URL.' } };
+  const looksFeed = Boolean(explicitFeedUrl || /\.(xml|rss|atom|json)$/i.test(inputUrl) || /\/(feed|rss|atom)(\/|$)/i.test(inputUrl));
+  const urlKind = explicitFeedUrl ? 'feed' : explicitSiteUrl && !genericUrl ? 'page' : looksFeed ? 'feed' : 'unknown';
   const source = {
-    sourceId: stableHash(canonicalUrl(url)),
-    feedUrl: looksFeed ? url : undefined,
-    siteUrl: looksFeed ? (siteUrl || undefined) : url,
+    sourceId: stableHash(canonicalUrl(inputUrl)),
+    inputUrl,
+    urlKind,
+    feedUrl: urlKind === 'feed' ? inputUrl : undefined,
+    siteUrl: explicitSiteUrl || undefined,
     title: row.title || row.text || row.name || row.label || undefined,
     author: row.author || undefined,
     folders: splitList(row.folder || row.category || row.group),
@@ -268,7 +274,13 @@ export function parseSourceList(text, name = 'stdin') {
     if (Array.isArray(parsed)) return { sources: parsed, warnings };
     if (Array.isArray(parsed.sources)) return { sources: parsed.sources, warnings };
     if (Array.isArray(parsed.selectedItems)) {
-      const sources = parsed.selectedItems.map((item) => ({ sourceId: item.sourceId, feedUrl: item.feedUrl, title: item.sourceTitle })).filter((s) => s.feedUrl);
+      const sources = parsed.selectedItems.map((item) => ({
+        sourceId: item.sourceId,
+        inputUrl: item.feedUrl,
+        feedUrl: item.feedUrl,
+        urlKind: 'feed',
+        title: item.sourceTitle,
+      })).filter((source) => source.feedUrl);
       return dedupeSources(sources);
     }
   }

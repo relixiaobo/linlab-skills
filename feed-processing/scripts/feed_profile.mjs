@@ -36,9 +36,12 @@ for (const item of items) {
 const profile = sources.map((source) => {
   const stats = statsBySource.get(source.sourceId) || emptyStats();
   return {
-    sourceId: source.sourceId,
-    feedUrl: source.feedUrl,
-    title: source.title,
+      sourceId: source.sourceId,
+      feedUrl: source.feedUrl,
+      title: source.title,
+      status: source.status,
+      recovered: source.recovered,
+      redirected: source.redirected,
     itemCount: stats.itemCount,
     newestAt: stats.newestMs === null ? null : new Date(stats.newestMs).toISOString(),
     oldestAt: stats.oldestMs === null ? null : new Date(stats.oldestMs).toISOString(),

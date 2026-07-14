@@ -21,7 +21,10 @@ for (const item of items) {
 }
 
 await writeJson(args.out, {
+  schemaVersion: input.schemaVersion,
   generatedAt: new Date().toISOString(),
+  implementation: input.implementation,
+  strictness: input.strictness,
   scope: input.scope,
   sources: input.sources || [],
   items: selectedItems,
@@ -29,6 +32,7 @@ await writeJson(args.out, {
   errors: input.errors || [],
   warnings: input.warnings || [],
   coverage: {
+    ...(input.coverage || {}),
     requested: input.coverage?.requested,
     fetched: input.coverage?.fetched,
     notModified: input.coverage?.notModified,

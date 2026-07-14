@@ -1,29 +1,43 @@
 # Bad Feed Handling
 
-Default to best-effort mixed-batch processing. One broken source should produce a
-per-source error and coverage loss, not abort the entire batch.
+Process mixed batches best-effort by default. Preserve every source in a
+terminal state rather than aborting the batch.
 
-## Error Classes
+## Error Contract
 
+Include `code`, `stage`, `retryable`, `severity`, `message`, and
+`nextAction`. Use:
+
+- `invalid_url`
+- `unsupported_url_scheme`
 - `network_error`
+- `timeout`
 - `http_error`
 - `redirect_loop`
+- `too_many_redirects`
+- `redirect_missing_location`
 - `unsupported_content_type`
 - `oversized_response`
 - `parse_error`
 - `no_feed_discovered`
 - `auth_required`
 - `rate_limited`
-- `date_ambiguous`
+- `capability_unavailable`
 - `unknown`
 
-Include `retryable`, severity, message, and next action when possible.
+Do not use transport success as feed validity. An HTTP 200 HTML response is a
+successful fetch that requires discovery, not a parsed feed.
 
 ## Recovery Order
 
-1. Follow safe redirects within the redirect limit.
-2. Try HTML feed autodiscovery for page URLs.
-3. Try common feed paths only after autodiscovery fails.
-4. Suggest RSSHub or RSS-Bridge routes only as explicit recovery options with
-   provenance and licensing/terms caveats.
-5. Ask the user for an alternate URL or authorized content when access is gated.
+1. Follow bounded HTTP(S) redirects and record the chain.
+2. Parse recognized feed payloads.
+3. For HTML, discover alternate links using the final response URL.
+4. Try a bounded common-path set only when alternate discovery finds nothing.
+5. Fetch and parse every accepted candidate.
+6. Prefer a non-empty valid candidate; retain an empty valid feed when no
+   non-empty candidate succeeds.
+7. Mark the source failed only after recovery is exhausted.
+
+Suggest third-party bridge routes only as explicit options with provenance,
+publisher-policy, licensing, and reliability caveats.

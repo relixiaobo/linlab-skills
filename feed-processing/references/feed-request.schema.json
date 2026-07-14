@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:feed-processing:request:1.0",
+  "title": "Portable Feed Processing Request",
+  "type": "object",
+  "required": ["sources"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "now": { "type": "string", "format": "date-time" },
+    "strictness": { "enum": ["best_effort", "strict"] },
+    "scope": {
+      "type": "object",
+      "required": ["mode"],
+      "properties": {
+        "mode": { "enum": ["all", "last_n_days", "since_cursor", "newest_n", "date_range"] },
+        "days": { "type": "number", "minimum": 0 },
+        "count": { "type": "integer", "minimum": 0 },
+        "start": { "type": "string", "format": "date-time" },
+        "end": { "type": "string", "format": "date-time" },
+        "seen": { "type": "object" },
+        "items": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "timeoutMs": { "type": "number", "exclusiveMinimum": 0 },
+        "maxBytes": { "type": "number", "exclusiveMinimum": 0 },
+        "maxRedirects": { "type": "integer", "minimum": 0 },
+        "maxCandidates": { "type": "integer", "minimum": 1 },
+        "maxDiscoveryDepth": { "type": "integer", "minimum": 0 },
+        "concurrency": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "discovery": {
+      "type": "object",
+      "properties": {
+        "includeCommonPaths": { "type": "boolean" },
+        "commonPaths": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["inputUrl"],
+        "properties": {
+          "sourceId": { "type": "string" },
+          "inputUrl": { "type": "string" },
+          "feedUrl": { "type": "string" },
+          "siteUrl": { "type": "string" },
+          "urlKind": { "enum": ["feed", "page", "unknown"] },
+          "etag": { "type": "string" },
+          "lastModified": { "type": "string" },
+          "payload": { "type": "string" },
+          "contentType": { "type": "string" },
+          "finalUrl": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

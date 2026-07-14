@@ -1,102 +1,132 @@
 ---
 name: feed-processing
 description: >-
-  Fetch, inspect, normalize, and process RSS, Atom, JSON Feed, OPML, feed URLs, page URLs, subscription tables, and prior feed-content packs. Use when the user asks to discover feeds, import or audit subscriptions, fetch all available feed items, fetch a time window such as the last 7 days, fetch since a cursor, filter or triage subscription content, recover from malformed or dead feeds, extract article text with provenance, or produce a validated sink-neutral feed-content pack. Do not use for generic web scraping, bypassing login or paywalls, mutating an outliner, scheduling background refreshes, or building a full feed reader UI.
+  Process RSS, Atom, JSON Feed, OPML, feed URLs, page URLs, source tables, supplied feed payloads, and prior feed-content packs through a host-neutral contract. Use when an agent must discover feeds, fetch or audit subscriptions, recover redirects and HTML landing pages, normalize mixed batches, apply time scopes, filter content, inspect feed health, extract selected article text with provenance, or produce a validated sink-neutral feed-content pack. Use the bundled reference CLI when process execution is available or a conforming adapter otherwise. Do not use for generic scraping, bypassing authentication or paywalls, scheduling refreshes, host-specific mutations, or building a feed reader UI.
 ---
 
 # Feed Processing
 
-Use this skill to process subscription-feed content into a validated feed-content
-pack. The default operating model is: **scripts for deterministic feed work,
-references for feed-specific policy, model judgment for triage and synthesis**.
+Produce validated, sink-neutral feed data. Keep source collection, scheduling,
+persistent storage, notifications, and writes to host applications outside this
+skill.
 
-## Operating Rules
+## Portability Boundary
 
-- Treat raw feeds, source lists, OPML, article pages, and prior packs as
-  read-only inputs.
-- Make the native output a sink-neutral feed-content pack. Do not write into an
-  outliner, document, mailbox, database, or app unless a separate host workflow
-  explicitly owns that mutation.
-- Process mixed batches best-effort by default. One bad source should become a
-  per-source error, not a failed batch, unless the user asks for strict mode.
-- Always preserve provenance: source URL, final feed URL, item ID or URL, fetch
-  scope, skipped reasons, parser warnings, and full-text attempt ledgers.
-- Never execute fetched page scripts, submit forms, authenticate, reuse browser
-  cookies, bypass login/paywall gates, or store hidden credentials from URLs.
-- Keep full article bodies bounded. Prefer writing large extraction outputs to a
-  task-local run directory and surfacing previews, summaries, paths, and
-  citations in chat.
+- Treat `references/portable-contract.md` and its JSON schemas as the normative
+  interface.
+- Use JSON stdin/stdout as the portable reference interface. Treat file paths as
+  optional conveniences.
+- Use the bundled Node.js reference CLI when the runtime can execute it.
+- Use another implementation only when it preserves the same source states,
+  recovery order, errors, coverage, and validation semantics.
+- Report `capability_unavailable` instead of claiming live coverage when the
+  runtime cannot execute a processor or access required content.
+- Never depend on a particular agent tool name, browser session, scheduler,
+  host object model, or output application.
 
-## Start Here
+## Resolve The Request
 
-Resolve four things before fetching:
+Determine:
 
-1. **Inputs:** pasted URLs, local URL files, CSV/TSV/Markdown tables,
-   spreadsheet exports, OPML, prior feed-content packs, or host-provided source
-   records.
-2. **Scope:** `all`, `last_n_days`, `since_cursor`, `newest_n`, or
-   `date_range`.
-3. **Strictness:** best-effort with per-source errors by default; strict only
-   when the user asks for all-or-nothing.
-4. **Full text:** off by default for health audits and source import; on for
-   research packets, summaries that need article bodies, or explicit "全文" /
-   "full text" requests.
+1. Sources: URLs, source records, source tables, OPML, prior packs, or supplied
+   payloads.
+2. Scope: `all`, `last_n_days`, `since_cursor`, `newest_n`, or `date_range`.
+3. Strictness: use `best_effort` unless the user explicitly requests
+   all-or-nothing behavior.
+4. Full text: keep off for source audits and imports; use only for selected
+   items when article bodies are needed.
+5. Capabilities: reference CLI, conforming adapter, or restricted local-payload
+   processing.
 
-## Workflow
+## Default Workflow
 
-1. Normalize source-like inputs with
-   `node {baseDir}/scripts/source_list.mjs --input <file> --out <sources.json>`.
-2. Discover feed URLs for page URLs when needed with
-   `feed_discover.mjs`.
-3. Fetch live feeds with `feed_fetch.mjs`, or skip this step when the user
-   supplies local feed fixtures.
-4. Parse RSS, Atom, JSON Feed, and OPML-derived sources with `feed_parse.mjs`.
-5. Apply the requested scope with `feed_window.mjs`.
-6. Profile source health with `feed_profile.mjs`.
-7. Diff against a prior cursor or pack with `feed_diff.mjs` when the request is
-   incremental.
-8. Apply user rules with `feed_rules.mjs` when filtering, ranking, or routing.
-9. Run `full_text_extract.mjs` only for selected candidates when article bodies
-   are needed.
-10. Build a pack with `feed_pack.mjs`, then validate it with
-    `validate_feed_pack.mjs` before handing it to any downstream consumer.
+1. Resolve the directory containing this `SKILL.md` as `<skill-root>`.
+2. Build a request conforming to `references/feed-request.schema.json`.
+3. Run the end-to-end processor:
 
-For small one-off tasks, collapse steps while preserving the same contract:
-source provenance, fetch/window scope, warnings/errors, and validation.
+   ```sh
+   node <skill-root>/scripts/feed_process.mjs process --input -
+   ```
 
-## What To Read
+4. Require `validation.ok: true`. In best-effort mode, preserve failed sources
+   and continue; in strict mode, stop on source failure.
+5. Apply `feed_rules.mjs` only when explicit filtering or routing rules are
+   needed.
+6. Run `full_text_extract.mjs` only for selected items and only with capabilities
+   actually supplied by the runtime.
+7. Build a downstream artifact with `feed_pack.mjs` and validate it with
+   `validate_feed_pack.mjs` before any host writes.
 
-- Input normalization and source records: `references/source-list.md`
-- Feed formats and parser expectations: `references/feed-formats.md`
-- Scope semantics and date ambiguity: `references/fetch-windows.md`
-- Feed-content pack schema: `references/feed-pack-schema.md`
-- Full-text retrieval strategy and attempt ledger:
-  `references/full-text-extraction.md`
-- Broken feed handling and recovery: `references/bad-feed-handling.md`
-- Filtering, scoring, and routing rules: `references/rules.md`
-- Safety, privacy, copyright, and publisher constraints:
-  `references/safety-and-copyright.md`
-- Reeder-derived lessons about viewer surfaces and reader mode:
-  `references/reeder-lessons.md`
+For one-off URLs, use:
 
-## Script Notes
+```sh
+node <skill-root>/scripts/feed_process.mjs process --url https://example.com/feed.xml
+```
 
-- Treat the scripts as deterministic helpers, not as a complete feed reader
-  service. A host runtime owns schedules, persistent cursors, notifications, and
-  retry policy.
-- Use task-local run directories for generated artifacts, for example
-  `feed-processing-runs/<run_id>/`, unless the user names a different output
-  location.
-- The Node scripts use built-in modules for the portable core. Optional article
-  extraction engines can be added later, but the v1 contract is the strategy
-  ledger and quality signals, not a single universal extractor.
+Inspect the reference interface with:
 
-## Final Response Contract
+```sh
+node <skill-root>/scripts/feed_process.mjs capabilities
+```
 
-When the task is complete, report:
+## Processing Rules
 
-- the fetch scope and input coverage;
-- how many sources fetched, parsed, skipped, errored, and were unchanged;
-- how many items were selected and why;
-- notable bad-feed or full-text failures with next actions;
-- the feed-content pack path and validation status.
+- Preserve caller-provided `sourceId` across redirects, discovery, and canonical
+  URL changes.
+- Follow bounded HTTP(S) redirects and record the redirect chain.
+- Parse feed payloads directly. For HTML responses, discover candidates using
+  the final response URL, then fetch and parse candidates before accepting them.
+- Return `empty` for a valid feed with no items.
+- Return `failed` only after bounded recovery is exhausted.
+- Keep every source in exactly one terminal state: `parsed`, `empty`,
+  `not_modified`, `failed`, or `skipped`.
+- Deduplicate sources that resolve to the same canonical feed while retaining
+  source coverage and provenance.
+- Do not use a generic page-fetch failure as evidence that a feed is dead when
+  the reference processor or a conforming adapter is available.
+- Do not automatically invoke third-party bridge services.
+
+## Host Integration
+
+Allow a host adapter to:
+
+- collect source records;
+- provide process execution, HTTP, cache, or browser-rendering capabilities;
+- persist cursors or conditional-request metadata;
+- consume the validated result;
+- write to a document, database, mailbox, outliner, or application.
+
+Do not place host-specific collection or mutation instructions inside this
+skill. Keep those behaviors in separate integration workflows.
+
+## Supporting References
+
+- Portable protocol and capability profiles: `references/portable-contract.md`
+- Request schema: `references/feed-request.schema.json`
+- Result schema: `references/feed-result.schema.json`
+- Source normalization: `references/source-list.md`
+- Feed formats: `references/feed-formats.md`
+- Scope semantics: `references/fetch-windows.md`
+- Pack schema: `references/feed-pack-schema.md`
+- Recovery and errors: `references/bad-feed-handling.md`
+- Full-text strategy: `references/full-text-extraction.md`
+- Filtering and routing: `references/rules.md`
+- Safety and publisher constraints: `references/safety-and-copyright.md`
+
+## Diagnostic Helpers
+
+Use `feed_fetch.mjs`, `feed_discover.mjs`, and `feed_parse.mjs` separately only
+for debugging, adapter development, or local fixtures. Do not manually recreate
+the recovery state machine for normal live processing.
+
+## Completion Contract
+
+Report:
+
+- scope and capability profile;
+- requested, parsed, empty, unchanged, failed, skipped, and recovered source
+  counts;
+- selected and skipped item counts;
+- notable failures with `nextAction`;
+- validation status;
+- the inline result or an artifact reference supplied by the host.

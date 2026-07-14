@@ -25,7 +25,7 @@ retiring skills.
 | `document` | active | Markdown/structured source or native DOCX when required | Reading/review artifact | Source fidelity, section structure, DOCX semantics, comments/redlines, reader questions | Optimized for agent-maintained documents and Word review workflows. |
 | `pdf` | active | Native PDF, page renders, extracted evidence, or editable source that exports PDF | Fixed-layout PDF artifact | Page count/boxes, render checks, text/OCR extraction, forms, annotations, links, redaction, encryption, and output re-inspection | Optimized for PDF-native operations and final-layout QA, not drafting source documents/slides/sheets. |
 | `presentation` | active | Canonical `deck.html` plus narrative/theme/layout decisions and evidence/preservation records for Studio work; original PPTX package plus edit manifest for Surgeon work | Slide/talk artifact | Source accuracy, rendered HTML/export aesthetic gates, concrete PPTX editability coverage, package/object diff for precise edits, and route-aware technical checks | Two routes: Presentation Studio for all creation/rebuilding, PPTX Surgeon for minimum-change edits. Studio separates narrative archetypes, themes, and per-slide layouts. |
-| `feed-processing` | active | Feed URLs, page URLs, source tables, OPML files, prior feed-content packs, and fetched article pages | Feed-content pack | Source-list profiling, fetch-window coverage, feed parse warnings, full-text attempt ledger, pack validation, and fixture/eval checks | Portable subscription-content processor; host adapters such as Tenon `#subscribe` are optional. |
+| `feed-processing` | active | Feed URLs, page URLs, source tables, OPML files, supplied payloads, prior feed-content packs, and fetched article pages | Portable feed result and feed-content pack | JSON protocol conformance, bounded redirect/discovery recovery, terminal source coverage, full-text attempt ledger, pack validation, and fixture/eval checks | Host-neutral subscription processor; collection, scheduling, persistence, and sink mutations belong to separate integrations. |
 | `shape-product-spec` | active | Product idea, feature request, business rule, source notes, screenshots, existing docs, interviews, user flows, evidence, assumptions, constraints, options, and approved decisions | Decision-ready and execution-ready product spec | Stable IDs, explicit decisions/evidence/non-goals, clean-slate vs constrained target framing, constraint classification, flow/state coverage, story slices, testable acceptance criteria, assumptions/open questions, contradiction review, and `spec_check.py` smoke validation | Solves the pre-build spec gap: the user wants an agent or team to build/change/evaluate a product capability, but intent is not executable yet. |
 | `spreadsheet` | active | Workbook spec/source script, native XLSX, or flat data file | Calculable workbook/data-entry artifact | Sheet roles, formulas, named ranges, validation, links, protection, source data coverage, and open/render limits | Optimized for durable spreadsheet models, not ordinary tables inside documents or slides. |
 | `video-studio` | active | Media files, scripts, manifests, platform packaging settings | Finished video/package | ffprobe/ffmpeg QA, platform dimensions, audio/subtitle/frame checks | Clear production toolchain and verification surface. |
@@ -69,9 +69,9 @@ Reusable artifacts can include:
   preservation matrix or edit manifest, canonical HTML deck source, speaker
   notes, export editability evidence, and
   accuracy/aesthetic/technical gates.
-- `feed-processing`: source list, fetch scope, source profiles, parse warnings, selected
-  items, skipped/error coverage, full-text attempt ledgers, pack validation, and
-  feed-content pack paths.
+- `feed-processing`: portable request/result objects, source states, fetch
+  scope, source profiles, parse warnings, selected items, skipped/error coverage,
+  full-text attempt ledgers, pack validation, and artifact references.
 - `shape-product-spec`: product model, evidence ledger, objective/constraint
   framing, clean-slate and constrained options, source decisions, flow/state
   maps, story and requirement IDs, business rules, acceptance criteria,
