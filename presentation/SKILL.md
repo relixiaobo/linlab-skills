@@ -26,14 +26,18 @@ not obvious.
 1. Record audience, objective, use setting, density, outputs, factual cutoff,
    and actual editability needs. For constrained redesigns, inspect the source
    and make the preservation matrix authoritative.
-2. Select one narrative archetype, adapt one theme, and choose a small core
+2. Build a visual asset plan before choosing layouts: inventory supplied media,
+   identify slides that need photography, screenshots, maps, documents, or
+   object evidence, and mark which visuals may be generated conceptually. Do
+   not add stock imagery merely to fill space.
+3. Select one narrative archetype, adapt one theme, and choose a small core
    layout set from the real content shapes. Review the outline first only when
    the user requests it.
-3. Prototype real content covering the opening, normal rhythm, hardest
+4. Prototype real content covering the opening, normal rhythm, hardest
    data/diagram/media case, and close. Fix weak frames before expanding.
-4. Build the complete HTML deck with stable slide ids, explicit layouts, local
+5. Build the complete HTML deck with stable slide ids, explicit layouts, local
    assets, deterministic geometry, and hidden speaker notes.
-5. Inspect and render HTML, compile the requested PPTX, run the technical gate,
+6. Inspect and render HTML, compile the requested PPTX, run the technical gate,
    and complete at least one fix-and-recheck pass. Run Office-rendered PPTX
    comparison only for high-risk slides or when the user requests strict export
    fidelity.
@@ -42,7 +46,9 @@ Use local HTML, CSS, and SVG. Add a project-local visualization library only
 when the content requires it. Compile each element to the strongest faithful
 representation available: native PowerPoint objects, SVG, then bounded raster
 fallback. Report actual editability coverage rather than calling the whole deck
-editable.
+editable. For visual subjects, use subject-bearing media or inspectable visual
+evidence where it carries the claim; reserve text-only slides for theses,
+transitions, decisions, and deliberate resets.
 
 ### Commands
 

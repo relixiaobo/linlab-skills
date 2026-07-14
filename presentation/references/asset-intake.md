@@ -3,6 +3,26 @@
 Use this reference for photographs, screenshots, logos, maps, diagrams, charts,
 documents, videos, and assets extracted from an existing PPTX.
 
+## Asset Program
+
+Before assigning layouts, classify the deck's visual material:
+
+- **Real evidence**: supplied or sourced photographs, screenshots, maps,
+  documents, logos, facilities, equipment, or interfaces that the audience must
+  inspect.
+- **Conceptual visual**: generated or abstract imagery that creates context,
+  emotion, or an explanatory metaphor without pretending to be evidence.
+- **Constructed visual**: charts, diagrams, timelines, tables, and maps built
+  from verified data.
+- **Intentional reset**: a text-led slide whose sparseness is part of the
+  narrative rhythm.
+
+For a visual subject, do not let constructed visuals replace every real or
+conceptual view. Include media-bearing slides when the audience needs to see
+the place, object, person, interface, document, or operating environment itself.
+For an analytical subject, use media only when it carries evidence or useful
+context; never add generic stock photography to satisfy a quota.
+
 ## Identity And Provenance
 
 Prefer official or user-provided assets when identity matters. Record source,

@@ -15,6 +15,11 @@ guidance in `design.md`. Select from audience, topic, evidence density, venue,
 asset availability, brand constraints, and export risk. Record at least one
 adaptation in the Studio brief.
 
+`assetBias` is a starting prior, not a prohibition. A data-heavy or technical
+theme can still use a real facility photograph, map, screenshot, or document
+excerpt when that media carries the argument. A photo-oriented theme must fall
+back to text, data, or diagrams when no trustworthy image is available.
+
 Do not ask the user to choose among several rendered directions unless a real
 preference cannot be inferred. Resolve that preference with the smallest useful
 decision artifact.

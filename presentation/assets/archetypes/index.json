@@ -10,8 +10,8 @@
       "defaultThemeIds": ["analytical-ledger", "institutional-editorial", "technical-blueprint"],
       "sequence": [
         { "job": "frame the question and answer", "range": "1-2", "layoutIds": ["cover", "statement"] },
-        { "job": "establish definitions and context", "range": "1-3", "layoutIds": ["section", "timeline", "map-callout"] },
-        { "job": "present the evidence", "range": "variable", "layoutIds": ["chart", "evidence-wall", "table-takeaway", "diagram"] },
+        { "job": "establish definitions and context", "range": "1-3", "layoutIds": ["section", "hero-media", "timeline", "map-callout"] },
+        { "job": "present the evidence", "range": "variable", "layoutIds": ["chart", "evidence-wall", "table-takeaway", "diagram", "gallery"] },
         { "job": "synthesize mechanisms and implications", "range": "2-5", "layoutIds": ["compare", "diagram", "split"] },
         { "job": "resolve decisions, risks, and next moves", "range": "1-3", "layoutIds": ["metric", "statement", "close"] }
       ],
@@ -26,8 +26,8 @@
       "defaultThemeIds": ["analytical-ledger", "institutional-editorial", "stage-keynote"],
       "sequence": [
         { "job": "state the investment thesis", "range": "1", "layoutIds": ["cover", "statement"] },
-        { "job": "define the asset, market, and timing", "range": "2-4", "layoutIds": ["map-callout", "timeline", "chart"] },
-        { "job": "show value drivers and operating case", "range": "3-6", "layoutIds": ["metric", "diagram", "table-takeaway"] },
+        { "job": "define the asset, market, and timing", "range": "2-4", "layoutIds": ["map-callout", "hero-media", "timeline", "chart"] },
+        { "job": "show value drivers and operating case", "range": "3-6", "layoutIds": ["metric", "hero-media", "diagram", "table-takeaway"] },
         { "job": "test downside, scenarios, and risks", "range": "2-4", "layoutIds": ["compare", "evidence-wall", "chart"] },
         { "job": "make the decision explicit", "range": "1-2", "layoutIds": ["statement", "close"] }
       ],

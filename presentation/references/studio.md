@@ -34,13 +34,21 @@ help the audience understand or remember it.
 - Keep the hardest analytical slide at the same craft level as the opening.
 - Use real product, place, person, document, interface, and brand evidence when
   identity matters.
+- Treat imagery as part of the argument, not late decoration. For visual
+  subjects, plan a mix of real media, screenshots, maps, document excerpts,
+  charts, and diagrams before assigning layouts. Conceptual generated visuals
+  are acceptable when real evidence is unavailable, but they must be labelled
+  illustrative and never imply a real person, place, product, or event.
+- Text-only slides should have a deliberate job: thesis, transition, decision,
+  or reset. Do not let every slide collapse into text, cards, and diagrams when
+  the audience needs to inspect the subject itself.
 - Avoid ornamental gradients, floating decoration, nested cards, and generic
   illustration that could be reused for an unrelated subject.
 
 ## HTML Source Contract
 
-Use local HTML, CSS, and SVG. Add a project-local library only when the content
-requires it. Bundle dependencies and assets locally, expose a deterministic
+Use local HTML, CSS, SVG, and media assets. Add a project-local library only
+when the content requires it. Bundle dependencies and assets locally, expose a deterministic
 ready promise for asynchronous visuals, and preserve fixed 1920x1080 geometry
 unless another aspect ratio is required.
 
