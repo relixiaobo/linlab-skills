@@ -42,6 +42,14 @@ before delivery.
 ## CSS And DOM Safety
 
 - Use fixed slide dimensions and stable Grid/Flex tracks.
+- Put content-bearing raster media in `<img>` elements with
+  `data-asset-id`, `data-asset-role`, and `data-fit="cover|contain"`.
+- Size the media frame, not the bitmap. Let `object-fit` preserve the source
+  aspect ratio; never force the bitmap to an unrelated width/height ratio.
+- Give every cover crop `data-focal-point` and matching `object-position`.
+  Use `contain` for screenshots, documents, maps, charts, and logos.
+- Do not use CSS background images for content that must be inspected or
+  verified; they cannot be audited as reliably through the export pipeline.
 - Use real DOM elements for legend swatches, markers, rules, and arrowheads.
   Pseudo-elements and CSS border triangles can compile as misplaced squares or
   disappear.
@@ -82,4 +90,6 @@ entire PPTX is simply editable.
 `compare` renders HTML and PPTX, normalizes each pair to 480x270, computes pixel
 delta metrics, and writes diff images. This detects shifts, missing objects,
 font-wrap changes, and large crop/fidelity failures. It is a triage gate, not an
-aesthetic judge; inspect contact sheets and risky slides at full size.
+aesthetic judge; inspect contact sheets and every media-bearing slide at full
+size for semantic match, focal point, crop, legibility, resolution, and absence
+of stretching in both HTML and PPTX renders.

@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import json
+import struct
 import subprocess
 import tempfile
 import unittest
 import zipfile
+import zlib
 from pathlib import Path
 
 
@@ -19,6 +21,7 @@ CONTENT_TYPES = """<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
   <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
   <Default Extension="xml" ContentType="application/xml"/>
+  <Default Extension="png" ContentType="image/png"/>
   <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>
   <Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>
 </Types>"""
@@ -63,13 +66,32 @@ def plain_shape(text: str = "Stable text") -> str:
 </p:sp>"""
 
 
-def picture_with_embed(relationship_id: str) -> str:
+def picture_with_embed(
+    relationship_id: str,
+    *,
+    cx: int = 2_000_000,
+    cy: int = 1_000_000,
+) -> str:
     return f"""
 <p:pic>
   <p:nvPicPr><p:cNvPr id="2" name="Dangling Picture"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr>
   <p:blipFill><a:blip r:embed="{relationship_id}"/><a:stretch><a:fillRect/></a:stretch></p:blipFill>
-  <p:spPr><a:xfrm><a:off x="500000" y="500000"/><a:ext cx="2000000" cy="1000000"/></a:xfrm></p:spPr>
+  <p:spPr><a:xfrm><a:off x="500000" y="500000"/><a:ext cx="{cx}" cy="{cy}"/></a:xfrm></p:spPr>
 </p:pic>"""
+
+
+def png_bytes(width: int, height: int) -> bytes:
+    def chunk(kind: bytes, payload: bytes) -> bytes:
+        checksum = zlib.crc32(kind + payload) & 0xFFFFFFFF
+        return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", checksum)
+
+    row = b"\x00" + (b"\x80\x80\x80\xff" * width)
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(row * height))
+        + chunk(b"IEND", b"")
+    )
 
 
 def nested_group(outer_x: int, text: str) -> str:
@@ -100,7 +122,7 @@ def write_pptx(
     slide: str,
     *,
     presentation: str | None = None,
-    extra_parts: dict[str, str] | None = None,
+    extra_parts: dict[str, str | bytes] | None = None,
 ) -> None:
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zf:
         zf.writestr("[Content_Types].xml", CONTENT_TYPES)
@@ -298,6 +320,40 @@ class PptxToolRegressionTests(unittest.TestCase):
         self.assertEqual(
             report["relationship_reference_validation"],
             {"checked_reference_count": 2, "missing_reference_count": 1},
+        )
+        self.assertFalse(report["technical_gate"]["passed"])
+
+    def test_small_but_visible_image_aspect_distortion_is_blocking(self) -> None:
+        pptx = self.work / "distorted-image.pptx"
+        output = self.work / "distorted-image-gate.json"
+        image_relationships = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            '<Relationship Id="rIdImage" '
+            'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" '
+            'Target="../media/square.png"/>'
+            '</Relationships>'
+        )
+        write_pptx(
+            pptx,
+            slide_xml(picture_with_embed("rIdImage", cx=1_050_000, cy=1_000_000)),
+            extra_parts={
+                "ppt/slides/_rels/slide1.xml.rels": image_relationships,
+                "ppt/media/square.png": png_bytes(400, 400),
+            },
+        )
+
+        process = run_tool("gate", str(pptx), "--out", str(output))
+        self.assertNotEqual(process.returncode, 0)
+        report = json.loads(output.read_text(encoding="utf-8"))
+        self.assertEqual(len(report["image_aspect_distortions"]), 1)
+        self.assertGreater(
+            report["image_aspect_distortions"][0]["metrics"]["aspect_delta"],
+            0.04,
+        )
+        self.assertIn(
+            "image_aspect_distortions",
+            report["technical_gate"]["blocking_warnings"],
         )
         self.assertFalse(report["technical_gate"]["passed"])
 

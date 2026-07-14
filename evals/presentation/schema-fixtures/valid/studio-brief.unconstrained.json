@@ -50,6 +50,36 @@
     "realContentRefs": ["source/product-brief.md#metric", "source/product-brief.md#model"],
     "previewRefs": ["renders/signal-cover.png", "renders/signal-dense.png"]
   },
+  "visualAssetPlan": {
+    "subjectMode": "mixed",
+    "strategy": "Use inspectable source evidence for the operating model and constructed visuals for the decision path.",
+    "items": [
+      {
+        "assetId": "asset-source-model",
+        "slideRef": 4,
+        "visualJob": "Let leaders inspect the source operating model behind the claim.",
+        "assetClass": "real-evidence",
+        "subject": "The operating-model excerpt and its three verified phases.",
+        "relevance": "The source excerpt anchors the visual explanation in the supplied product brief.",
+        "sourceOrGenerationPlan": "Capture the relevant source excerpt from source/product-brief.md.",
+        "candidateRefs": ["assets/source-model.png"],
+        "fit": "contain",
+        "status": "ready"
+      },
+      {
+        "slideRef": 7,
+        "visualJob": "Show fragmented signals converging into one decision.",
+        "assetClass": "constructed-visual",
+        "subject": "The verified operating signals and leadership decision path.",
+        "relevance": "The diagram directly explains the content-specific creative thesis.",
+        "sourceOrGenerationPlan": "Construct from verified metrics and decisions in the evidence ledger.",
+        "fit": "not-applicable",
+        "status": "ready"
+      }
+    ],
+    "mediaBearingSlideRefs": [4],
+    "intentionalTextOnlySlideRefs": [1, 12]
+  },
   "layoutStrategy": {
     "coreLayoutIds": ["cover", "diagram", "evidence-wall", "metric", "compare", "close"],
     "riskLayoutIds": ["evidence-wall", "diagram"],

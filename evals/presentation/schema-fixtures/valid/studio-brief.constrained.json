@@ -35,6 +35,24 @@
     "realContentRefs": ["source/board-update.pptx#slide-1"],
     "previewRefs": ["renders/single-focus.png"]
   },
+  "visualAssetPlan": {
+    "subjectMode": "analytical",
+    "strategy": "Preserve the exact source content and use a constructed metric hierarchy without introducing unrelated media.",
+    "items": [
+      {
+        "slideRef": 1,
+        "visualJob": "Make the protected metric and its exact evidence field immediately scannable.",
+        "assetClass": "constructed-visual",
+        "subject": "The protected metric and source evidence.",
+        "relevance": "The constructed hierarchy is the only visual treatment permitted by the preservation matrix.",
+        "sourceOrGenerationPlan": "Rebuild from the protected source objects without new media.",
+        "fit": "not-applicable",
+        "status": "ready"
+      }
+    ],
+    "mediaBearingSlideRefs": [],
+    "intentionalTextOnlySlideRefs": []
+  },
   "layoutStrategy": {
     "coreLayoutIds": ["metric", "evidence-wall"],
     "riskLayoutIds": ["metric"],

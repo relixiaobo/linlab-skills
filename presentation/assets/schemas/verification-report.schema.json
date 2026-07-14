@@ -451,6 +451,32 @@
       },
       "additionalProperties": false
     },
+    "assetReview": {
+      "type": "object",
+      "required": [
+        "status",
+        "plannedMediaSlides",
+        "reviewedMediaSlides",
+        "semanticMismatchCount",
+        "distortionCount",
+        "awkwardCropCount",
+        "lowResolutionCount",
+        "complete",
+        "evidence"
+      ],
+      "properties": {
+        "status": { "$ref": "#/$defs/gateStatus" },
+        "plannedMediaSlides": { "type": "integer", "minimum": 0 },
+        "reviewedMediaSlides": { "type": "integer", "minimum": 0 },
+        "semanticMismatchCount": { "type": "integer", "minimum": 0 },
+        "distortionCount": { "type": "integer", "minimum": 0 },
+        "awkwardCropCount": { "type": "integer", "minimum": 0 },
+        "lowResolutionCount": { "type": "integer", "minimum": 0 },
+        "complete": { "type": "boolean" },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "additionalProperties": false
+    },
     "fullDeckAestheticGate": {
       "type": "object",
       "required": [
@@ -459,6 +485,7 @@
         "renderManifestRef",
         "contactSheetRef",
         "renderCoverage",
+        "assetReview",
         "renderArtifacts",
         "reviewedSlides",
         "revisionPasses",
@@ -471,6 +498,7 @@
         "renderManifestRef": { "type": "string", "minLength": 1 },
         "contactSheetRef": { "type": "string", "minLength": 1 },
         "renderCoverage": { "$ref": "#/$defs/renderCoverage" },
+        "assetReview": { "$ref": "#/$defs/assetReview" },
         "renderArtifacts": {
           "type": "array",
           "minItems": 1,
@@ -489,6 +517,8 @@
             "contentSpecificConcept",
             "messageHierarchy",
             "compositionFocalPoint",
+            "visualAssetRelevance",
+            "mediaCropIntegrity",
             "typographyAssetQuality",
             "informationDesign",
             "rhythmCoherence",
@@ -498,6 +528,8 @@
             "contentSpecificConcept": { "$ref": "#/$defs/score" },
             "messageHierarchy": { "$ref": "#/$defs/score" },
             "compositionFocalPoint": { "$ref": "#/$defs/score" },
+            "visualAssetRelevance": { "$ref": "#/$defs/score" },
+            "mediaCropIntegrity": { "$ref": "#/$defs/score" },
             "typographyAssetQuality": { "$ref": "#/$defs/score" },
             "informationDesign": { "$ref": "#/$defs/score" },
             "rhythmCoherence": { "$ref": "#/$defs/score" },
@@ -649,11 +681,23 @@
                 "complete": { "const": true }
               }
             },
+            "assetReview": {
+              "properties": {
+                "status": { "const": "passed" },
+                "semanticMismatchCount": { "const": 0 },
+                "distortionCount": { "const": 0 },
+                "awkwardCropCount": { "const": 0 },
+                "lowResolutionCount": { "const": 0 },
+                "complete": { "const": true }
+              }
+            },
             "criteria": {
               "properties": {
                 "contentSpecificConcept": { "minimum": 4 },
                 "messageHierarchy": { "minimum": 4 },
                 "compositionFocalPoint": { "minimum": 4 },
+                "visualAssetRelevance": { "minimum": 4 },
+                "mediaCropIntegrity": { "minimum": 4 },
                 "typographyAssetQuality": { "minimum": 4 },
                 "informationDesign": { "minimum": 4 },
                 "rhythmCoherence": { "minimum": 4 },

@@ -42,6 +42,17 @@
       "complete": true,
       "evidence": ["renders/concept-manifest.json"]
     },
+    "assetReview": {
+      "status": "passed",
+      "plannedMediaSlides": 0,
+      "reviewedMediaSlides": 0,
+      "semanticMismatchCount": 0,
+      "distortionCount": 0,
+      "awkwardCropCount": 0,
+      "lowResolutionCount": 0,
+      "complete": true,
+      "evidence": ["reviews/media-review.json"]
+    },
     "renderArtifacts": ["renders/concept-a.png"],
     "reviewedSlides": [1],
     "revisionPasses": 1,
@@ -49,6 +60,8 @@
       "contentSpecificConcept": 5,
       "messageHierarchy": 5,
       "compositionFocalPoint": 5,
+      "visualAssetRelevance": 5,
+      "mediaCropIntegrity": 5,
       "typographyAssetQuality": 5,
       "informationDesign": 5,
       "rhythmCoherence": 5,

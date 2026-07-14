@@ -11,6 +11,8 @@ const REGISTERED_LAYOUTS = new Set(LAYOUT_INDEX.layouts.map((layout) => layout.i
 const TEXT_ONLY_LAYOUTS = new Set(['section', 'statement', 'quote', 'close']);
 const VISUAL_MARKER_RE = /<(img|svg|canvas|video|figure|table)\b|class\s*=\s*["'][^"']*\b(metric|stage-visual|device-frame|feature-grid|visual-frame|timeline|quote|gallery|compare|diagram|signal|panel|number|chart|map|callout|table|evidence-wall)\b/i;
 const TINY_FONT_RE = /font-size\s*:\s*((?:[0-9](?:\.\d+)?)|(?:1[0-3](?:\.\d+)?))px\b/gi;
+const ASSET_POSTURES = new Set(['visual', 'mixed', 'analytical']);
+const IMAGE_FITS = new Set(['cover', 'contain']);
 
 function usage() {
   console.error('Usage: node scripts/html_tool.mjs inspect deck.html [--out report.json]');
@@ -34,6 +36,27 @@ function hasAttribute(tag, attr) {
 
 function classList(tag) {
   return (attrValue(tag, 'class') ?? '').split(/\s+/).filter(Boolean);
+}
+
+function imageElements(html) {
+  return [...html.matchAll(/<img\b[^>]*>/gi)].map((match) => {
+    const tag = match[0];
+    return {
+      tag,
+      src: attrValue(tag, 'src') ?? '',
+      assetId: attrValue(tag, 'data-asset-id') ?? '',
+      role: attrValue(tag, 'data-asset-role') ?? '',
+      fit: (attrValue(tag, 'data-fit') ?? '').toLowerCase(),
+      focalPoint: attrValue(tag, 'data-focal-point') ?? '',
+    };
+  });
+}
+
+function contentBackgroundImageRefs(html) {
+  const refs = [];
+  const re = /background(?:-image)?\s*:[^;{}]*url\(\s*["']?([^"')\s]+)["']?\s*\)/gi;
+  for (const match of html.matchAll(re)) refs.push(match[1]);
+  return sortedUnique(refs);
 }
 
 function isSpeakerNotesTag(tag) {
@@ -121,6 +144,7 @@ function collectSlideElements(html) {
         tag: token,
         classes,
         layout: attrValue(token, 'data-layout') ?? '',
+        assetPosture: attrValue(token, 'data-asset-posture') ?? '',
         isDeckStage,
         isSlide: !isDeckStage && slideTags.has(tagName)
           && (classes.includes('slide') || hasAttribute(token, 'data-slide')),
@@ -174,6 +198,7 @@ function collectSlideElements(html) {
       tag: slide.tagName,
       parent_element_index: candidateIndex.get(slide.slideAncestor?.start) ?? null,
     })),
+    deckAssetPostures: deckStages.map((stage) => stage.assetPosture).filter(Boolean),
     deckStageCount: deckStages.length,
     ignoredSlideElementCount: ordered.length - scoped.length,
   };
@@ -222,9 +247,12 @@ async function inspectHtml(filePath, html) {
   const collection = collectSlideElements(html);
   const slides = collection.slides;
   const slideCount = slides.length;
+  const audienceDocument = stripSpeakerNotesElements(html);
+  const backgroundImageRefs = contentBackgroundImageRefs(audienceDocument);
   const localRefs = [
     ...attrValues(html, 'src'),
     ...attrValues(html, 'href'),
+    ...backgroundImageRefs,
   ].filter((value) => {
     if (!value || value.startsWith('#')) return false;
     if (/^(https?:|data:|mailto:|tel:)/i.test(value)) return false;
@@ -239,6 +267,22 @@ async function inspectHtml(filePath, html) {
     audienceHtml: stripSpeakerNotesElements(slide.html),
     speakerNotesTags: speakerNotesElements(slide.html).map((element) => element.openingTag),
   }));
+  const imageAssets = analyzedSlides.flatMap((slide) => imageElements(slide.audienceHtml)
+    .map((asset) => ({ ...asset, slide: slide.index })));
+  const imageContractIssues = imageAssets.flatMap((asset) => {
+    const issues = [];
+    if (!asset.assetId) issues.push('missing_asset_id');
+    if (!asset.role) issues.push('missing_asset_role');
+    if (!asset.fit) issues.push('missing_fit');
+    else if (!IMAGE_FITS.has(asset.fit)) issues.push('invalid_fit');
+    if (asset.fit === 'cover' && !asset.focalPoint) issues.push('cover_missing_focal_point');
+    return issues.length > 0 ? [{ ...asset, issues }] : [];
+  });
+  const mediaBearingSlides = analyzedSlides
+    .filter((slide) => /<(img|video)\b/i.test(slide.audienceHtml))
+    .map((slide) => slide.index);
+  const assetPostures = sortedUnique(collection.deckAssetPostures);
+  const assetPosture = assetPostures.length === 1 ? assetPostures[0] : '';
   const layouts = analyzedSlides.map((slide) => slide.layout).filter(Boolean);
   const missingLayoutSlides = analyzedSlides
     .filter((slide) => !slide.layout)
@@ -259,7 +303,6 @@ async function inspectHtml(filePath, html) {
   const bulletDenseSlides = analyzedSlides
     .filter((slide) => (slide.audienceHtml.match(/<li\b/gi) ?? []).length >= 5)
     .map((slide) => slide.index);
-  const audienceDocument = stripSpeakerNotesElements(html);
   const tinyTextHits = sortedUnique(
     [...audienceDocument.matchAll(TINY_FONT_RE)].map((match) => `${match[1]}px`)
   );
@@ -276,11 +319,19 @@ async function inspectHtml(filePath, html) {
   if (slideCount === 0) errors.push('no_slide_elements_found');
   if (collection.nestedSlideElements.length > 0) errors.push('nested_slide_element_found');
   if (unhiddenSpeakerNotesSlides.length > 0) errors.push('speaker_notes_not_hidden');
+  if (assetPostures.length > 1) errors.push('conflicting_asset_postures');
+  if (assetPosture && !ASSET_POSTURES.has(assetPosture)) errors.push('invalid_asset_posture');
+  if (imageContractIssues.length > 0) errors.push('image_asset_contract_failed');
+  if (['visual', 'mixed'].includes(assetPosture) && mediaBearingSlides.length === 0) {
+    errors.push('required_media_missing');
+  }
   if (placeholders.length > 0) warnings.push('placeholder_text_found');
   if (brokenLocalReferences.length > 0) errors.push('broken_local_asset_reference_found');
   if (remoteDependencyRefs.length > 0) warnings.push('remote_dependency_reference_found');
   if (!hasKeyboardNavigation(html)) warnings.push('keyboard_navigation_not_obvious');
   if (!hasFixedStageHint(html)) warnings.push('missing_fixed_stage_hint');
+  if (!assetPosture) warnings.push('missing_asset_posture');
+  if (backgroundImageRefs.length > 0) warnings.push('content_background_image_found');
   if (slideDisplayNone) warnings.push('display_none_slide_switching_risk');
   if (missingLayoutSlides.length > 0) warnings.push('missing_layout_metadata_found');
   if (slideCount >= 4 && new Set(layouts).size <= 2) warnings.push('low_layout_variety');
@@ -296,6 +347,8 @@ async function inspectHtml(filePath, html) {
     errors,
     slide_count: slideCount,
     deck_stage_count: collection.deckStageCount,
+    asset_posture: assetPosture,
+    asset_postures: assetPostures,
     nested_slide_elements: collection.nestedSlideElements,
     ignored_slide_element_count: collection.ignoredSlideElementCount,
     layouts: sortedUnique(layouts),
@@ -304,6 +357,11 @@ async function inspectHtml(filePath, html) {
     missing_layout_slides: missingLayoutSlides,
     unknown_layouts: [],
     visual_slide_count: slideCount - textOnlySlides.length,
+    media_bearing_slides: mediaBearingSlides,
+    image_count: imageAssets.length,
+    image_assets: imageAssets,
+    image_contract_issues: imageContractIssues,
+    content_background_image_references: backgroundImageRefs,
     text_only_slides: textOnlySlides,
     notes_slides: notesSlides,
     unhidden_speaker_notes_slides: unhiddenSpeakerNotesSlides,

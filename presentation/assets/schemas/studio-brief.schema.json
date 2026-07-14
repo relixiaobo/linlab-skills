@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Presentation Studio Brief",
-  "description": "Canonical audience, visual direction, theme adaptation, prototype, deliverable, and editability record for Studio work. The policy may be unconstrained or preservation-controlled; production source is HTML.",
+  "description": "Canonical audience, visual direction, visual asset plan, theme adaptation, prototype, deliverable, and editability record for Studio work. The policy may be unconstrained or preservation-controlled; production source is HTML.",
   "type": "object",
   "required": [
     "taskContract",
@@ -15,6 +15,7 @@
     "creativeThesis",
     "narrativeDirection",
     "visualDirection",
+    "visualAssetPlan",
     "layoutStrategy",
     "successCriteria"
   ],
@@ -87,6 +88,7 @@
     "creativeThesis": { "type": "string", "minLength": 1 },
     "narrativeDirection": { "$ref": "#/$defs/narrativeDirection" },
     "visualDirection": { "$ref": "#/$defs/visualDirection" },
+    "visualAssetPlan": { "$ref": "#/$defs/visualAssetPlan" },
     "layoutStrategy": { "$ref": "#/$defs/layoutStrategy" },
     "prototypes": {
       "type": "object",
@@ -176,6 +178,154 @@
         "selectionRationale": { "type": "string", "minLength": 1 },
         "customCompositionPolicy": { "type": "string", "minLength": 1 }
       },
+      "additionalProperties": false
+    },
+    "visualAssetPlan": {
+      "type": "object",
+      "required": [
+        "subjectMode",
+        "strategy",
+        "items",
+        "mediaBearingSlideRefs",
+        "intentionalTextOnlySlideRefs"
+      ],
+      "properties": {
+        "subjectMode": {
+          "type": "string",
+          "enum": ["visual", "mixed", "analytical"]
+        },
+        "strategy": { "type": "string", "minLength": 1 },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/visualAssetPlanItem" }
+        },
+        "mediaBearingSlideRefs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": ["integer", "string"] }
+        },
+        "intentionalTextOnlySlideRefs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": ["integer", "string"] }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "subjectMode": { "enum": ["visual", "mixed"] }
+            },
+            "required": ["subjectMode"]
+          },
+          "then": {
+            "properties": {
+              "mediaBearingSlideRefs": { "minItems": 1 },
+              "items": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "assetClass": {
+                      "enum": ["real-evidence", "conceptual-image"]
+                    }
+                  },
+                  "required": ["assetClass"]
+                },
+                "minContains": 1
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "visualAssetPlanItem": {
+      "type": "object",
+      "required": [
+        "slideRef",
+        "visualJob",
+        "assetClass",
+        "subject",
+        "relevance",
+        "sourceOrGenerationPlan",
+        "fit",
+        "status"
+      ],
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "slideRef": { "type": ["integer", "string"] },
+        "visualJob": { "type": "string", "minLength": 1 },
+        "assetClass": {
+          "type": "string",
+          "enum": [
+            "real-evidence",
+            "conceptual-image",
+            "constructed-visual",
+            "intentional-reset"
+          ]
+        },
+        "subject": { "type": "string", "minLength": 1 },
+        "relevance": { "type": "string", "minLength": 1 },
+        "sourceOrGenerationPlan": { "type": "string", "minLength": 1 },
+        "candidateRefs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "fit": {
+          "type": "string",
+          "enum": ["cover", "contain", "not-applicable"]
+        },
+        "focalPoint": { "type": "string", "minLength": 1 },
+        "cropPolicy": { "type": "string", "minLength": 1 },
+        "status": {
+          "type": "string",
+          "enum": ["planned", "ready", "blocked"]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "assetClass": {
+                "enum": ["real-evidence", "conceptual-image"]
+              }
+            },
+            "required": ["assetClass"]
+          },
+          "then": {
+            "properties": {
+              "fit": { "enum": ["cover", "contain"] }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "fit": { "const": "cover" } },
+            "required": ["fit"]
+          },
+          "then": {
+            "required": ["focalPoint", "cropPolicy"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "assetClass": { "const": "intentional-reset" }
+            },
+            "required": ["assetClass"]
+          },
+          "then": {
+            "properties": {
+              "fit": { "const": "not-applicable" }
+            }
+          }
+        }
+      ],
       "additionalProperties": false
     },
     "visualDirection": {

@@ -487,6 +487,78 @@ class HtmlInspectorTests(unittest.TestCase):
 
         self.assertNotIn("missing_fixed_stage_hint", report["warnings"])
 
+    def test_ratio_safe_image_contract_is_reported(self) -> None:
+        report = self.inspect(
+            """<!doctype html>
+<html>
+<head><style>
+.deck-stage { aspect-ratio: 16 / 9; }
+.media-frame { width: 640px; height: 360px; }
+img[data-fit="cover"] { width: 100%; height: 100%; object-fit: cover; }
+</style></head>
+<body>
+  <main class="deck-stage" data-deck data-asset-posture="mixed">
+    <section class="slide" data-layout="hero-media">
+      <figure class="media-frame">
+        <img src="data:image/gif;base64,R0lGODlhAQABAAAAACw="
+          alt="Relevant subject"
+          data-asset-id="asset-subject"
+          data-asset-role="subject"
+          data-fit="cover"
+          data-focal-point="50% 50%">
+      </figure>
+    </section>
+  </main>
+  <script>window.addEventListener('keydown', () => {});</script>
+</body>
+</html>
+"""
+        )
+
+        self.assertEqual(report["asset_posture"], "mixed")
+        self.assertEqual(report["image_count"], 1)
+        self.assertEqual(report["media_bearing_slides"], [1])
+        self.assertEqual(report["image_contract_issues"], [])
+
+    def test_image_contract_and_required_media_are_blocking(self) -> None:
+        missing_contract = self.inspect(
+            """<!doctype html>
+<html>
+<head><style>.deck-stage { aspect-ratio: 16 / 9; }</style></head>
+<body>
+  <main class="deck-stage" data-deck data-asset-posture="visual">
+    <section class="slide" data-layout="hero-media">
+      <img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="Subject">
+    </section>
+  </main>
+  <script>window.addEventListener('keydown', () => {});</script>
+</body>
+</html>
+""",
+            expected_returncode=1,
+        )
+        self.assertIn("image_asset_contract_failed", missing_contract["errors"])
+        self.assertEqual(
+            missing_contract["image_contract_issues"][0]["issues"],
+            ["missing_asset_id", "missing_asset_role", "missing_fit"],
+        )
+
+        missing_media = self.inspect(
+            """<!doctype html>
+<html>
+<head><style>.deck-stage { aspect-ratio: 16 / 9; }</style></head>
+<body>
+  <main class="deck-stage" data-deck data-asset-posture="mixed">
+    <section class="slide" data-layout="diagram"><svg aria-label="Diagram"></svg></section>
+  </main>
+  <script>window.addEventListener('keydown', () => {});</script>
+</body>
+</html>
+""",
+            expected_returncode=1,
+        )
+        self.assertIn("required_media_missing", missing_media["errors"])
+
     def test_studio_template_is_export_safe_and_inspectable(self) -> None:
         template = HTML_TEMPLATE.read_text(encoding="utf-8")
         for export_risk in (
@@ -499,6 +571,7 @@ class HtmlInspectorTests(unittest.TestCase):
             self.assertNotIn(export_risk, template)
         self.assertIn("export-mode", template)
         self.assertIn("window.__PRESENTATION_READY__", template)
+        self.assertIn('data-asset-posture="analytical"', template)
         self.assertIn('class="speaker-notes" hidden', template)
         self.assertNotIn('class="notes"', template)
         self.assertEqual(template.count('class="slide"'), 5)

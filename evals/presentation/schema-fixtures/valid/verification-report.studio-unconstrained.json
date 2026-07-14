@@ -67,6 +67,17 @@
       "complete": true,
       "evidence": ["renders/render-manifest.json"]
     },
+    "assetReview": {
+      "status": "passed",
+      "plannedMediaSlides": 1,
+      "reviewedMediaSlides": 1,
+      "semanticMismatchCount": 0,
+      "distortionCount": 0,
+      "awkwardCropCount": 0,
+      "lowResolutionCount": 0,
+      "complete": true,
+      "evidence": ["reviews/media-review.json"]
+    },
     "renderArtifacts": ["renders/slide-001.png", "renders/slide-012.png"],
     "reviewedSlides": [1, 4, 7, 12],
     "revisionPasses": 1,
@@ -74,6 +85,8 @@
       "contentSpecificConcept": 5,
       "messageHierarchy": 4,
       "compositionFocalPoint": 4,
+      "visualAssetRelevance": 4,
+      "mediaCropIntegrity": 4,
       "typographyAssetQuality": 4,
       "informationDesign": 4,
       "rhythmCoherence": 4,

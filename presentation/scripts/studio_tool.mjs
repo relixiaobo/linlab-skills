@@ -333,6 +333,112 @@ async function inspectDeckDom(page, projectInfo) {
   });
 }
 
+async function inspectImageAssets(page, projectInfo) {
+  return page.evaluate(({ slideSelector, stageSelector }) => {
+    const allowedPostures = new Set(['visual', 'mixed', 'analytical']);
+    const allowedFits = new Set(['cover', 'contain']);
+    const round = (value) => Math.round(value * 10000) / 10000;
+    const errors = [];
+    const warnings = [];
+    const slides = [...document.querySelectorAll(slideSelector)];
+    const stage = document.querySelector(stageSelector);
+    const assetPosture = stage?.dataset?.assetPosture || '';
+    const assets = [];
+
+    for (let slideIndex = 0; slideIndex < slides.length; slideIndex += 1) {
+      const slide = slides[slideIndex];
+      const images = [...slide.querySelectorAll('img')];
+      for (let imageIndex = 0; imageIndex < images.length; imageIndex += 1) {
+        const element = images[imageIndex];
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        const naturalWidth = element.naturalWidth || 0;
+        const naturalHeight = element.naturalHeight || 0;
+        const sourceAspect = naturalHeight > 0 ? naturalWidth / naturalHeight : 0;
+        const boxAspect = rect.height > 0 ? rect.width / rect.height : 0;
+        const declaredFit = (element.dataset.fit || '').toLowerCase();
+        const computedFit = (style.objectFit || 'fill').toLowerCase();
+        const declaredFocalPoint = (element.dataset.focalPoint || '').trim();
+        const computedPosition = (style.objectPosition || '').trim();
+        let scale = 0;
+        if (naturalWidth > 0 && naturalHeight > 0 && rect.width > 0 && rect.height > 0) {
+          const xScale = rect.width / naturalWidth;
+          const yScale = rect.height / naturalHeight;
+          if (computedFit === 'cover') scale = Math.max(xScale, yScale);
+          else if (computedFit === 'contain') scale = Math.min(xScale, yScale);
+          else if (computedFit === 'none') scale = 1;
+          else if (computedFit === 'scale-down') scale = Math.min(1, Math.min(xScale, yScale));
+          else scale = Math.max(xScale, yScale);
+        }
+        const aspectDelta = sourceAspect > 0 && boxAspect > 0
+          ? Math.abs(boxAspect - sourceAspect) / sourceAspect
+          : 0;
+        const identity = {
+          slide: slideIndex + 1,
+          index: imageIndex + 1,
+          assetId: element.dataset.assetId || '',
+          role: element.dataset.assetRole || '',
+          src: element.getAttribute('src') || '',
+        };
+        const assetErrors = [];
+        const assetWarnings = [];
+        if (!element.complete || naturalWidth <= 0 || naturalHeight <= 0) assetErrors.push('image_not_loaded');
+        if (rect.width <= 0 || rect.height <= 0) assetErrors.push('image_has_no_rendered_area');
+        if (!identity.assetId) assetErrors.push('missing_asset_id');
+        if (!identity.role) assetErrors.push('missing_asset_role');
+        if (!allowedFits.has(declaredFit)) assetErrors.push('invalid_or_missing_declared_fit');
+        if (declaredFit && computedFit !== declaredFit) assetErrors.push('declared_fit_mismatch');
+        if (computedFit === 'fill' && aspectDelta > 0.02) assetErrors.push('aspect_distortion');
+        if (declaredFit === 'cover' && !declaredFocalPoint) assetErrors.push('cover_missing_focal_point');
+        if (declaredFocalPoint && computedPosition !== declaredFocalPoint) {
+          assetErrors.push('declared_focal_point_mismatch');
+        }
+        if (scale > 2) assetErrors.push('severe_upscaling');
+        else if (scale > 1.25) assetWarnings.push('upscaling_requires_review');
+
+        const record = {
+          ...identity,
+          naturalWidth,
+          naturalHeight,
+          renderedWidth: round(rect.width),
+          renderedHeight: round(rect.height),
+          sourceAspect: round(sourceAspect),
+          boxAspect: round(boxAspect),
+          aspectDelta: round(aspectDelta),
+          declaredFit,
+          computedFit,
+          declaredFocalPoint,
+          computedPosition,
+          scale: round(scale),
+          errors: assetErrors,
+          warnings: assetWarnings,
+        };
+        assets.push(record);
+        for (const issue of assetErrors) errors.push({ ...identity, issue });
+        for (const issue of assetWarnings) warnings.push({ ...identity, issue });
+      }
+    }
+
+    if (!assetPosture) warnings.push({ issue: 'missing_asset_posture' });
+    else if (!allowedPostures.has(assetPosture)) errors.push({ issue: 'invalid_asset_posture', assetPosture });
+    if ((assetPosture === 'visual' || assetPosture === 'mixed') && assets.length === 0) {
+      errors.push({ issue: 'required_media_missing', assetPosture });
+    }
+
+    return {
+      ok: errors.length === 0,
+      assetPosture,
+      imageCount: assets.length,
+      assets,
+      errors,
+      warnings,
+    };
+  }, {
+    slideSelector: projectInfo.config.slideSelector,
+    stageSelector: projectInfo.config.stageSelector,
+  });
+}
+
 async function openDeckPage(browser, baseUrl, projectInfo) {
   const page = await browser.newPage();
   await page.setViewport({
@@ -350,7 +456,8 @@ async function openDeckPage(browser, baseUrl, projectInfo) {
   });
   await page.goto(entryUrl(baseUrl, projectInfo), { waitUntil: 'networkidle0', timeout: 60000 });
   await waitForDeck(page, projectInfo.config.render?.timeoutMs || 30000);
-  return { page, consoleErrors, requestFailures };
+  const imageAssets = await inspectImageAssets(page, projectInfo);
+  return { page, consoleErrors, requestFailures, imageAssets };
 }
 
 async function runProcess(command, args, options = {}) {
@@ -596,9 +703,20 @@ async function compileDeck(projectInfo, options) {
   const compiled = await withStaticServer(projectInfo.project, async (baseUrl) => {
     const browser = await launchBrowser(runtime.puppeteer);
     try {
-      const { page, consoleErrors, requestFailures } = await openDeckPage(browser, baseUrl, projectInfo);
+      const {
+        page,
+        consoleErrors,
+        requestFailures,
+        imageAssets,
+      } = await openDeckPage(browser, baseUrl, projectInfo);
       const slides = await inspectDeckDom(page, projectInfo);
       if (slides.length === 0) throw new Error(`No slides match ${projectInfo.config.slideSelector}`);
+      if (!imageAssets.ok) {
+        const details = imageAssets.errors.slice(0, 8)
+          .map((item) => `slide ${item.slide || '?'} asset ${item.assetId || item.index || '?'}: ${item.issue}`)
+          .join('\n');
+        throw new Error(`The HTML deck failed media diagnostics:\n${details}`);
+      }
       if (requestFailures.length > 0 || consoleErrors.length > 0) {
         const details = [
           ...requestFailures.map((item) => `${item.error}: ${item.url}`),
@@ -634,6 +752,7 @@ async function compileDeck(projectInfo, options) {
         slides,
         consoleErrors,
         requestFailures,
+        imageAssets,
       };
     } finally {
       await browser.close();
@@ -668,6 +787,7 @@ async function compileDeck(projectInfo, options) {
     technicalGate: gatePath,
     browserConsoleErrors: compiled.consoleErrors,
     requestFailures: compiled.requestFailures,
+    mediaDiagnostics: compiled.imageAssets,
   };
   await writeJson(projectOutput(projectInfo, 'compileReport', 'qa/compile-report.json'), report);
   return report;
@@ -772,7 +892,18 @@ async function renderHtml(projectInfo, options) {
     const result = await withStaticServer(projectInfo.project, async (baseUrl) => {
       const browser = await launchBrowser(runtime.puppeteer);
       try {
-        const { page, consoleErrors, requestFailures } = await openDeckPage(browser, baseUrl, projectInfo);
+        const {
+          page,
+          consoleErrors,
+          requestFailures,
+          imageAssets,
+        } = await openDeckPage(browser, baseUrl, projectInfo);
+        if (!imageAssets.ok) {
+          const details = imageAssets.errors.slice(0, 8)
+            .map((item) => `slide ${item.slide || '?'} asset ${item.assetId || item.index || '?'}: ${item.issue}`)
+            .join('\n');
+          throw new Error(`The HTML deck failed media diagnostics:\n${details}`);
+        }
         await page.addStyleTag({ content: `${projectInfo.config.controlsSelector || '.deck-controls'}{display:none!important}` });
         const handles = await page.$$(projectInfo.config.slideSelector);
         if (handles.length === 0) throw new Error(`No slides match ${projectInfo.config.slideSelector}`);
@@ -784,7 +915,7 @@ async function renderHtml(projectInfo, options) {
           files.push(target);
         }
         await makeContactSheet(browser, files, path.join(staging, 'contact-sheet.webp'));
-        return { files, consoleErrors, requestFailures };
+        return { files, consoleErrors, requestFailures, imageAssets };
       } finally {
         await browser.close();
       }
@@ -799,6 +930,7 @@ async function renderHtml(projectInfo, options) {
       contact_sheet: 'contact-sheet.webp',
       browser_console_errors: result.consoleErrors,
       request_failures: result.requestFailures,
+      media_diagnostics: result.imageAssets,
     };
     await writeJson(path.join(staging, 'render-manifest.json'), manifest);
     await preserveUnownedFiles(outputDir, staging, ownership.unowned);

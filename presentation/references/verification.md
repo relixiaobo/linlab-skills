@@ -23,6 +23,8 @@ Review prototypes and the full deck at contact-sheet and full-size views. Score
 - content-specific concept;
 - message hierarchy;
 - composition and focal point;
+- visual asset relevance;
+- crop and aspect integrity;
 - typography and asset quality;
 - information design;
 - rhythm and coherence;
@@ -32,13 +34,24 @@ A strong Studio deck should reach at least 4 in each category. Revise when the
 hardest slide is materially weaker than the cover, the visual device is generic,
 or the sequence accumulates pages without building and resolving an argument.
 
+Review every planned media-bearing slide against the visual asset plan:
+
+- the selected image matches the intended subject, action, context, and claim;
+- every planned media slide was actually reviewed;
+- no generic substitute, fake identity, accidental crop, stretch, unreadable
+  screenshot, or low-resolution asset remains;
+- cover crops preserve the declared focal point in HTML and exported PPTX;
+- visual or mixed decks contain the required media-bearing slides.
+
 ### Runtime And Export
 
 - HTML inspection has no errors, placeholders, broken local assets, visible
   notes, nested slides, or missing fixed-stage geometry.
 - Browser render has no console or request failures.
+- Browser media diagnostics have no unloaded images, fit-contract failures,
+  aspect distortion, or severe upscaling.
 - Every expected slide is rendered.
-- PPTX passes the technical gate.
+- PPTX passes the technical gate with zero image-aspect distortions.
 - HTML/PPTX comparison has no blocking fidelity mismatch.
 - Notes and links survive when requested.
 - Editability evidence reports native, SVG, raster, semantic table/chart, and

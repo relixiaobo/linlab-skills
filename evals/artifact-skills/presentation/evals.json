@@ -14,11 +14,14 @@
         "Routes the request through Studio for a new deck",
         "Derives a content-specific visual concept from the activation-versus-early-retention narrative rather than selecting only a generic theme or layout preset",
         "Automatically selects and adapts one strong visual direction from the content, audience, venue, evidence profile, and export constraints without forcing a three-option user-facing style exercise",
+        "Builds a slide-level visual asset plan before layout assignment, classifies the deck as visual, mixed, or analytical, and records each media item's exact subject, relevance, source or generation plan, fit, and crop policy",
+        "Uses real or clearly conceptual subject-bearing media where the audience needs to inspect the product or operating context, while rejecting generic mood imagery and avoiding an arbitrary image quota",
         "Uses the theme library only as an internal design prior, records the selected or reference-led theme decision and content-specific adaptations, and escalates to user choice only for a genuine unresolved preference tradeoff",
         "Builds a role-tagged prototype set scaled to the deck and covering its actual risk profile before expanding the full canonical HTML deck",
         "Keeps all source metrics, dates, caveats, and asks accurate while authoring canonical HTML and compiling the requested editable PPTX",
         "Reports actual native, SVG, and raster editability coverage instead of selecting a deck-level native or hybrid backend",
-        "Renders the selected prototypes and completed deck, performs a mandatory visual critique for hierarchy, readability, composition, overlap, cropping, and cross-slide coherence, and iterates on material issues"
+        "Authors raster media with stable asset metadata and ratio-preserving cover or contain treatment, then rejects missing focal points, distortion, severe upscaling, or image-fit mismatches",
+        "Renders the selected prototypes and completed deck, performs a mandatory visual critique for hierarchy, readability, composition, image relevance, overlap, cropping, and cross-slide coherence, and iterates on material issues"
       ]
     },
     {
@@ -33,6 +36,7 @@
         "Routes a requested full restructure through Studio and treats the source PPTX as evidence rather than as the file being patched",
         "Extracts and audits the existing deck into a traceable source map before changing the narrative",
         "Treats page count, order, and layout as mutable while treating claims, numbers, citations, quotes, and required brand assets as source-fidelity constraints",
+        "Inventories source media and builds a visual asset plan that distinguishes real evidence, conceptual imagery, constructed visuals, and intentional text-only resets before assigning layouts",
         "Develops one content-derived visual direction, records why it fits the source and audience, renders it with real source content, and prototypes the actual risk profile before full production",
         "Checks the rebuilt deck against the source map so no unsupported facts are introduced and no required source content disappears silently",
         "Uses rendered visual review to evaluate the new narrative and design while using content/source comparison, not geometric one-to-one matching, to verify fidelity",

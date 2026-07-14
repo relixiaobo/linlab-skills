@@ -26,8 +26,8 @@ is evidence and asset provenance, not a file being incrementally transformed.
 When invariants matter, inspect first and make the preservation matrix
 authoritative.
 
-Read `references/studio.md`. Also read `references/evidence.md` for factual or
-research-heavy work, `references/asset-intake.md` when real assets matter,
+Read `references/studio.md` and `references/asset-intake.md` for every Studio
+deck. Also read `references/evidence.md` for factual or research-heavy work,
 `references/narrative-archetypes.md` before shaping the argument,
 `references/theme-library.md` before setting the visual direction,
 `references/layout-library.md` before assigning slide compositions, and
@@ -43,15 +43,21 @@ research-heavy work, `references/asset-intake.md` when real assets matter,
 3. Select and adapt one narrative archetype, then shape the argument and slide
    jobs. When the user explicitly requests outline review before production,
    stop at a decision-ready outline and discuss it.
-4. Automatically select and adapt one theme from the content, audience, venue,
+4. Build the visual asset plan before choosing layouts. Classify the subject as
+   visual, mixed, or analytical; for every planned media item record the exact
+   subject, visual job, relevance to the claim, source or generation plan,
+   `cover`/`contain` treatment, and crop policy. A visual or mixed deck must
+   show the real subject where inspection matters instead of collapsing into
+   text, cards, and diagrams.
+5. Automatically select and adapt one theme from the content, audience, venue,
    evidence profile, and export constraints. Do not generate three full visual
    directions for user selection by default.
-5. Choose a small core layout set from the real content shapes. Render
+6. Choose a small core layout set from the real content shapes. Render
    real-content prototypes covering the opening, normal rhythm, hardest
    dense/data/diagram/media case, and close. Revise weak frames before expanding.
-6. Build the complete canonical HTML deck with stable slide ids, explicit
+7. Build the complete canonical HTML deck with stable slide ids, explicit
    layouts, local dependencies, fixed geometry, and hidden speaker notes.
-7. Inspect HTML and evidence, render the full deck, compile requested outputs,
+8. Inspect HTML and evidence, render the full deck, compile requested outputs,
    report PPTX object coverage, run technical gates, render PPTX, compare it
    with HTML, and complete at least one fix-and-recheck pass.
 
@@ -59,6 +65,11 @@ research-heavy work, `references/asset-intake.md` when real assets matter,
 
 HTML may use plain CSS, Tailwind CSS, CSS Grid/Flex, ECharts, Mermaid, D3, or
 other local libraries. These are authoring choices, not separate routes.
+
+Use auditable `<img>` elements for content-bearing raster media. Give each one
+a stable asset id, semantic role, declared `cover` or `contain` fit, and an
+intentional focal point when cropped. Never use independent width/height scaling
+or `background-size: 100% 100%` for subject imagery.
 
 Compile each element to the strongest faithful representation available:
 
@@ -94,6 +105,9 @@ node studio.mjs render-html .
 node studio.mjs compile .
 node studio.mjs compare .
 ```
+
+`python3 {baseDir}/scripts/pptx_tool.py image-info <images...>` reports source
+dimensions and a safe default treatment before insertion.
 
 `compile` uses the pinned `dom-to-pptx` browser bundle with the correct
 `width`/`height` options, waits for declared browser readiness, injects HTML
@@ -140,6 +154,12 @@ python3 {baseDir}/scripts/pptx_tool.py gate edited.pptx --baseline before.json -
 - Narrative archetypes are reasoning priors, not fixed page-count templates.
 - Match registered layouts to real content shapes. Do not invent data or force
   content into a layout that does not fit.
+- Treat imagery as part of the argument. A candidate image must match the
+  slide's subject, action, and context; generic mood imagery is not a substitute.
+- A visual or mixed subject may not ship with zero media-bearing slides unless
+  the missing assets are reported as a blocker.
+- Never stretch raster or identity-bearing media. HTML runtime checks, rendered
+  review, and the PPTX gate must show no aspect distortion or accidental crop.
 - Use real DOM elements for swatches, markers, and arrowheads. Avoid CSS
   pseudo-elements and border triangles in export-critical visuals.
 - Reserve width for CJK text and verify line breaks in rendered PPTX.
@@ -158,8 +178,8 @@ blocks delivery until repaired or explicitly reported as unresolved.
 Keep one authority for each concern:
 
 - Studio brief (`assets/schemas/studio-brief.schema.json`): audience, objective,
-  narrative direction, selected theme adaptation, core layout strategy,
-  prototype decision, outputs, and editability requirement.
+  narrative direction, visual asset plan, selected theme adaptation, core
+  layout strategy, prototype decision, outputs, and editability requirement.
 - `deck.html`: narrative, visible content, notes, and visual system.
 - Evidence ledger: sources, claims, definitions, cutoff, and assets.
 - Preservation matrix: constrained-rebuild invariants.
@@ -173,7 +193,7 @@ production source.
 
 - `references/studio.md`: Studio source roles, workflow, beauty bar, and constrained rebuilds.
 - `references/evidence.md`: evidence ledger, cutoff, claims, definitions, and bindings.
-- `references/asset-intake.md`: provenance, identity, screenshots, media, and quality.
+- `references/asset-intake.md`: visual asset planning, relevance, provenance, fit, crop, and quality.
 - `references/narrative-archetypes.md`: argument sequences for research, launch, sales, learning, operating review, and talks.
 - `references/theme-library.md`: automatic theme selection and executable packages.
 - `references/layout-library.md`: content-to-layout mapping, limits, and custom-composition rules.

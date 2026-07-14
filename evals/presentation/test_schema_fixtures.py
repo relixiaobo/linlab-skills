@@ -327,6 +327,30 @@ class SchemaFixtureTests(unittest.TestCase):
         )
         cases.append(("incomplete-render", "verification-report.schema.json", incomplete_render, "/aestheticGate/renderCoverage"))
 
+        missing_asset_plan = copy.deepcopy(full_brief)
+        del missing_asset_plan["visualAssetPlan"]
+        cases.append(("missing-asset-plan", "studio-brief.schema.json", missing_asset_plan, "visualAssetPlan"))
+
+        mixed_without_media = copy.deepcopy(full_brief)
+        mixed_without_media["visualAssetPlan"]["mediaBearingSlideRefs"] = []
+        mixed_without_media["visualAssetPlan"]["items"] = [
+            item
+            for item in mixed_without_media["visualAssetPlan"]["items"]
+            if item["assetClass"] not in {"real-evidence", "conceptual-image"}
+        ]
+        cases.append(("mixed-without-media", "studio-brief.schema.json", mixed_without_media, "/visualAssetPlan"))
+
+        cover_without_focal_point = copy.deepcopy(full_brief)
+        media_item = cover_without_focal_point["visualAssetPlan"]["items"][0]
+        media_item["fit"] = "cover"
+        media_item["cropPolicy"] = "Keep the complete source excerpt visible."
+        media_item.pop("focalPoint", None)
+        cases.append(("cover-without-focal-point", "studio-brief.schema.json", cover_without_focal_point, "focalPoint"))
+
+        unresolved_asset_review = copy.deepcopy(creative_report)
+        unresolved_asset_review["aestheticGate"]["assetReview"]["distortionCount"] = 1
+        cases.append(("unresolved-asset-review", "verification-report.schema.json", unresolved_asset_review, "/aestheticGate/assetReview/distortionCount"))
+
         zero_expected_matches = copy.deepcopy(precision_report)
         zero_expected_matches["accuracyGate"]["targetAssertions"][0]["expectedMatchCount"] = 0
         cases.append(("zero-expected-matches", "verification-report.schema.json", zero_expected_matches, "/accuracyGate/targetAssertions/0/expectedMatchCount"))
