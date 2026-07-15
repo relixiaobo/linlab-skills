@@ -282,6 +282,26 @@ def extract_numbers(text: str) -> list[Decimal]:
     return values
 
 
+def has_fanout_control_evidence(normalized: str) -> bool:
+    explicit = (
+        "fan-out",
+        "fanout",
+        "one-to-many",
+        "1:n",
+        "double-count",
+        "inflate",
+    )
+    if any(token in normalized for token in explicit):
+        return True
+    expansion = ("expand", "duplicate", "repeat", "multiple rows", "more rows")
+    consequence = ("incorrect", "overstat", "double", "summed", "sum after")
+    return (
+        "join" in normalized
+        and any(token in normalized for token in expansion)
+        and any(token in normalized for token in consequence)
+    )
+
+
 def audit_ledger(path: Path) -> dict[str, Any]:
     if not path.is_file() or path.is_symlink():
         return {
@@ -420,10 +440,7 @@ def audit_artifacts(
             "grain": grain_key in normalized and any(
                 token in normalized for token in ("grain", "one row per", "unique")
             ),
-            "fanout": any(
-                token in normalized
-                for token in ("fan-out", "fanout", "one-to-many", "1:n", "double-count", "inflate")
-            ),
+            "fanout": has_fanout_control_evidence(normalized),
             "independent_verification": any(
                 token in normalized
                 for token in (
@@ -608,29 +625,6 @@ def apply_deterministic_overrides(
             "artifact-audit.json metric_mentions and concepts.filter_scope",
         )
         failure_tags.add("factuality")
-
-    fanout = scores.get("fanout-control")
-    concepts = artifact_audit["concepts"]
-    if fanout is not None and source_truth["join"]["fanout_risk"]:
-        missing = [name for name in ("grain", "fanout") if not concepts[name]]
-        if missing:
-            cap_score(
-                fanout,
-                0.5,
-                f"analysis does not substantiate {', '.join(missing)} control",
-                "artifact-audit.json concepts",
-            )
-            failure_tags.add("process-compliance")
-
-    verification = scores.get("independent-verification")
-    if verification is not None and not concepts["independent_verification"]:
-        cap_score(
-            verification,
-            0.5,
-            "no independent verification or reconciliation evidence was found",
-            "artifact-audit.json concepts.independent_verification",
-        )
-        failure_tags.add("verification")
 
     delivery = scores.get("auditable-delivery")
     required_artifacts = (

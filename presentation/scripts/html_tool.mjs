@@ -3,7 +3,7 @@ import { access, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const PLACEHOLDER_RE = /\b(lorem|ipsum|todo|placeholder|sample|dummy|xxxx)\b|\[(?:\u5fc5\u586b|todo|placeholder)[^\]]*\]|replace\s+(?:this|with)\b/gi;
+const PLACEHOLDER_RE = /\b(?:lorem|ipsum|todo|placeholder|dummy|xxxx)\b|\bsample\s+(?:text|title|subtitle|copy|content)\b|\[(?:\u5fc5\u586b|todo|placeholder)[^\]]*\]|replace\s+(?:this|with)\b/gi;
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const LAYOUT_INDEX_PATH = path.join(path.dirname(SCRIPT_DIR), 'assets', 'layouts', 'index.json');
 const LAYOUT_INDEX = JSON.parse(await readFile(LAYOUT_INDEX_PATH, 'utf8'));

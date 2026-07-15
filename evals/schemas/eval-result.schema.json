@@ -146,6 +146,7 @@
       "properties": {
         "status": {"type": "string", "enum": ["pending", "partial", "completed", "failed"]},
         "overall_score": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "task_score": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
         "passed": {"type": ["boolean", "null"]},
         "critical_failures": {
           "type": "array",
@@ -217,6 +218,47 @@
           "oneOf": [
             {"type": "null"},
             {"$ref": "#/$defs/sha256"}
+          ]
+        },
+        "timestamps": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["started_at", "completed_at", "duration_ms"],
+          "properties": {
+            "started_at": {"type": ["string", "null"]},
+            "completed_at": {"type": ["string", "null"]},
+            "duration_ms": {"type": ["integer", "null"], "minimum": 0}
+          }
+        },
+        "provenance": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "repo_commit",
+                "repo_dirty",
+                "entrypoint_path",
+                "entrypoint_sha256"
+              ],
+              "properties": {
+                "repo_commit": {
+                  "oneOf": [
+                    {"type": "null"},
+                    {"type": "string", "pattern": "^[a-f0-9]{40}$"}
+                  ]
+                },
+                "repo_dirty": {"type": "boolean"},
+                "entrypoint_path": {"type": ["string", "null"]},
+                "entrypoint_sha256": {
+                  "oneOf": [
+                    {"type": "null"},
+                    {"$ref": "#/$defs/sha256"}
+                  ]
+                }
+              }
+            }
           ]
         }
       }

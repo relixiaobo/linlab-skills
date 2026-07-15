@@ -152,7 +152,31 @@ class DataAnalysisJudgeTests(unittest.TestCase):
         self.assertTrue(audit["findings"]["ledger"]["valid"])
         self.assertEqual(audit["findings"]["ledger"]["rows"], 3)
 
-    def test_deterministic_failures_cap_model_scores(self) -> None:
+    def test_artifact_audit_recognizes_join_expansion_without_magic_word(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="data_judge_join_expansion_") as temp:
+            output_dir = Path(temp)
+            write_good_artifacts(output_dir)
+            (output_dir / "analysis.md").write_text(
+                """# Join control
+
+At the unique `order_id` grain, metrics are computed before the join. A direct
+join expands three paid orders to five rows and would produce an incorrect sum
+of 720.00 when order revenue is summed afterward. An independent grouped line
+aggregation reconciles to 400.00 for `status = paid`.
+""",
+                encoding="utf-8",
+            )
+            truth = build_source_truth(oracle()["evaluation"]["config"], CASE_DIR)
+            audit = audit_artifacts(
+                oracle()["evaluation"]["config"],
+                result(),
+                output_dir,
+                truth,
+            )
+
+        self.assertTrue(audit["concepts"]["fanout"])
+
+    def test_only_structured_deterministic_failures_cap_model_scores(self) -> None:
         with tempfile.TemporaryDirectory(prefix="data_judge_overrides_") as temp:
             output_dir = Path(temp)
             write_good_artifacts(output_dir)
@@ -181,12 +205,12 @@ class DataAnalysisJudgeTests(unittest.TestCase):
         scores = {item["criterion_id"]: item for item in output["scores"]}
         self.assertEqual(scores["correct-route"]["value"], 0.0)
         self.assertEqual(scores["correct-metrics"]["value"], 0.25)
-        self.assertEqual(scores["fanout-control"]["value"], 0.5)
-        self.assertEqual(scores["independent-verification"]["value"], 0.5)
+        self.assertEqual(scores["fanout-control"]["value"], 0.9)
+        self.assertEqual(scores["independent-verification"]["value"], 0.9)
         self.assertEqual(scores["auditable-delivery"]["value"], 0.4)
         self.assertEqual(
             set(output["failure_tags"]),
-            {"factuality", "process-compliance", "route-error", "verification"},
+            {"factuality", "process-compliance", "route-error"},
         )
 
     def test_missing_artifacts_skip_model_review(self) -> None:
@@ -278,6 +302,8 @@ class DataAnalysisJudgeTests(unittest.TestCase):
             self.assertEqual(json.loads(judge_result.read_text(encoding="utf-8")), output)
             usage = json.loads((trace_dir / "usage.json").read_text(encoding="utf-8"))
             self.assertEqual(usage["usage"]["total_tokens"], 18)
+            self.assertIsInstance(usage["duration_ms"], int)
+            self.assertGreaterEqual(usage["duration_ms"], 0)
             self.assertEqual(usage["structured_output_mode"], "schema")
             self.assertTrue((trace_dir / "attempt-01" / "codex-events.jsonl").is_file())
 

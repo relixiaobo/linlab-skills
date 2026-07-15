@@ -24,7 +24,7 @@
   },
   "comparison": {
     "control_condition": "baseline",
-    "metrics": ["score", "input_tokens", "output_tokens", "total_tokens", "duration_ms"]
+    "metrics": ["score", "task_score", "input_tokens", "output_tokens", "total_tokens", "duration_ms"]
   },
   "metadata": {
     "case_organization": "user-job",

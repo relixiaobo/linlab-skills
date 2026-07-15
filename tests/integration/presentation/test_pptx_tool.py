@@ -151,6 +151,27 @@ class PptxToolRegressionTests(unittest.TestCase):
         self.assertEqual(process.returncode, 0, process.stderr or process.stdout)
         return json.loads(output.read_text(encoding="utf-8"))
 
+    def test_placeholder_detection_does_not_flag_sample_size(self) -> None:
+        evidence = self.work / "sample-size.pptx"
+        placeholder = self.work / "sample-title.pptx"
+        write_pptx(
+            evidence,
+            slide_xml(plain_shape("Retention improved, but sample size is low")),
+        )
+        write_pptx(
+            placeholder,
+            slide_xml(plain_shape("Sample title")),
+        )
+
+        evidence_report = self.inspect(evidence, "sample-size")
+        placeholder_report = self.inspect(placeholder, "sample-title")
+
+        self.assertEqual(evidence_report["placeholder_hits"], [])
+        self.assertEqual(
+            placeholder_report["placeholder_hits"],
+            [{"slide": 1, "text": "sample title"}],
+        )
+
     def test_malformed_xml_and_rels_fail_clean_gate_with_structured_errors(self) -> None:
         pptx = self.work / "malformed.pptx"
         output = self.work / "malformed-gate.json"

@@ -17,7 +17,13 @@ from pathlib import Path
 from typing import Any
 from xml.etree import ElementTree as ET
 
-PLACEHOLDER_RE = re.compile(r"\b(lorem|ipsum|todo|placeholder|sample|dummy|xxxx)\b", re.I)
+PLACEHOLDER_RE = re.compile(
+    r"\b(?:lorem|ipsum|todo|placeholder|dummy|xxxx)\b"
+    r"|\bsample\s+(?:text|title|subtitle|copy|content)\b"
+    r"|\[(?:\u5fc5\u586b|todo|placeholder)[^\]]*\]"
+    r"|replace\s+(?:this|with)\b",
+    re.I,
+)
 PAGE_NUMBER_RE = re.compile(r"^\s*(\d{1,4})(?:\s*/\s*(\d{1,4}))?\s*$")
 CLOSING_RE = re.compile("(thank\\s*you|terima\\s*kasih|\u8c22\u8c22|q\\s*&\\s*a|questions?)", re.I)
 DATE_LABEL_RE = re.compile(r"^(?:19\d{2}|20\d{2}|1980s|1990s|2000s|2010s|2020s)\b", re.I)

@@ -283,6 +283,26 @@ def git_provenance() -> tuple[str | None, bool]:
     return commit_value or None, bool(status.stdout.strip())
 
 
+def command_entrypoint_provenance(
+    command: list[str],
+    cwd: Path,
+) -> tuple[str | None, str | None]:
+    """Hash the first repository file invoked by a Judge command."""
+    root = ROOT.resolve()
+    for argument in command:
+        candidate = Path(argument).expanduser()
+        if not candidate.is_absolute():
+            candidate = cwd / candidate
+        try:
+            candidate = candidate.resolve()
+            relative = candidate.relative_to(root).as_posix()
+        except (OSError, ValueError):
+            continue
+        if candidate.is_file() and not candidate.is_symlink():
+            return relative, sha256_file(candidate)
+    return None, None
+
+
 def format_command(template: str, values: dict[str, str]) -> list[str]:
     try:
         rendered = template.format_map(values)
@@ -427,6 +447,8 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
     scores: list[dict[str, Any]] = []
     seen: set[str] = set()
     weighted = 0.0
+    task_weighted = 0.0
+    task_weight = 0.0
     for raw in raw_scores:
         criterion_id = raw["criterion_id"]
         if criterion_id not in outcomes:
@@ -437,6 +459,9 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
         value = raw["value"]
         weight = float(outcomes[criterion_id]["weight"])
         weighted += float(value) * weight
+        if criterion_id != "correct-route":
+            task_weighted += float(value) * weight
+            task_weight += weight
         scores.append(
             {
                 "criterion_id": criterion_id,
@@ -465,6 +490,11 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
     return {
         "status": status,
         "overall_score": weighted if complete else None,
+        "task_score": (
+            task_weighted / task_weight
+            if complete and task_weight > 0
+            else None
+        ),
         "passed": not critical_failures if complete else None,
         "critical_failures": critical_failures,
         "scores": scores,
@@ -477,6 +507,7 @@ def pending_judging() -> dict[str, Any]:
     return {
         "status": "pending",
         "overall_score": None,
+        "task_score": None,
         "passed": None,
         "critical_failures": [],
         "scores": [],
@@ -532,6 +563,12 @@ def initial_result(
             "config": {},
             "evidence_manifest_path": None,
             "evidence_manifest_sha256": None,
+            "timestamps": {
+                "started_at": None,
+                "completed_at": None,
+                "duration_ms": None,
+            },
+            "provenance": None,
         },
         "judging": pending_judging(),
         "failure": None,
@@ -765,6 +802,13 @@ def judge_one(
     output_sha256_before = sha256_tree(output_dir)
 
     judge_command = format_command(invocation.command_template, values)
+    judge_started_wall = time.monotonic()
+    judge_started_at = utc_now()
+    judge_repo_commit, judge_repo_dirty = git_provenance()
+    entrypoint_path, entrypoint_sha256 = command_entrypoint_provenance(
+        judge_command,
+        run_dir,
+    )
     stdout_path = logs_dir / "judge.stdout.log"
     stderr_path = logs_dir / "judge.stderr.log"
     result.setdefault("judge", {})
@@ -781,6 +825,17 @@ def judge_one(
         "config": invocation.config,
         "evidence_manifest_path": None,
         "evidence_manifest_sha256": None,
+        "timestamps": {
+            "started_at": judge_started_at,
+            "completed_at": None,
+            "duration_ms": None,
+        },
+        "provenance": {
+            "repo_commit": judge_repo_commit,
+            "repo_dirty": judge_repo_dirty,
+            "entrypoint_path": entrypoint_path,
+            "entrypoint_sha256": entrypoint_sha256,
+        },
     }
 
     # Prior judge infrastructure failures are not evidence for the next judge.
@@ -860,6 +915,10 @@ def judge_one(
     )
     result["judge"]["evidence_manifest_path"] = evidence_path
     result["judge"]["evidence_manifest_sha256"] = evidence_sha
+    result["judge"]["timestamps"]["completed_at"] = utc_now()
+    result["judge"]["timestamps"]["duration_ms"] = round(
+        (time.monotonic() - judge_started_wall) * 1000
+    )
     validate_result(result)
     write_json(result_path, result)
     return result
@@ -978,8 +1037,14 @@ def execute_one(
 def metric_value(result: dict[str, Any], metric: str) -> int | float | None:
     if metric == "score":
         return result["judging"]["overall_score"]
+    if metric == "task_score":
+        return result["judging"].get("task_score")
     if metric == "duration_ms":
         return result["timestamps"]["duration_ms"]
+    if metric == "judge_duration_ms":
+        return ((result.get("judge") or {}).get("timestamps") or {}).get(
+            "duration_ms"
+        )
     return result["usage"].get(metric)
 
 
@@ -998,8 +1063,14 @@ def build_summary(
             "repetition": result["repetition"],
             "status": result["status"],
             "score": result["judging"]["overall_score"],
+            "task_score": result["judging"].get("task_score"),
             "passed": result["judging"]["passed"],
             "judge_adapter": (result.get("judge") or {}).get("adapter_id"),
+            "judge_duration_ms": (
+                ((result.get("judge") or {}).get("timestamps") or {}).get(
+                    "duration_ms"
+                )
+            ),
             "result_path": path.relative_to(run_root).as_posix(),
         }
         for path, result in results
@@ -1019,7 +1090,10 @@ def build_summary(
         if not control:
             continue
         deltas: dict[str, int | float | None] = {}
-        for metric in suite.data["comparison"]["metrics"]:
+        metrics = list(suite.data["comparison"]["metrics"])
+        if "score" in metrics and "task_score" not in metrics:
+            metrics.insert(metrics.index("score") + 1, "task_score")
+        for metric in metrics:
             control_value = metric_value(control, metric)
             treatment_value = metric_value(treatment, metric)
             deltas[metric] = (

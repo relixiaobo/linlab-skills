@@ -243,15 +243,19 @@ writes `EVAL_JUDGE_RESULT_FILE`:
 ```
 
 The runner takes weights from the oracle, never from the judge, and computes the
-weighted score only when every criterion is present. Partial judging keeps its
-total score and pass state null. Completed judging records explicit critical
-failures. Raw results include route, artifacts, hashes, model/config, token use,
-cost, latency, failures, and provenance. `run-summary.json` pairs each treatment
-with the baseline at the same case and repetition and reports metric deltas.
+weighted score only when every criterion is present. It also computes a
+route-neutral `task_score` by removing `correct-route` and renormalizing the
+remaining weights. Partial judging keeps both scores and pass state null.
+Completed judging records explicit critical failures. Raw results include route,
+artifacts, hashes, model/config, token use, cost, latency, failures, and
+provenance. `run-summary.json` pairs each treatment with the baseline at the same
+case and repetition and reports both raw-score and Task-score deltas.
 
 The runner also records adapter id, kind, protocol version, registry path/hash,
-exact command, merged config, logs, exit code, and a hash of the generated
-evidence manifest. It hashes the Agent output tree before and after judging and
+exact command, merged config, logs, exit code, Judge start/end/duration, Judge
+repository commit/state, Adapter entrypoint hash, and a hash of the generated
+evidence manifest. Model-assisted adapters record duration and usage for every
+attempt. The runner hashes the Agent output tree before and after judging and
 rejects an adapter that mutates it. Domain scoring logic and failure tags belong
 to the adapter and case contract, never in `evalctl`.
 
@@ -268,16 +272,20 @@ judge infrastructure errors if they do not recover.
 
 The data-analysis judge independently recomputes configured metrics from the
 source CSV, verifies the declared filter and grain, measures one-to-many join
-inflation, validates the findings ledger, and persists all of that evidence before
-blind review. Missing metric values, filter scope, grain/fan-out controls,
-verification, or audit fields deterministically cap the corresponding score.
+inflation, validates the findings ledger, and persists all of that evidence
+before blind review. Deterministic caps apply to numeric truth, exact filter
+evidence, required artifacts, and the structured ledger contract. Free-form
+grain, fan-out, and verification language remains evidence for blind semantic
+review rather than a keyword veto.
 
 The product-spec judge runs the portable spec inspector, records sections,
 stable IDs, acceptance criteria, and lint findings, then checks Case-defined
 source facts, options, flows, states, scope, and open-policy evidence before
 blind review. The Case contract controls which concepts and minimums matter;
 the adapter does not encode a single reference answer or reward template length.
-Missing required evidence deterministically caps only the affected criterion.
+Missing stable IDs, acceptance counts, artifacts, or a clean structural check
+can deterministically cap the affected criterion. Free-form term matches and
+misses are review hints, because phrase absence is not reliable semantic absence.
 
 Image-sensitive cases may declare
 `metadata.presentation_asset_expectations` in the hidden oracle. The

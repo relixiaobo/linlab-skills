@@ -132,7 +132,7 @@ class ProductSpecJudgeTests(unittest.TestCase):
             4,
         )
 
-    def test_deterministic_failures_cap_corresponding_model_scores(self) -> None:
+    def test_semantic_term_misses_do_not_cap_blind_model_scores(self) -> None:
         with tempfile.TemporaryDirectory(prefix="product_spec_caps_") as temp:
             root = Path(temp)
             output_dir = root / "output"
@@ -166,15 +166,49 @@ class ProductSpecJudgeTests(unittest.TestCase):
         )
         scores = {item["criterion_id"]: item for item in output["scores"]}
         self.assertEqual(scores["correct-route"]["value"], 0.0)
-        self.assertEqual(scores["evidence-fidelity"]["value"], 0.5)
-        self.assertEqual(scores["target-options"]["value"], 0.5)
-        self.assertEqual(scores["flows-and-states"]["value"], 0.5)
-        self.assertEqual(scores["scope-and-open-policy"]["value"], 0.5)
+        self.assertEqual(scores["evidence-fidelity"]["value"], 0.9)
+        self.assertEqual(scores["target-options"]["value"], 0.9)
+        self.assertEqual(scores["flows-and-states"]["value"], 0.9)
+        self.assertEqual(scores["scope-and-open-policy"]["value"], 0.9)
         self.assertEqual(scores["testable-acceptance"]["value"], 0.25)
         self.assertEqual(
             set(output["failure_tags"]),
-            {"factuality", "process-compliance", "route-error", "task-understanding"},
+            {"process-compliance", "route-error"},
         )
+
+    def test_structural_minimums_still_cap_model_scores(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="product_spec_structure_cap_") as temp:
+            root = Path(temp)
+            output_dir = root / "output"
+            output_dir.mkdir()
+            spec_path = write_good_artifacts(output_dir)
+            report, check_run = run_spec_check(
+                spec_path,
+                "product-spec.md",
+                root / "evidence",
+            )
+            audit = build_artifact_audit(
+                config(),
+                result(),
+                spec_path,
+                report,
+                check_run,
+            )
+
+        structure = audit["criterion_checks"]["testable-acceptance"]["structure"]
+        structure["missing_stable_ids"] = ["FR"]
+        structure["acceptance_criteria"]["actual"] = 0
+        structure["acceptance_criteria"]["passed"] = False
+        output = apply_deterministic_overrides(
+            judgment(),
+            oracle=oracle(),
+            config=config(),
+            result=result(),
+            artifact_audit=audit,
+        )
+        scores = {item["criterion_id"]: item for item in output["scores"]}
+        self.assertEqual(scores["testable-acceptance"]["value"], 0.5)
+        self.assertIn("process-compliance", output["failure_tags"])
 
     def test_section_warnings_do_not_become_template_vetoes(self) -> None:
         with tempfile.TemporaryDirectory(prefix="product_spec_sections_") as temp:
@@ -281,6 +315,7 @@ class ProductSpecJudgeTests(unittest.TestCase):
             self.assertTrue((evidence_dir / "artifact-audit.json").is_file())
             usage = json.loads((trace_dir / "usage.json").read_text(encoding="utf-8"))
             self.assertEqual(usage["usage"]["total_tokens"], 18)
+            self.assertIsInstance(usage["duration_ms"], int)
 
     def test_registry_resolves_product_spec_and_suite_requires_judging(self) -> None:
         case = validate_case(CASE_DIR, ROOT)

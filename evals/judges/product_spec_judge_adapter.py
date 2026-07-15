@@ -431,9 +431,9 @@ invented certainty. Distinguish the clean-slate direction from the selected
 constrained release and evaluate whether the tradeoff is coherent. Verify that
 flows are reachable, permissions and states are explicit, non-goals prevent
 overbuild, and acceptance criteria describe observable behavior rather than
-implementation details. Treat artifact-audit.json as absence evidence only: a
-term match proves that a concept was mentioned, not that it was used correctly.
-Use spec-check.json for structural facts, then inspect the artifact itself for
+implementation details. Treat artifact-audit.json term matches and misses as
+semantic review hints, not as proof that a concept is present or absent. Use
+spec-check.json for structural facts, then inspect the artifact itself for
 semantic quality and contradictions.
 
 Score every criterion from 0.0 to 1.0. Set passed=true only at 0.75 or higher
@@ -575,12 +575,8 @@ def apply_deterministic_overrides(
         failure_tags.add(config["criterion_failure_tags"][artifact_criterion])
 
     for criterion, check in artifact_audit["criterion_checks"].items():
-        if check["passed"]:
-            continue
-        missing_concepts = check["concepts"]["missing"]
         structure = check["structure"]
         missing_parts = [
-            *(f"concept:{item}" for item in missing_concepts),
             *(f"stable-id:{item}" for item in structure["missing_stable_ids"]),
         ]
         acceptance = structure.get("acceptance_criteria")
@@ -589,6 +585,8 @@ def apply_deterministic_overrides(
                 "acceptance-criteria:"
                 f"{acceptance['actual']}/{acceptance['minimum']}"
             )
+        if not missing_parts:
+            continue
         cap_score(
             scores[criterion],
             0.5,

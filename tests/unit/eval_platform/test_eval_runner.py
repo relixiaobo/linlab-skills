@@ -131,6 +131,35 @@ class EvalRunnerTests(unittest.TestCase):
             normalized = load_judge_protocol(path, oracle)
         self.assertEqual(normalized["failure_tags"], ["fixture-domain-check"])
 
+    def test_task_score_excludes_correct_route_and_renormalizes(self) -> None:
+        oracle = json.loads(
+            (
+                ROOT
+                / "evals/cases/analyze-order-revenue/oracle.yaml"
+            ).read_text(encoding="utf-8")
+        )
+        raw = {
+            "scores": [
+                {
+                    "criterion_id": outcome["id"],
+                    "value": 0.0 if outcome["id"] == "correct-route" else 1.0,
+                    "passed": outcome["id"] != "correct-route",
+                    "rationale": "Fixture score.",
+                    "evidence": ["fixture"],
+                }
+                for outcome in oracle["expected"]["outcomes"]
+            ],
+            "failure_tags": ["route-error"],
+            "summary": "Route failed; task quality passed.",
+        }
+        with tempfile.TemporaryDirectory(prefix="task_score_protocol_") as temp:
+            path = Path(temp) / "judge-result.json"
+            path.write_text(json.dumps(raw), encoding="utf-8")
+            normalized = load_judge_protocol(path, oracle)
+
+        self.assertAlmostEqual(normalized["overall_score"], 0.9)
+        self.assertAlmostEqual(normalized["task_score"], 1.0)
+
     def test_materialization_isolates_oracle_and_applies_ablation(self) -> None:
         with tempfile.TemporaryDirectory(prefix="eval_materialize_") as temp:
             result = self.run_evalctl(
@@ -204,6 +233,7 @@ class EvalRunnerTests(unittest.TestCase):
             self.assertEqual(len(summary["comparisons"]), 3)
             for comparison in summary["comparisons"]:
                 self.assertEqual(comparison["deltas"]["score"], 1.0)
+                self.assertEqual(comparison["deltas"]["task_score"], 1.0)
                 self.assertEqual(comparison["deltas"]["input_tokens"], 10)
                 self.assertEqual(comparison["deltas"]["total_tokens"], 10)
 
@@ -219,6 +249,7 @@ class EvalRunnerTests(unittest.TestCase):
             self.assertEqual(enabled_result["status"], "completed")
             self.assertEqual(enabled_result["judging"]["status"], "completed")
             self.assertEqual(enabled_result["judging"]["overall_score"], 1.0)
+            self.assertEqual(enabled_result["judging"]["task_score"], 1.0)
             self.assertTrue(enabled_result["judging"]["passed"])
             self.assertEqual(enabled_result["judging"]["critical_failures"], [])
             self.assertEqual(enabled_result["route"]["primary_skill"], "tiny-skill")
@@ -228,6 +259,22 @@ class EvalRunnerTests(unittest.TestCase):
             self.assertEqual(enabled_result["judge"]["kind"], "override")
             self.assertRegex(
                 enabled_result["judge"]["evidence_manifest_sha256"],
+                r"^[a-f0-9]{64}$",
+            )
+            self.assertIsInstance(
+                enabled_result["judge"]["timestamps"]["duration_ms"],
+                int,
+            )
+            self.assertIsNotNone(
+                enabled_result["judge"]["timestamps"]["completed_at"]
+            )
+            judge_provenance = enabled_result["judge"]["provenance"]
+            self.assertEqual(
+                judge_provenance["entrypoint_path"],
+                "tests/fixtures/evals/fake_judge.py",
+            )
+            self.assertRegex(
+                judge_provenance["entrypoint_sha256"],
                 r"^[a-f0-9]{64}$",
             )
 

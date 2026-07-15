@@ -73,19 +73,23 @@ Criterion ids and failure tags must come from the hidden oracle. Failure tags ar
 domain-defined slugs rather than a core-runner enumeration. The JSON Schema is
 the authoritative structural contract and requires explicit pass state,
 rationale, evidence, failure tags, and summary. The runner adds oracle weights,
-computes the weighted score, identifies critical failures, and normalizes the
-result. Partial criterion coverage remains a partial judgment and cannot complete
-a required suite.
+computes both the raw weighted score and a route-neutral Task score, identifies
+critical failures, and normalizes the result. Partial criterion coverage remains
+a partial judgment and cannot complete a required suite.
 
 After every attempt, the runner hashes every regular file under
 `judge-evidence/` into `evidence-manifest.json`. The result records adapter id,
-kind, protocol, registry hash, exact command, merged config, logs, exit code, and
-evidence-manifest hash. This preserves which evaluator actually produced the
-observation.
+kind, protocol, registry hash, exact command, merged config, logs, exit code,
+Judge duration, repository state, Adapter entrypoint hash, and evidence-manifest
+hash. Model-assisted adapters also retain per-attempt duration and usage. This
+preserves which evaluator actually produced the observation and its cost.
 
 ## Adapter Rules
 
 - Prefer deterministic evidence before model judgment.
+- Apply deterministic score caps only to high-precision checks such as numeric
+  truth, artifact integrity, source identity, or explicit structural contracts.
+  Treat free-form phrase matches and misses as semantic review evidence.
 - Keep provider, renderer, parser, and tool failures separate from artifact
   quality failures.
 - Blind model judges to condition names and prior scores.
@@ -106,8 +110,9 @@ observation.
 adapters. Presentation persists PPTX inspection, render, and asset evidence;
 data-analysis recomputes metric truth and join fan-out; product-spec runs the
 portable readiness inspector and audits Case-defined facts, options, flows,
-scope, stable IDs, and acceptance criteria. All apply deterministic vetoes after
-blind review. The representative suite requires judging and proves that one
+scope, stable IDs, and acceptance criteria. All apply high-precision
+deterministic vetoes after blind review while leaving free-form semantics to the
+blind evaluator. The representative suite requires judging and proves that one
 suite can resolve all three adapters. Code-review and other artifact adapters
 remain explicit migration work. Suites must explicitly choose whether judging
 is required; only optional suites may contain cases without `evaluation.adapter`.

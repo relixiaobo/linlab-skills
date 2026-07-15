@@ -191,6 +191,7 @@ def write_judge_attempt(
     options: ModelJudgeOptions,
     provider_id: str,
     structured_output_mode: str,
+    duration_ms: int,
 ) -> dict[str, Any]:
     events, diagnostics = parse_jsonl_best_effort(stdout) if stdout.strip() else ([], [])
     usage = usage_from_events(events)
@@ -204,6 +205,7 @@ def write_judge_attempt(
         "reasoning_effort": options.reasoning_effort,
         "model_provider": provider_id,
         "structured_output_mode": structured_output_mode,
+        "duration_ms": duration_ms,
         "usage": usage,
         "parse_diagnostics": diagnostics,
     }
@@ -317,6 +319,7 @@ def run_blind_model_judge(
     history: list[dict[str, Any]] = []
     for offset in range(options.max_attempts):
         output_path.unlink(missing_ok=True)
+        attempt_started_wall = time.monotonic()
         try:
             proc = subprocess.run(
                 command,
@@ -339,6 +342,7 @@ def run_blind_model_judge(
             stdout = ""
             stderr = f"Cannot start blind model judge: {exc}\n"
             returncode = 127
+        duration_ms = round((time.monotonic() - attempt_started_wall) * 1000)
         transient = is_transient_codex_failure(returncode, stdout, stderr)
         history.append(
             write_judge_attempt(
@@ -351,6 +355,7 @@ def run_blind_model_judge(
                 options=options,
                 provider_id=provider_id,
                 structured_output_mode=structured_output_mode,
+                duration_ms=duration_ms,
             )
         )
         (trace_root / "attempts.json").write_text(

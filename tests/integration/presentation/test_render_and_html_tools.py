@@ -316,6 +316,26 @@ class HtmlInspectorTests(unittest.TestCase):
             )
             return json.loads(report.read_text(encoding="utf-8"))
 
+    def test_placeholder_detection_does_not_flag_sample_size(self) -> None:
+        def deck(text: str) -> str:
+            return f"""<!doctype html>
+<html>
+<head><style>.deck-stage {{ aspect-ratio: 16 / 9; }}</style></head>
+<body>
+  <main class="deck-stage" data-deck>
+    <section class="slide" data-layout="statement"><p>{text}</p></section>
+  </main>
+  <script>window.addEventListener('keydown', () => {{}});</script>
+</body>
+</html>
+"""
+
+        evidence = self.inspect(deck("Retention improved, but sample size is low"))
+        placeholder = self.inspect(deck("Sample title"))
+
+        self.assertEqual(evidence["placeholder_hits"], [])
+        self.assertEqual(placeholder["placeholder_hits"], ["sample title"])
+
     def test_wrapped_div_and_custom_slides_receive_per_slide_checks(self) -> None:
         report = self.inspect(
             """<!doctype html>
