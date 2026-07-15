@@ -90,6 +90,8 @@ observation.
   quality failures.
 - Blind model judges to condition names and prior scores.
 - Ground every score in persisted evidence; do not reward response claims alone.
+- Put exact metric, filter, grain, and join expectations in structured case
+  config so deterministic evidence can be recomputed independently.
 - Treat a missing required artifact as missing evidence, not a model-review
   opportunity.
 - Keep domain-specific logic inside the adapter. Do not add presentation, code
@@ -98,8 +100,11 @@ observation.
 
 ## Current Coverage
 
-`presentation` is the first production adapter. The mixed fixture suite proves
-that one suite can resolve two different adapters. Canonical data-analysis,
-product-spec, code-review, and other artifact adapters remain explicit migration
-work. Suites must explicitly choose whether judging is required; only optional
-migration suites may contain cases without `evaluation.adapter`.
+`presentation` and `data-analysis` are production hybrid adapters. Presentation
+persists PPTX inspection, render, and asset evidence; data-analysis independently
+recomputes metric truth and join fan-out, audits `analysis.md` and `findings.tsv`,
+then applies deterministic vetoes after blind review. The mixed fixture suite
+proves that one suite can resolve different adapters. Product-spec, code-review,
+and other artifact adapters remain explicit migration work. Suites must
+explicitly choose whether judging is required; only optional migration suites may
+contain cases without `evaluation.adapter`.

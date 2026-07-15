@@ -5,6 +5,49 @@
   "job": "analyze-tabular-data",
   "tags": ["analysis", "fanout", "routing", "verification"],
   "risk_level": "medium",
+  "evaluation": {
+    "adapter": "data-analysis",
+    "config": {
+      "artifacts": {
+        "analysis": "analysis.md",
+        "findings": "findings.tsv"
+      },
+      "metric_contract": {
+        "source": "input/orders.csv",
+        "filter": {"column": "status", "equals": "paid"},
+        "grain_key": "order_id",
+        "metrics": [
+          {
+            "id": "paid-revenue",
+            "aggregation": "sum",
+            "column": "revenue",
+            "expected": "400.00",
+            "tolerance": "0.01"
+          },
+          {
+            "id": "paid-order-count",
+            "aggregation": "count",
+            "expected": "3",
+            "tolerance": "0"
+          },
+          {
+            "id": "average-paid-order-value",
+            "aggregation": "mean",
+            "column": "revenue",
+            "expected": "133.3333333333333333",
+            "tolerance": "0.01"
+          }
+        ]
+      },
+      "join_contract": {
+        "left": "input/orders.csv",
+        "right": "input/order_lines.csv",
+        "left_key": "order_id",
+        "right_key": "order_id",
+        "left_measure": "revenue"
+      }
+    }
+  },
   "expected": {
     "route": {
       "acceptable_primary_skills": ["data-analysis"],

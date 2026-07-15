@@ -19,12 +19,13 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from evals.runners.codex_exec_adapter import (  # noqa: E402
-    AdapterError,
-    parse_jsonl_best_effort,
-    provider_overrides,
-    seed_codex_home,
-    usage_from_events,
+from evals.judges.common import anonymized_result, trace_summary  # noqa: E402
+from evals.judges.model_judge_runtime import (  # noqa: E402
+    ModelJudgeError,
+    ModelJudgeOptions,
+    is_transient_codex_failure,
+    resolve_structured_output_mode,
+    run_blind_model_judge,
 )
 from evals.runners.eval_lib import EvalConfigError, safe_child, sha256_file  # noqa: E402
 
@@ -101,44 +102,6 @@ def find_pptx(output_dir: Path, result: dict[str, Any]) -> list[Path]:
     if declared:
         return sorted(set(declared))
     return sorted(path for path in output_dir.rglob("*.pptx") if path.is_file())
-
-
-def trace_summary(output_dir: Path) -> dict[str, Any]:
-    event_path = output_dir / "trace" / "codex-events.jsonl"
-    if not event_path.is_file():
-        return {"event_counts": {}, "items": []}
-    events, diagnostics = parse_jsonl_best_effort(
-        event_path.read_text(encoding="utf-8", errors="replace")
-    )
-    counts: dict[str, int] = {}
-    items: list[dict[str, Any]] = []
-    for event in events:
-        event_type = str(event.get("type", "unknown"))
-        counts[event_type] = counts.get(event_type, 0) + 1
-        item = event.get("item")
-        if not isinstance(item, dict):
-            continue
-        item_type = item.get("type")
-        if item_type == "command_execution":
-            items.append(
-                {
-                    "type": item_type,
-                    "command": item.get("command", ""),
-                    "status": item.get("status", ""),
-                }
-            )
-        elif item_type in {"agent_message", "file_change", "error"}:
-            items.append(
-                {
-                    "type": item_type,
-                    "text": item.get("text") or item.get("message") or "",
-                    "status": item.get("status", ""),
-                }
-            )
-    summary: dict[str, Any] = {"event_counts": counts, "items": items[-200:]}
-    if diagnostics:
-        summary["parse_diagnostics"] = diagnostics
-    return summary
 
 
 def deterministic_evidence(pptx: Path, evidence_dir: Path) -> dict[str, Any]:
@@ -311,54 +274,6 @@ def build_asset_match_report(
     return {"configured": True, "required": required, "forbidden": forbidden}
 
 
-def anonymized_result(result: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "status": result.get("status"),
-        "route": result.get("route"),
-        "usage": result.get("usage"),
-        "artifacts": result.get("artifacts"),
-        "model": (result.get("executor") or {}).get("model"),
-    }
-
-
-def write_judge_schema(path: Path, criterion_ids: list[str], failure_tags: list[str]) -> None:
-    schema = {
-        "type": "object",
-        "additionalProperties": False,
-        "required": ["scores", "failure_tags", "summary"],
-        "properties": {
-            "scores": {
-                "type": "array",
-                "minItems": len(criterion_ids),
-                "maxItems": len(criterion_ids),
-                "items": {
-                    "type": "object",
-                    "additionalProperties": False,
-                    "required": ["criterion_id", "value", "passed", "rationale", "evidence"],
-                    "properties": {
-                        "criterion_id": {"type": "string", "enum": criterion_ids},
-                        "value": {"type": "number", "minimum": 0, "maximum": 1},
-                        "passed": {"type": "boolean"},
-                        "rationale": {"type": "string", "minLength": 1},
-                        "evidence": {
-                            "type": "array",
-                            "minItems": 1,
-                            "items": {"type": "string", "minLength": 1},
-                        },
-                    },
-                },
-            },
-            "failure_tags": {
-                "type": "array",
-                "uniqueItems": True,
-                "items": {"type": "string", "enum": failure_tags},
-            },
-            "summary": {"type": "string", "minLength": 1},
-        },
-    }
-    path.write_text(json.dumps(schema, indent=2) + "\n", encoding="utf-8")
-
-
 def judge_prompt(oracle: dict[str, Any]) -> str:
     outcomes = oracle["expected"]["outcomes"]
     rubric = "\n".join(
@@ -395,83 +310,6 @@ Allowed failure tags: {json.dumps(failure_tags)}
 """
 
 
-def resolve_structured_output_mode(provider_id: str, requested: str) -> str:
-    if requested not in {"auto", "schema", "prompt"}:
-        raise JudgeError(f"unsupported structured output mode: {requested}")
-    if requested == "auto":
-        return "schema" if provider_id == "openai" else "prompt"
-    return requested
-
-
-def is_transient_codex_failure(returncode: int, stdout: str, stderr: str) -> bool:
-    if returncode == 0:
-        return False
-    combined = f"{stdout}\n{stderr}".lower()
-    markers = (
-        "429",
-        "502 bad gateway",
-        "503 service unavailable",
-        "504 gateway timeout",
-        "connection reset",
-        "connection refused",
-        "reconnecting",
-        "rate limit",
-        "stream disconnected",
-        "temporarily unavailable",
-        "timed out",
-        "unexpected eof",
-    )
-    return returncode == 124 or any(marker in combined for marker in markers)
-
-
-def next_attempt_number(trace_root: Path) -> int:
-    numbers: list[int] = []
-    if trace_root.is_dir():
-        for path in trace_root.glob("attempt-*"):
-            try:
-                numbers.append(int(path.name.removeprefix("attempt-")))
-            except ValueError:
-                continue
-    return max(numbers, default=0) + 1
-
-
-def write_judge_attempt(
-    *,
-    trace_root: Path,
-    attempt_number: int,
-    stdout: str,
-    stderr: str,
-    returncode: int,
-    transient: bool,
-    args: argparse.Namespace,
-    provider_id: str,
-    structured_output_mode: str,
-) -> dict[str, Any]:
-    events, diagnostics = parse_jsonl_best_effort(stdout) if stdout.strip() else ([], [])
-    usage = usage_from_events(events)
-    attempt_dir = trace_root / f"attempt-{attempt_number:02d}"
-    attempt_dir.mkdir(parents=True)
-    metadata = {
-        "attempt": attempt_number,
-        "exit_code": returncode,
-        "transient_failure": transient,
-        "model": args.model,
-        "reasoning_effort": args.reasoning_effort,
-        "model_provider": provider_id,
-        "structured_output_mode": structured_output_mode,
-        "usage": usage,
-        "parse_diagnostics": diagnostics,
-    }
-    for directory in (attempt_dir, trace_root):
-        (directory / "codex-events.jsonl").write_text(stdout, encoding="utf-8")
-        (directory / "codex-stderr.log").write_text(stderr, encoding="utf-8")
-        (directory / "usage.json").write_text(
-            json.dumps(metadata, indent=2) + "\n",
-            encoding="utf-8",
-        )
-    return metadata
-
-
 def model_judge(
     *,
     args: argparse.Namespace,
@@ -481,132 +319,27 @@ def model_judge(
     trace_root: Path,
 ) -> dict[str, Any]:
     criterion_ids = [item["id"] for item in oracle["expected"]["outcomes"]]
-    schema_path = workspace / "judge-output.schema.json"
-    output_path = workspace / "judge-output.json"
-    write_judge_schema(schema_path, criterion_ids, oracle.get("failure_taxonomy", []))
-
-    original_codex_home = Path(
-        os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))
-    ).expanduser().resolve()
-    provider_id, provider_args = provider_overrides(original_codex_home / "config.toml")
-    structured_output_mode = resolve_structured_output_mode(
-        provider_id,
-        args.structured_output,
+    options = ModelJudgeOptions(
+        codex_bin=args.codex_bin,
+        model=args.model,
+        reasoning_effort=args.reasoning_effort,
+        timeout_seconds=args.timeout_seconds,
+        max_attempts=args.max_attempts,
+        retry_delay_seconds=args.retry_delay_seconds,
+        structured_output=args.structured_output,
     )
-    runtime_root = workspace.parent / "judge-runtime"
-    runtime_root.mkdir()
-    fake_home = runtime_root / "home"
-    fake_home.mkdir()
-    codex_home = runtime_root / "codex-home"
-    seed_codex_home(codex_home, original_codex_home)
-    tmp_dir = runtime_root / "tmp"
-    tmp_dir.mkdir()
-
-    command = [
-        args.codex_bin,
-        "exec",
-        "--ephemeral",
-        "--ignore-user-config",
-        "--ignore-rules",
-        "--strict-config",
-        "--skip-git-repo-check",
-        "--disable",
-        "plugins",
-        "--disable",
-        "multi_agent",
-        "--sandbox",
-        "read-only",
-        "--json",
-        "--color",
-        "never",
-        "--model",
-        args.model,
-        "--cd",
-        str(workspace),
-        "--output-last-message",
-        str(output_path),
-        "--config",
-        f'model_reasoning_effort="{args.reasoning_effort}"',
-        "--config",
-        'approval_policy="never"',
-        "--config",
-        'shell_environment_policy.inherit="core"',
-        "--config",
-        'shell_environment_policy.include_only=["PATH","HOME","TMPDIR","LANG","LC_ALL"]',
-    ]
-    if structured_output_mode == "schema":
-        output_index = command.index("--output-last-message")
-        command[output_index:output_index] = ["--output-schema", str(schema_path)]
-    for image_path in image_paths:
-        command.extend(["--image", str(image_path)])
-    command.extend(provider_args)
-    command.append(judge_prompt(oracle))
-
-    child_env = dict(os.environ)
-    child_env.update(
-        {
-            "HOME": str(fake_home),
-            "CODEX_HOME": str(codex_home),
-            "TMPDIR": str(tmp_dir),
-        }
-    )
-    for key in list(child_env):
-        if key.startswith("EVAL_"):
-            child_env.pop(key)
-    trace_root.mkdir(parents=True, exist_ok=True)
-    attempt_number = next_attempt_number(trace_root)
-    history: list[dict[str, Any]] = []
-    for offset in range(args.max_attempts):
-        output_path.unlink(missing_ok=True)
-        try:
-            proc = subprocess.run(
-                command,
-                cwd=workspace,
-                env=child_env,
-                capture_output=True,
-                text=True,
-                timeout=args.timeout_seconds,
-                check=False,
-            )
-            stdout = proc.stdout
-            stderr = proc.stderr
-            returncode = proc.returncode
-        except subprocess.TimeoutExpired as exc:
-            stdout = exc.stdout.decode() if isinstance(exc.stdout, bytes) else (exc.stdout or "")
-            stderr = exc.stderr.decode() if isinstance(exc.stderr, bytes) else (exc.stderr or "")
-            stderr += f"\nCodex visual judge timed out after {args.timeout_seconds} seconds.\n"
-            returncode = 124
-        transient = is_transient_codex_failure(returncode, stdout, stderr)
-        history.append(
-            write_judge_attempt(
-                trace_root=trace_root,
-                attempt_number=attempt_number + offset,
-                stdout=stdout,
-                stderr=stderr,
-                returncode=returncode,
-                transient=transient,
-                args=args,
-                provider_id=provider_id,
-                structured_output_mode=structured_output_mode,
-            )
+    try:
+        return run_blind_model_judge(
+            options=options,
+            prompt=judge_prompt(oracle),
+            workspace=workspace,
+            trace_root=trace_root,
+            criterion_ids=criterion_ids,
+            failure_tags=oracle.get("failure_taxonomy", []),
+            image_paths=image_paths,
         )
-        (trace_root / "attempts.json").write_text(
-            json.dumps({"attempts": history}, indent=2) + "\n",
-            encoding="utf-8",
-        )
-        if returncode == 0:
-            return load_json(output_path)
-        if transient and offset + 1 < args.max_attempts:
-            delay = min(args.retry_delay_seconds * (2**offset), 30.0)
-            if delay > 0:
-                time.sleep(delay)
-            continue
-        failure_tail = f"{stderr}\n{stdout}"[-2000:]
-        raise JudgeError(
-            f"Codex visual judge exited with code {returncode} after {offset + 1} "
-            f"attempt(s): {failure_tail}"
-        )
-    raise JudgeError("Codex visual judge exhausted its retry loop")
+    except ModelJudgeError as exc:
+        raise JudgeError(str(exc)) from exc
 
 
 def missing_artifact_result(oracle: dict[str, Any], result: dict[str, Any]) -> dict[str, Any]:
@@ -959,7 +692,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     try:
         judgment = run_judge(args)
-    except (JudgeError, AdapterError, subprocess.TimeoutExpired) as exc:
+    except (JudgeError, subprocess.TimeoutExpired) as exc:
         print(json.dumps({"ok": False, "error": str(exc)}), file=sys.stderr)
         return 1
     print(json.dumps({"ok": True, "judgment": judgment}))

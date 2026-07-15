@@ -1,1 +1,1 @@
-"""Reusable deterministic and model-assisted evaluation judges."""
+"""Job-oriented Judge Adapters and shared blind-review infrastructure."""

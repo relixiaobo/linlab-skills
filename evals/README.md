@@ -260,6 +260,12 @@ This avoids treating a provider's unsupported response-format parameter as a
 deck failure. Transient local renderer failures are also retried and remain
 judge infrastructure errors if they do not recover.
 
+The data-analysis judge independently recomputes configured metrics from the
+source CSV, verifies the declared filter and grain, measures one-to-many join
+inflation, validates the findings ledger, and persists all of that evidence before
+blind review. Missing metric values, filter scope, grain/fan-out controls,
+verification, or audit fields deterministically cap the corresponding score.
+
 Image-sensitive cases may declare
 `metadata.presentation_asset_expectations` in the hidden oracle. The
 presentation judge hashes source assets and joins them to PPTX media records,
