@@ -81,6 +81,7 @@ class SuiteSpec:
     path: Path
     data: dict[str, Any]
     runs: tuple[SuiteRunSpec, ...]
+    repetitions_override: int | None = None
 
     @property
     def id(self) -> str:
@@ -405,6 +406,24 @@ def validate_suite(path: Path, root: Path = REPO_ROOT) -> SuiteSpec:
         repetitions = item.get("repetitions", default_repetitions)
         resolved_runs.append(SuiteRunSpec(case, conditions, repetitions))
     return SuiteSpec(path.resolve(), data, tuple(resolved_runs))
+
+
+def override_suite_repetitions(
+    suite: SuiteSpec,
+    repetitions: int | None,
+) -> SuiteSpec:
+    if repetitions is None:
+        return suite
+    if (
+        not isinstance(repetitions, int)
+        or isinstance(repetitions, bool)
+        or not 1 <= repetitions <= 100
+    ):
+        raise EvalConfigError("repetitions override must be an integer from 1 to 100")
+    runs = tuple(
+        SuiteRunSpec(item.case, item.conditions, repetitions) for item in suite.runs
+    )
+    return SuiteSpec(suite.path, suite.data, runs, repetitions)
 
 
 def validate_result(data: dict[str, Any]) -> None:

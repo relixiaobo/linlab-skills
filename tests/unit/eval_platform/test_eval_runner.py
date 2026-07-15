@@ -44,6 +44,19 @@ class EvalRunnerTests(unittest.TestCase):
         self.assertFalse(report["judging_required"])
         self.assertIsNone(report["judge_adapters"]["tiny-case"])
 
+    def test_validate_applies_suite_wide_repetitions_override(self) -> None:
+        result = self.run_evalctl(
+            "validate",
+            "--suite",
+            SUITE,
+            "--repetitions",
+            "2",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(report["planned_run_count"], 8)
+        self.assertEqual(report["repetitions_override"], 2)
+
     def test_required_judging_rejects_a_case_without_an_adapter(self) -> None:
         result = self.run_evalctl("validate", "--suite", REQUIRED_JUDGING_SUITE)
         self.assertEqual(result.returncode, 2)
@@ -217,6 +230,64 @@ class EvalRunnerTests(unittest.TestCase):
                 enabled_result["judge"]["evidence_manifest_sha256"],
                 r"^[a-f0-9]{64}$",
             )
+
+    def test_run_override_is_recorded_and_rejudge_recovers_it(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="eval_repetitions_override_") as temp:
+            agent = f"{sys.executable} {{repo}}/tests/fixtures/evals/fake_agent.py"
+            judge = f"{sys.executable} {{repo}}/tests/fixtures/evals/fake_judge.py"
+            run = self.run_evalctl(
+                "run",
+                "--suite",
+                SUITE,
+                "--results-dir",
+                temp,
+                "--run-id",
+                "override-test",
+                "--repetitions",
+                "2",
+                "--agent-command",
+                agent,
+                "--judge-command",
+                judge,
+            )
+            self.assertEqual(run.returncode, 0, run.stderr)
+            run_root = Path(temp) / "override-test"
+            summary_path = run_root / "run-summary.json"
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+            self.assertEqual(summary["repetitions_override"], 2)
+            self.assertEqual(summary["planned_run_count"], 8)
+            self.assertEqual(summary["result_count"], 8)
+
+            summary_before = summary_path.read_bytes()
+            mismatch = self.run_evalctl(
+                "rejudge",
+                "--suite",
+                SUITE,
+                "--run-root",
+                str(run_root),
+                "--repetitions",
+                "1",
+                "--judge-command",
+                judge,
+            )
+            self.assertEqual(mismatch.returncode, 2)
+            self.assertIn("does not match the existing run", mismatch.stderr)
+            self.assertEqual(summary_path.read_bytes(), summary_before)
+
+            rejudge = self.run_evalctl(
+                "rejudge",
+                "--suite",
+                SUITE,
+                "--run-root",
+                str(run_root),
+                "--judge-command",
+                judge,
+            )
+            self.assertEqual(rejudge.returncode, 0, rejudge.stderr)
+            rejudged_summary = json.loads(summary_path.read_text(encoding="utf-8"))
+            self.assertEqual(rejudged_summary["mode"], "rejudge")
+            self.assertEqual(rejudged_summary["repetitions_override"], 2)
+            self.assertEqual(rejudged_summary["result_count"], 8)
 
     def test_registry_routes_each_case_to_its_declared_judge_adapter(self) -> None:
         with tempfile.TemporaryDirectory(prefix="eval_adapter_routing_") as temp:

@@ -28,6 +28,7 @@ from evals.runners.eval_lib import (  # noqa: E402
     JudgeAdapterSpec,
     canonical_sha256,
     load_judge_registry,
+    override_suite_repetitions,
     repo_relative_path,
     resolve_case_judge_adapter,
     resolve_git_revision,
@@ -1044,6 +1045,10 @@ def build_summary(
         "run_id": run_id,
         "suite_id": suite.id,
         "mode": mode,
+        "repetitions_override": suite.repetitions_override,
+        "planned_run_count": sum(
+            len(item.conditions) * item.repetitions for item in suite.runs
+        ),
         "judging_required": suite.judging_required,
         "judging_status_counts": judging_status_counts,
         "result_count": len(results),
@@ -1249,7 +1254,10 @@ def write_run_summary(
 
 def command_validate(args: argparse.Namespace) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
-    suite = validate_suite(suite_path, ROOT)
+    suite = override_suite_repetitions(
+        validate_suite(suite_path, ROOT),
+        args.repetitions,
+    )
     registry = judge_registry_for_args(args)
     invocations = judge_invocations_for_suite(
         suite=suite,
@@ -1269,6 +1277,7 @@ def command_validate(args: argparse.Namespace) -> int:
                 "suite": suite.id,
                 "case_count": len(suite.runs),
                 "planned_run_count": count,
+                "repetitions_override": suite.repetitions_override,
                 "judging_required": suite.judging_required,
                 "judge_registry": str(resolve_registry_path(args.judge_registry)),
                 "judge_adapters": adapters,
@@ -1280,9 +1289,45 @@ def command_validate(args: argparse.Namespace) -> int:
     return 0
 
 
+def existing_run_repetitions_override(
+    run_root: Path,
+    requested: int | None,
+) -> int | None:
+    summary_path = run_root / "run-summary.json"
+    recorded: int | None = None
+    if summary_path.is_file():
+        try:
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise EvalConfigError(f"cannot read existing run summary: {exc}") from exc
+        if not isinstance(summary, dict):
+            raise EvalConfigError("existing run summary must contain an object")
+        recorded = summary.get("repetitions_override")
+        if recorded is not None and (
+            not isinstance(recorded, int)
+            or isinstance(recorded, bool)
+            or not 1 <= recorded <= 100
+        ):
+            raise EvalConfigError("existing run has an invalid repetitions override")
+    if requested is not None and requested != recorded:
+        raise EvalConfigError(
+            "repetitions override does not match the existing run: "
+            f"requested={requested}, recorded={recorded}"
+        )
+    return recorded
+
+
 def command_rejudge(args: argparse.Namespace) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
     suite = validate_suite(suite_path, ROOT)
+    run_root = Path(args.run_root).expanduser().resolve()
+    if not run_root.is_dir():
+        raise EvalConfigError(f"run root does not exist: {run_root}")
+    recorded_repetitions = existing_run_repetitions_override(
+        run_root,
+        args.repetitions,
+    )
+    suite = override_suite_repetitions(suite, recorded_repetitions)
     registry = judge_registry_for_args(args)
     invocations = judge_invocations_for_suite(
         suite=suite,
@@ -1290,9 +1335,6 @@ def command_rejudge(args: argparse.Namespace) -> int:
         registry=registry,
         require_all=True,
     )
-    run_root = Path(args.run_root).expanduser().resolve()
-    if not run_root.is_dir():
-        raise EvalConfigError(f"run root does not exist: {run_root}")
     preflight: list[tuple[Any, Any, int, Path, Path, dict[str, Any], bool]] = []
     skipped: list[dict[str, Any]] = []
     for case, condition, repetition, run_dir in suite_entries(suite, run_root):
@@ -1391,6 +1433,14 @@ def command_rejudge(args: argparse.Namespace) -> int:
 def command_resume(args: argparse.Namespace) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
     suite = validate_suite(suite_path, ROOT)
+    source_root = Path(args.source_run).expanduser().resolve()
+    if not source_root.is_dir():
+        raise EvalConfigError(f"source run does not exist: {source_root}")
+    recorded_repetitions = existing_run_repetitions_override(
+        source_root,
+        args.repetitions,
+    )
+    suite = override_suite_repetitions(suite, recorded_repetitions)
     registry = judge_registry_for_args(args)
     invocations = judge_invocations_for_suite(
         suite=suite,
@@ -1398,9 +1448,6 @@ def command_resume(args: argparse.Namespace) -> int:
         registry=registry,
         require_all=True,
     )
-    source_root = Path(args.source_run).expanduser().resolve()
-    if not source_root.is_dir():
-        raise EvalConfigError(f"source run does not exist: {source_root}")
     run_id = check_run_id(args.run_id or default_run_id())
     results_root = Path(args.results_dir).expanduser()
     if not results_root.is_absolute():
@@ -1547,7 +1594,10 @@ def command_resume(args: argparse.Namespace) -> int:
 
 def command_execute(args: argparse.Namespace, mode: str) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
-    suite = validate_suite(suite_path, ROOT)
+    suite = override_suite_repetitions(
+        validate_suite(suite_path, ROOT),
+        args.repetitions,
+    )
     invocations: dict[str, JudgeInvocation | None] = {}
     if mode == "run":
         registry = judge_registry_for_args(args)
@@ -1645,6 +1695,11 @@ def build_parser() -> argparse.ArgumentParser:
     validate_parser = subparsers.add_parser("validate", help="validate schemas and a suite")
     validate_parser.add_argument("--suite", required=True, help="suite path, relative to repository root")
     validate_parser.add_argument(
+        "--repetitions",
+        type=int,
+        help="override repetitions for every case in the suite",
+    )
+    validate_parser.add_argument(
         "--judge-registry",
         default=DEFAULT_JUDGE_REGISTRY,
         help="Judge Adapter registry, relative to repository root",
@@ -1656,6 +1711,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     rejudge_parser.add_argument("--suite", required=True, help="suite path, relative to repository root")
     rejudge_parser.add_argument("--run-root", required=True, help="existing run directory")
+    rejudge_parser.add_argument(
+        "--repetitions",
+        type=int,
+        help="must match the override recorded by the existing run",
+    )
     rejudge_parser.add_argument("--judge-command", help="override Judge Adapter command template")
     rejudge_parser.add_argument(
         "--judge-registry",
@@ -1671,6 +1731,11 @@ def build_parser() -> argparse.ArgumentParser:
     resume_parser.add_argument("--source-run", required=True, help="immutable source run directory")
     resume_parser.add_argument("--results-dir", default="results", help="generated result root")
     resume_parser.add_argument("--run-id", required=True, help="new run identifier")
+    resume_parser.add_argument(
+        "--repetitions",
+        type=int,
+        help="must match the override recorded by the source run",
+    )
     resume_parser.add_argument("--agent-command", required=True, help="executor command template")
     resume_parser.add_argument("--judge-command", help="override Judge Adapter command template")
     resume_parser.add_argument(
@@ -1684,6 +1749,11 @@ def build_parser() -> argparse.ArgumentParser:
         child.add_argument("--suite", required=True, help="suite path, relative to repository root")
         child.add_argument("--results-dir", default="results", help="generated result root")
         child.add_argument("--run-id", help="stable run identifier")
+        child.add_argument(
+            "--repetitions",
+            type=int,
+            help="override repetitions for every case in the suite",
+        )
         child.add_argument(
             "--judge-registry",
             default=DEFAULT_JUDGE_REGISTRY,

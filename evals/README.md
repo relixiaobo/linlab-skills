@@ -111,9 +111,15 @@ from the hidden oracle and `evals/judges/registry.json`:
 ```sh
 .venv/bin/python evals/runners/evalctl.py run \
   --suite evals/suites/representative-ab.json \
+  --repetitions 1 \
   --run-id model-build-001 \
   --agent-command 'agent-adapter --manifest {manifest}'
 ```
+
+`--repetitions` overrides every Case entry for calibration runs without changing
+the checked-in suite. The effective value and planned run count are recorded in
+`run-summary.json`; `rejudge` and `resume` recover the recorded value and reject
+an explicitly conflicting override.
 
 `--judge-command 'judge-adapter --result {result} --oracle {oracle}'` is an
 explicit whole-suite override for development or compatibility. The result
