@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
@@ -113,11 +114,7 @@ def load_document(path: Path) -> dict[str, Any]:
 
 
 def repo_path(root: Path, relative: str, *, kind: str | None = None) -> Path:
-    if not isinstance(relative, str) or not relative:
-        raise EvalConfigError("repository path must be a non-empty string")
-    candidate = Path(relative)
-    if candidate.is_absolute() or ".." in candidate.parts:
-        raise EvalConfigError(f"unsafe repository path: {relative}")
+    candidate = repo_relative_path(relative)
     resolved = (root / candidate).resolve()
     try:
         resolved.relative_to(root.resolve())
@@ -130,6 +127,48 @@ def repo_path(root: Path, relative: str, *, kind: str | None = None) -> Path:
     if kind == "dir" and not resolved.is_dir():
         raise EvalConfigError(f"expected a directory: {relative}")
     return resolved
+
+
+def repo_relative_path(relative: Any) -> Path:
+    if not isinstance(relative, str) or not relative:
+        raise EvalConfigError("repository path must be a non-empty string")
+    candidate = Path(relative)
+    if candidate.is_absolute() or ".." in candidate.parts or relative.startswith("-"):
+        raise EvalConfigError(f"unsafe repository path: {relative}")
+    return candidate
+
+
+def resolve_git_revision(root: Path, revision: Any) -> str:
+    if (
+        not isinstance(revision, str)
+        or not revision
+        or revision.startswith("-")
+        or any(character.isspace() for character in revision)
+    ):
+        raise EvalConfigError("Skill revision must be a non-empty Git revision without whitespace")
+    proc = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{revision}^{{commit}}"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    resolved = proc.stdout.strip()
+    if proc.returncode != 0 or not re.fullmatch(r"[a-f0-9]{40}", resolved):
+        raise EvalConfigError(f"cannot resolve Skill revision: {revision}")
+    return resolved
+
+
+def git_path_exists(root: Path, revision: str, relative: str) -> bool:
+    path = repo_relative_path(relative).as_posix()
+    proc = subprocess.run(
+        ["git", "cat-file", "-e", f"{revision}:{path}"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return proc.returncode == 0
 
 
 def safe_child(root: Path, relative: str) -> Path:
@@ -334,18 +373,41 @@ def validate_condition(path: Path, root: Path = REPO_ROOT) -> ConditionSpec:
             raise EvalConfigError(f"condition skill {index} must be an object")
         name = _require_slug(skill.get("name"), f"condition skill {index}.name")
         names.append(name)
-        source = repo_path(root, skill.get("path"), kind="dir")
-        if not (source / "SKILL.md").is_file():
-            raise EvalConfigError(f"condition skill {name} is missing SKILL.md")
+        skill_path = repo_relative_path(skill.get("path")).as_posix()
+        revision = skill.get("revision")
+        resolved_revision: str | None = None
+        source: Path | None = None
+        if revision is not None:
+            resolved_revision = resolve_git_revision(root, revision)
+            if not git_path_exists(root, resolved_revision, f"{skill_path}/SKILL.md"):
+                raise EvalConfigError(
+                    f"condition skill {name} is missing SKILL.md at revision {revision}"
+                )
+        else:
+            source = repo_path(root, skill_path, kind="dir")
+            if not (source / "SKILL.md").is_file():
+                raise EvalConfigError(f"condition skill {name} is missing SKILL.md")
         ablations = _require_list(skill.get("ablations", []), f"skill {name}.ablations")
         if kind == "skill-enabled" and ablations:
             raise EvalConfigError("skill-enabled conditions must not contain ablations")
         for ablation in ablations:
             if not isinstance(ablation, dict) or ablation.get("op") not in {"remove", "replace"}:
                 raise EvalConfigError(f"skill {name} has an invalid ablation")
-            target = safe_child(source, ablation.get("path", ""))
-            if not target.exists():
-                raise EvalConfigError(f"ablation target does not exist: {target}")
+            ablation_path = repo_relative_path(ablation.get("path", "")).as_posix()
+            if resolved_revision:
+                target_exists = git_path_exists(
+                    root,
+                    resolved_revision,
+                    f"{skill_path}/{ablation_path}",
+                )
+                target_label = f"{resolved_revision}:{skill_path}/{ablation_path}"
+            else:
+                assert source is not None
+                target = safe_child(source, ablation_path)
+                target_exists = target.exists()
+                target_label = str(target)
+            if not target_exists:
+                raise EvalConfigError(f"ablation target does not exist: {target_label}")
             if ablation["op"] == "replace":
                 replacement = ablation.get("replacement")
                 if not replacement:
@@ -452,15 +514,32 @@ def validate_result(data: dict[str, Any]) -> None:
     if condition.get("kind") not in {"baseline", "skill-enabled", "ablation"}:
         raise EvalConfigError("result.condition.kind is invalid")
     for skill in _require_list(condition.get("skills"), "result.condition.skills"):
+        if not isinstance(skill, dict):
+            raise EvalConfigError("result condition Skill must be an object")
         for key in ("source_sha256", "materialized_sha256"):
-            if not isinstance(skill, dict) or not SHA256_RE.fullmatch(str(skill.get(key, ""))):
+            if not SHA256_RE.fullmatch(str(skill.get(key, ""))):
                 raise EvalConfigError(f"result skill {key} is invalid")
+        resolved_revision = skill.get("resolved_revision")
+        if resolved_revision is not None and not re.fullmatch(r"[a-f0-9]{40}", str(resolved_revision)):
+            raise EvalConfigError("result skill resolved_revision is invalid")
     provenance = data["provenance"]
     if not isinstance(provenance, dict):
         raise EvalConfigError("result.provenance must be an object")
     for key in ("case_sha256", "oracle_sha256", "condition_sha256"):
         if not SHA256_RE.fullmatch(str(provenance.get(key, ""))):
             raise EvalConfigError(f"result.provenance.{key} is invalid")
+    lineage = data.get("lineage")
+    if lineage is not None:
+        if not isinstance(lineage, dict):
+            raise EvalConfigError("result.lineage must be an object")
+        if not isinstance(lineage.get("source_run_id"), str) or not lineage["source_run_id"]:
+            raise EvalConfigError("result.lineage.source_run_id is invalid")
+        if not SHA256_RE.fullmatch(str(lineage.get("source_result_sha256", ""))):
+            raise EvalConfigError("result.lineage.source_result_sha256 is invalid")
+        if lineage.get("action") not in {"reused-executor-output", "reran-executor"}:
+            raise EvalConfigError("result.lineage.action is invalid")
+        if not isinstance(lineage.get("resumed_at"), str) or not lineage["resumed_at"]:
+            raise EvalConfigError("result.lineage.resumed_at is invalid")
     judging = data["judging"]
     if not isinstance(judging, dict) or judging.get("status") not in {
         "pending",

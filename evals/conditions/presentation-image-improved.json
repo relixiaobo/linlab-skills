@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "id": "presentation-image-improved",
+  "label": "Presentation Skill with image-handling improvements",
+  "kind": "skill-enabled",
+  "skills": [
+    {
+      "name": "presentation",
+      "path": "presentation",
+      "revision": "0fdd27c2d8f182d1785832c75da5362554b321f5"
+    }
+  ],
+  "executor_config": {
+    "skill_registry": "isolated",
+    "routing": "natural",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "medium",
+    "network_access": true,
+    "adapter_timeout_seconds": 1800
+  }
+}

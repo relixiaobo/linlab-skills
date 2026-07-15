@@ -1,0 +1,122 @@
+{
+  "schema_version": "1.0",
+  "id": "create-incident-response-launch",
+  "title": "Create an image-faithful incident response launch deck",
+  "job": "create-presentation",
+  "tags": ["artifact", "images", "routing", "visual-quality"],
+  "risk_level": "high",
+  "expected": {
+    "route": {
+      "acceptable_primary_skills": ["presentation"],
+      "forbidden_primary_skills": ["document", "pdf", "spreadsheet"]
+    },
+    "outcomes": [
+      {
+        "id": "correct-route",
+        "description": "Select presentation as the primary workflow without an explicit Skill invocation.",
+        "weight": 0.08,
+        "critical": true,
+        "evidence_sources": ["route", "trace"]
+      },
+      {
+        "id": "source-fidelity",
+        "description": "Preserve launch date, cohort limits, free-cohort caveat, success definition, workflow, and partner ask without invented adoption or commercial claims.",
+        "weight": 0.16,
+        "critical": true,
+        "evidence_sources": ["artifact", "response"]
+      },
+      {
+        "id": "visual-plan",
+        "description": "Make the real product interface central to the story and use constructed visuals only for workflow, cohort, and ask jobs.",
+        "weight": 0.12,
+        "critical": false,
+        "evidence_sources": ["artifact", "trace"]
+      },
+      {
+        "id": "image-relevance",
+        "description": "Use all three approved SignalDesk assets, show both official interfaces for their assigned product-evidence jobs, and exclude the third-party dashboard and generic architecture photo.",
+        "weight": 0.2,
+        "critical": true,
+        "evidence_sources": ["artifact", "trace"]
+      },
+      {
+        "id": "image-fit",
+        "description": "Keep desktop UI, portrait mobile UI, and wordmark proportional and legible with complete viewports and no stretch or destructive crop.",
+        "weight": 0.2,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "editable-deliverable",
+        "description": "Deliver an editable PPTX with 8-10 coherent slides and speaker notes suitable for a 10-minute partner presentation.",
+        "weight": 0.12,
+        "critical": true,
+        "evidence_sources": ["artifact", "response"]
+      },
+      {
+        "id": "rendered-verification",
+        "description": "Render and inspect every final PPTX slide for text fit, UI legibility, crop, overlap, and cross-slide coherence before delivery.",
+        "weight": 0.12,
+        "critical": true,
+        "evidence_sources": ["artifact", "trace", "response"]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "editable-pptx",
+        "pattern": "*.pptx",
+        "required": true,
+        "description": "Editable partner launch presentation"
+      }
+    ]
+  },
+  "judges": [
+    {
+      "id": "route-and-process",
+      "type": "model",
+      "criteria": ["correct-route", "visual-plan", "rendered-verification"]
+    },
+    {
+      "id": "deck-artifact-review",
+      "type": "model",
+      "criteria": ["source-fidelity", "image-relevance", "image-fit", "editable-deliverable"]
+    }
+  ],
+  "failure_taxonomy": [
+    "route-error",
+    "factuality",
+    "missing-artifact",
+    "artifact-integrity",
+    "visual-quality",
+    "image-relevance",
+    "image-distortion",
+    "verification",
+    "efficiency"
+  ],
+  "metadata": {
+    "novelty": "private synthetic incident-response launch",
+    "presentation_asset_expectations": {
+      "required": [
+        {
+          "path": "input/assets/signaldesk-command-center.png",
+          "treatment": "contain",
+          "max_cropped_fraction": 0.0
+        },
+        {
+          "path": "input/assets/signaldesk-mobile-oncall.png",
+          "treatment": "contain",
+          "max_cropped_fraction": 0.0
+        },
+        {
+          "path": "input/assets/signaldesk-wordmark.png",
+          "treatment": "contain",
+          "max_cropped_fraction": 0.0
+        }
+      ],
+      "forbidden": [
+        "input/assets/northstar-dashboard-decoy.png",
+        "input/assets/generic-architecture-decoy.jpg"
+      ]
+    }
+  }
+}

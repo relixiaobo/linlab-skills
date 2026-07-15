@@ -8,7 +8,8 @@
       "conditions": [
         "tests/fixtures/evals/conditions/baseline.json",
         "tests/fixtures/evals/conditions/tiny-enabled.json",
-        "tests/fixtures/evals/conditions/tiny-ablated.json"
+        "tests/fixtures/evals/conditions/tiny-ablated.json",
+        "tests/fixtures/evals/conditions/tiny-revision.json"
       ]
     }
   ],

@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 import shlex
 import shutil
 import subprocess
 import sys
+import tarfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,12 +26,18 @@ from evals.runners.eval_lib import (  # noqa: E402
     FAILURE_TAGS,
     EvalConfigError,
     canonical_sha256,
+    repo_relative_path,
+    resolve_git_revision,
     safe_child,
     sha256_file,
     sha256_paths,
     sha256_tree,
     validate_result,
     validate_suite,
+)
+from evals.runners.codex_exec_adapter import (  # noqa: E402
+    parse_jsonl_best_effort,
+    selected_skills,
 )
 
 
@@ -74,11 +82,65 @@ def ignored_copy(_directory: str, names: list[str]) -> set[str]:
     return {name for name in names if name in IGNORED_COPY_NAMES or name.endswith(".pyc")}
 
 
-def copy_skill(source: Path, destination: Path, ablations: list[dict[str, Any]]) -> dict[str, Any]:
-    for path in source.rglob("*"):
-        if path.is_symlink():
-            raise EvalConfigError(f"Skill source must not contain symlinks: {path}")
-    shutil.copytree(source, destination, ignore=ignored_copy)
+def export_skill_revision(skill_path: str, revision: str, destination: Path) -> str:
+    resolved = resolve_git_revision(ROOT, revision)
+    proc = subprocess.run(
+        ["git", "archive", "--format=tar", resolved, skill_path],
+        cwd=ROOT,
+        capture_output=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        raise EvalConfigError(
+            f"cannot archive Skill {skill_path} at {revision}: {proc.stderr.decode().strip()}"
+        )
+    prefix = repo_relative_path(skill_path).as_posix().rstrip("/") + "/"
+    skill_root = prefix.rstrip("/")
+    destination.mkdir(parents=True)
+    with tarfile.open(fileobj=io.BytesIO(proc.stdout), mode="r:") as archive:
+        for member in archive.getmembers():
+            if member.issym() or member.islnk():
+                raise EvalConfigError(f"revision Skill contains a link: {member.name}")
+            member_name = member.name.rstrip("/")
+            if member_name == skill_root:
+                continue
+            if member.isdir() and skill_root.startswith(member_name + "/"):
+                continue
+            if not member.name.startswith(prefix):
+                raise EvalConfigError(f"archive member escapes Skill prefix: {member.name}")
+            relative = member.name[len(prefix):]
+            if not relative:
+                continue
+            target = safe_child(destination, relative)
+            if member.isdir():
+                target.mkdir(parents=True, exist_ok=True)
+                continue
+            if not member.isfile():
+                raise EvalConfigError(f"unsupported archive member: {member.name}")
+            source = archive.extractfile(member)
+            if source is None:
+                raise EvalConfigError(f"cannot read archive member: {member.name}")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(source.read())
+            target.chmod(member.mode & 0o777)
+    return resolved
+
+
+def copy_skill(
+    skill_path: str,
+    destination: Path,
+    ablations: list[dict[str, Any]],
+    revision: str | None,
+) -> dict[str, Any]:
+    resolved_revision: str | None = None
+    if revision:
+        resolved_revision = export_skill_revision(skill_path, revision, destination)
+    else:
+        source = (ROOT / skill_path).resolve()
+        for path in source.rglob("*"):
+            if path.is_symlink():
+                raise EvalConfigError(f"Skill source must not contain symlinks: {path}")
+        shutil.copytree(source, destination, ignore=ignored_copy)
     source_sha = sha256_tree(destination)
 
     for ablation in ablations:
@@ -98,6 +160,8 @@ def copy_skill(source: Path, destination: Path, ablations: list[dict[str, Any]])
                 shutil.copy2(replacement, target)
 
     return {
+        "requested_revision": revision,
+        "resolved_revision": resolved_revision,
         "source_sha256": source_sha,
         "materialized_sha256": sha256_tree(destination),
     }
@@ -328,6 +392,18 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def pending_judging() -> dict[str, Any]:
+    return {
+        "status": "pending",
+        "overall_score": None,
+        "passed": None,
+        "critical_failures": [],
+        "scores": [],
+        "failure_tags": [],
+        "summary": "",
+    }
+
+
 def initial_result(
     *,
     run_id: str,
@@ -362,15 +438,7 @@ def initial_result(
             "estimated_cost_usd": None,
         },
         "artifacts": [],
-        "judging": {
-            "status": "pending",
-            "overall_score": None,
-            "passed": None,
-            "critical_failures": [],
-            "scores": [],
-            "failure_tags": [],
-            "summary": "",
-        },
+        "judging": pending_judging(),
         "failure": None,
         "provenance": provenance,
     }
@@ -407,13 +475,15 @@ def materialize_one(
     for skill in condition.data["skills"]:
         destination = skills_dir / skill["name"]
         hashes = copy_skill(
-            (ROOT / skill["path"]).resolve(),
+            skill["path"],
             destination,
             skill.get("ablations", []),
+            skill.get("revision"),
         )
         materialized_skills.append(
             {
                 "name": skill["name"],
+                "path": skill["path"],
                 **hashes,
                 "ablations": skill.get("ablations", []),
             }
@@ -471,6 +541,147 @@ def materialize_one(
     return result, values
 
 
+def existing_values(case: Any, run_dir: Path) -> dict[str, str]:
+    payload = run_dir / "payload"
+    output = run_dir / "output"
+    return {
+        "repo": str(ROOT),
+        "run": str(run_dir),
+        "payload": str(payload),
+        "prompt": str(payload / "prompt.md"),
+        "input": str(payload / "input"),
+        "skills": str(payload / "skills"),
+        "output": str(output),
+        "manifest": str(run_dir / "agent-manifest.json"),
+        "agent_result": str(output / AGENT_RESULT_NAME),
+        "result": str(run_dir / "result.json"),
+        "oracle": str(case.oracle_path),
+        "judge_result": str(run_dir / JUDGE_RESULT_NAME),
+    }
+
+
+def load_existing_result(path: Path) -> dict[str, Any]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise EvalConfigError(f"cannot load existing result {path}: {exc}") from exc
+    if not isinstance(value, dict):
+        raise EvalConfigError(f"existing result must contain an object: {path}")
+    validate_result(value)
+    return value
+
+
+def artifacts_intact(result: dict[str, Any], output_dir: Path) -> bool:
+    artifacts = result.get("artifacts")
+    if not isinstance(artifacts, list) or not artifacts:
+        return False
+    for artifact in artifacts:
+        if not isinstance(artifact, dict) or not isinstance(artifact.get("path"), str):
+            return False
+        try:
+            path = safe_child(output_dir, artifact["path"])
+        except EvalConfigError:
+            return False
+        if not path.is_file() or path.is_symlink():
+            return False
+        if path.stat().st_size != artifact.get("bytes"):
+            return False
+        if sha256_file(path) != artifact.get("sha256"):
+            return False
+    return True
+
+
+def recover_route_from_trace(result: dict[str, Any], run_dir: Path) -> None:
+    manifest_path = run_dir / "agent-manifest.json"
+    trace_path = run_dir / "output" / "trace" / "codex-events.jsonl"
+    if not manifest_path.is_file() or not trace_path.is_file():
+        return
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    available = manifest.get("available_skills", []) if isinstance(manifest, dict) else []
+    if not isinstance(available, list):
+        return
+    raw_trace = trace_path.read_text(encoding="utf-8", errors="replace")
+    events, diagnostics = parse_jsonl_best_effort(raw_trace)
+    selected = selected_skills(events, available, raw_trace)
+    if selected:
+        result["route"] = {
+            "primary_skill": selected[0],
+            "selected_skills": selected,
+        }
+    config = result.get("executor", {}).get("config")
+    if isinstance(config, dict):
+        config["trace_parse_warning_count"] = len(diagnostics)
+        config["trace_parse_warning_lines"] = [item["line"] for item in diagnostics]
+
+
+def judge_one(
+    *,
+    result: dict[str, Any],
+    values: dict[str, str],
+    case: Any,
+    judge_template: str,
+    timeout: int,
+) -> dict[str, Any]:
+    run_dir = Path(values["run"])
+    result_path = Path(values["result"])
+    logs_dir = run_dir / "logs"
+    logs_dir.mkdir(exist_ok=True)
+    judge_result = Path(values["judge_result"])
+    judge_result.unlink(missing_ok=True)
+
+    # Prior judge infrastructure failures are not evidence for the blind judge.
+    result["status"] = "completed"
+    result["judging"] = pending_judging()
+    result["failure"] = None
+    validate_result(result)
+    write_json(result_path, result)
+
+    judge_command = format_command(judge_template, values)
+    judge_env = {key: value for key, value in os.environ.items() if not key.startswith("EVAL_")}
+    judge_env.update(
+        {
+            "EVAL_ORACLE_FILE": values["oracle"],
+            "EVAL_RESULT_FILE": values["result"],
+            "EVAL_PAYLOAD_DIR": values["payload"],
+            "EVAL_OUTPUT_DIR": values["output"],
+            "EVAL_JUDGE_RESULT_FILE": values["judge_result"],
+        }
+    )
+    judge_exit, judge_stdout, judge_stderr, judge_error = run_process(
+        judge_command,
+        cwd=run_dir,
+        env=judge_env,
+        timeout=timeout,
+    )
+    (logs_dir / "judge.stdout.log").write_text(judge_stdout, encoding="utf-8")
+    (logs_dir / "judge.stderr.log").write_text(judge_stderr, encoding="utf-8")
+    if judge_exit != 0:
+        result["status"] = "failed"
+        result["judging"]["status"] = "failed"
+        result["failure"] = {
+            "stage": "judge",
+            "category": "judge-error",
+            "message": judge_error or f"judge exited with code {judge_exit}",
+        }
+    else:
+        try:
+            result["judging"] = load_judge_protocol(judge_result, case.oracle)
+        except EvalConfigError as exc:
+            result["status"] = "failed"
+            result["judging"]["status"] = "failed"
+            result["failure"] = {
+                "stage": "judge",
+                "category": "protocol-error",
+                "message": str(exc),
+            }
+    validate_result(result)
+    write_json(result_path, result)
+    return result
+
+
 def execute_one(
     *,
     result: dict[str, Any],
@@ -507,7 +718,7 @@ def execute_one(
         timeout=timeout,
     )
     logs_dir = run_dir / "logs"
-    logs_dir.mkdir()
+    logs_dir.mkdir(exist_ok=True)
     stdout_path = logs_dir / "executor.stdout.log"
     stderr_path = logs_dir / "executor.stderr.log"
     stdout_path.write_text(stdout, encoding="utf-8")
@@ -521,34 +732,48 @@ def execute_one(
         }
     )
 
-    if exit_code != 0:
-        result["status"] = "failed"
-        result["failure"] = {
-            "stage": "executor",
-            "category": "executor-error",
-            "message": process_error or f"executor exited with code {exit_code}",
-        }
-    else:
+    protocol: dict[str, Any] | None = None
+    protocol_error: EvalConfigError | None = None
+    if Path(values["agent_result"]).is_file():
         try:
             protocol = load_agent_protocol(Path(values["agent_result"]), output_dir)
-            result["status"] = protocol["status"]
             result["route"] = protocol["route"]
             result["usage"] = protocol["usage"]
             result["artifacts"] = protocol["artifacts"]
             result["executor"]["model"] = protocol["model"]
             result["executor"]["config"] = protocol["config"]
-            if protocol["status"] == "failed":
-                result["failure"] = {
-                    "stage": "executor",
-                    "category": "executor-error",
-                    "message": str(protocol.get("failure") or "agent reported failure"),
-                }
         except EvalConfigError as exc:
-            result["status"] = "failed"
+            protocol_error = exc
+
+    if exit_code != 0:
+        result["status"] = "failed"
+        result["failure"] = {
+            "stage": "executor",
+            "category": "executor-error",
+            "message": process_error
+            or str((protocol or {}).get("failure") or f"executor exited with code {exit_code}"),
+        }
+    elif protocol_error is not None:
+        result["status"] = "failed"
+        result["failure"] = {
+            "stage": "protocol",
+            "category": "protocol-error",
+            "message": str(protocol_error),
+        }
+    elif protocol is None:
+        result["status"] = "failed"
+        result["failure"] = {
+            "stage": "protocol",
+            "category": "protocol-error",
+            "message": f"missing {AGENT_RESULT_NAME}",
+        }
+    else:
+        result["status"] = protocol["status"]
+        if protocol["status"] == "failed":
             result["failure"] = {
-                "stage": "protocol",
-                "category": "protocol-error",
-                "message": str(exc),
+                "stage": "executor",
+                "category": "executor-error",
+                "message": str(protocol.get("failure") or "agent reported failure"),
             }
 
     result["timestamps"]["completed_at"] = utc_now()
@@ -557,46 +782,13 @@ def execute_one(
     write_json(result_path, result)
 
     if result["status"] == "completed" and judge_template:
-        judge_command = format_command(judge_template, values)
-        judge_env = {key: value for key, value in os.environ.items() if not key.startswith("EVAL_")}
-        judge_env.update(
-            {
-                "EVAL_ORACLE_FILE": values["oracle"],
-                "EVAL_RESULT_FILE": values["result"],
-                "EVAL_PAYLOAD_DIR": values["payload"],
-                "EVAL_OUTPUT_DIR": values["output"],
-                "EVAL_JUDGE_RESULT_FILE": values["judge_result"],
-            }
-        )
-        judge_exit, judge_stdout, judge_stderr, judge_error = run_process(
-            judge_command,
-            cwd=run_dir,
-            env=judge_env,
+        result = judge_one(
+            result=result,
+            values=values,
+            case=case,
+            judge_template=judge_template,
             timeout=timeout,
         )
-        (logs_dir / "judge.stdout.log").write_text(judge_stdout, encoding="utf-8")
-        (logs_dir / "judge.stderr.log").write_text(judge_stderr, encoding="utf-8")
-        if judge_exit != 0:
-            result["status"] = "failed"
-            result["judging"]["status"] = "failed"
-            result["failure"] = {
-                "stage": "judge",
-                "category": "judge-error",
-                "message": judge_error or f"judge exited with code {judge_exit}",
-            }
-        else:
-            try:
-                result["judging"] = load_judge_protocol(Path(values["judge_result"]), case.oracle)
-            except EvalConfigError as exc:
-                result["status"] = "failed"
-                result["judging"]["status"] = "failed"
-                result["failure"] = {
-                    "stage": "judge",
-                    "category": "protocol-error",
-                    "message": str(exc),
-                }
-        validate_result(result)
-        write_json(result_path, result)
     return result
 
 
@@ -687,6 +879,176 @@ def validate_schema_documents() -> list[str]:
     return names
 
 
+def suite_entries(suite: Any, run_root: Path) -> list[tuple[Any, Any, int, Path]]:
+    entries: list[tuple[Any, Any, int, Path]] = []
+    for suite_run in suite.runs:
+        for condition in suite_run.conditions:
+            for repetition in range(1, suite_run.repetitions + 1):
+                run_dir = (
+                    run_root
+                    / suite_run.case.id
+                    / condition.id
+                    / f"rep-{repetition:02d}"
+                )
+                entries.append((suite_run.case, condition, repetition, run_dir))
+    return entries
+
+
+def validate_existing_identity(
+    result: dict[str, Any],
+    *,
+    suite: Any,
+    case: Any,
+    condition: Any,
+    repetition: int,
+) -> None:
+    expected = (suite.id, case.id, condition.id, repetition)
+    actual = (
+        result.get("suite_id"),
+        result.get("case_id"),
+        (result.get("condition") or {}).get("id"),
+        result.get("repetition"),
+    )
+    if actual != expected:
+        raise EvalConfigError(
+            f"existing result identity mismatch: expected {expected}, found {actual}"
+        )
+    expected_oracle = sha256_file(case.oracle_path)
+    if result["provenance"].get("oracle_sha256") != expected_oracle:
+        raise EvalConfigError(
+            f"oracle changed since the source run for {case.id}/{condition.id}/rep-{repetition:02d}"
+        )
+    expected_case = sha256_paths(
+        [case.prompt_path, *case.input_files],
+        case.directory,
+    )
+    if result["provenance"].get("case_sha256") != expected_case:
+        raise EvalConfigError(
+            f"case changed since the source run for {case.id}/{condition.id}/rep-{repetition:02d}"
+        )
+    expected_condition = canonical_sha256(condition.data)
+    if result["provenance"].get("condition_sha256") != expected_condition:
+        raise EvalConfigError(
+            f"condition changed since the source run for "
+            f"{case.id}/{condition.id}/rep-{repetition:02d}"
+        )
+
+
+def archive_attempt(run_dir: Path, label: str, names: tuple[str, ...]) -> Path:
+    attempts = run_dir / "attempts"
+    attempts.mkdir(exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    destination = attempts / f"{timestamp}-{label}"
+    suffix = 1
+    while destination.exists():
+        suffix += 1
+        destination = attempts / f"{timestamp}-{label}-{suffix:02d}"
+    destination.mkdir()
+    for name in names:
+        source = run_dir / name
+        if not source.exists():
+            continue
+        target = destination / name
+        if source.is_dir():
+            shutil.copytree(source, target)
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+    return destination
+
+
+def archive_judge_attempt(run_dir: Path) -> Path:
+    return archive_attempt(
+        run_dir,
+        "judge",
+        ("result.json", "logs", JUDGE_RESULT_NAME, "judge-trace", "judge-evidence"),
+    )
+
+
+def archive_full_attempt(run_dir: Path) -> Path:
+    return archive_attempt(
+        run_dir,
+        "executor",
+        (
+            "result.json",
+            "agent-manifest.json",
+            "logs",
+            "output",
+            JUDGE_RESULT_NAME,
+            "judge-trace",
+            "judge-evidence",
+        ),
+    )
+
+
+def remove_path(path: Path) -> None:
+    if path.is_dir() and not path.is_symlink():
+        shutil.rmtree(path)
+    else:
+        path.unlink(missing_ok=True)
+
+
+def clear_execution_attempt(run_dir: Path) -> None:
+    for name in ("logs", "output", JUDGE_RESULT_NAME, "judge-trace", "judge-evidence"):
+        remove_path(run_dir / name)
+    (run_dir / "output").mkdir()
+
+
+def clear_judge_attempt(run_dir: Path) -> None:
+    for name in (JUDGE_RESULT_NAME, "judge-trace", "judge-evidence"):
+        remove_path(run_dir / name)
+    logs = run_dir / "logs"
+    for name in ("judge.stdout.log", "judge.stderr.log"):
+        (logs / name).unlink(missing_ok=True)
+
+
+def rewrite_manifest(run_dir: Path, run_id: str) -> None:
+    path = run_dir / "agent-manifest.json"
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise EvalConfigError(f"cannot rewrite cloned manifest {path}: {exc}") from exc
+    if not isinstance(manifest, dict):
+        raise EvalConfigError(f"cloned manifest must contain an object: {path}")
+    payload = run_dir / "payload"
+    output = run_dir / "output"
+    manifest.update(
+        {
+            "run_id": run_id,
+            "prompt_path": str(payload / "prompt.md"),
+            "input_dir": str(payload / "input"),
+            "output_dir": str(output),
+        }
+    )
+    available = manifest.get("available_skills", [])
+    if not isinstance(available, list):
+        raise EvalConfigError(f"cloned manifest has invalid available_skills: {path}")
+    for skill in available:
+        if not isinstance(skill, dict) or not isinstance(skill.get("name"), str):
+            raise EvalConfigError(f"cloned manifest has an invalid Skill entry: {path}")
+        skill["path"] = str(payload / "skills" / skill["name"])
+    write_json(path, manifest)
+
+
+def write_run_summary(
+    *,
+    run_id: str,
+    suite: Any,
+    mode: str,
+    results: list[tuple[Path, dict[str, Any]]],
+    run_root: Path,
+) -> dict[str, Any]:
+    summary = build_summary(
+        run_id=run_id,
+        suite=suite,
+        mode=mode,
+        results=results,
+        run_root=run_root,
+    )
+    write_json(run_root / "run-summary.json", summary)
+    return summary
+
+
 def command_validate(args: argparse.Namespace) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
     suite = validate_suite(suite_path, ROOT)
@@ -707,6 +1069,244 @@ def command_validate(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_rejudge(args: argparse.Namespace) -> int:
+    suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
+    suite = validate_suite(suite_path, ROOT)
+    run_root = Path(args.run_root).expanduser().resolve()
+    if not run_root.is_dir():
+        raise EvalConfigError(f"run root does not exist: {run_root}")
+    preflight: list[tuple[Any, Any, int, Path, Path, dict[str, Any], bool]] = []
+    skipped: list[dict[str, Any]] = []
+    for case, condition, repetition, run_dir in suite_entries(suite, run_root):
+        result_path = run_dir / "result.json"
+        result = load_existing_result(result_path)
+        validate_existing_identity(
+            result,
+            suite=suite,
+            case=case,
+            condition=condition,
+            repetition=repetition,
+        )
+        recover_route_from_trace(result, run_dir)
+        eligible = artifacts_intact(result, run_dir / "output")
+        if not eligible:
+            skipped.append(
+                {
+                    "case_id": case.id,
+                    "condition_id": condition.id,
+                    "repetition": repetition,
+                    "reason": "executor artifacts are absent or no longer match recorded hashes",
+                }
+            )
+        preflight.append(
+            (case, condition, repetition, run_dir, result_path, result, eligible)
+        )
+
+    attempted = sum(1 for *_, eligible in preflight if eligible)
+    if attempted == 0:
+        raise EvalConfigError("no intact executor artifacts were eligible for rejudging")
+    if (run_root / "run-summary.json").is_file():
+        archive_attempt(run_root, "summary", ("run-summary.json",))
+
+    collected: list[tuple[Path, dict[str, Any]]] = []
+    succeeded = 0
+    timeout = int(suite.data["defaults"]["timeout_seconds"])
+    for index, (
+        case,
+        condition,
+        _repetition,
+        run_dir,
+        result_path,
+        result,
+        eligible,
+    ) in enumerate(preflight, start=1):
+        print(
+            f"[{index}/{len(preflight)}] {case.id} / {condition.id}: "
+            f"{'rejudging' if eligible else 'skipping missing artifacts'}",
+            file=sys.stderr,
+            flush=True,
+        )
+        if not eligible:
+            collected.append((result_path, result))
+            continue
+        archive_judge_attempt(run_dir)
+        clear_judge_attempt(run_dir)
+        values = existing_values(case, run_dir)
+        result = judge_one(
+            result=result,
+            values=values,
+            case=case,
+            judge_template=args.judge_command,
+            timeout=timeout,
+        )
+        if result["judging"]["status"] in {"completed", "partial"}:
+            succeeded += 1
+        collected.append((result_path, result))
+
+    run_id = collected[0][1]["run_id"]
+    summary = write_run_summary(
+        run_id=run_id,
+        suite=suite,
+        mode="rejudge",
+        results=collected,
+        run_root=run_root,
+    )
+    report = {
+        "ok": succeeded == attempted,
+        "run_root": str(run_root),
+        "attempted": attempted,
+        "succeeded": succeeded,
+        "skipped": skipped,
+        **summary,
+    }
+    print(json.dumps(report, indent=2))
+    return 0 if succeeded == attempted else 1
+
+
+def command_resume(args: argparse.Namespace) -> int:
+    suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
+    suite = validate_suite(suite_path, ROOT)
+    source_root = Path(args.source_run).expanduser().resolve()
+    if not source_root.is_dir():
+        raise EvalConfigError(f"source run does not exist: {source_root}")
+    run_id = check_run_id(args.run_id or default_run_id())
+    results_root = Path(args.results_dir).expanduser()
+    if not results_root.is_absolute():
+        results_root = ROOT / results_root
+    run_root = (results_root / run_id).resolve()
+    if run_root.exists():
+        raise EvalConfigError(f"run directory already exists: {run_root}")
+    try:
+        run_root.relative_to(source_root)
+    except ValueError:
+        pass
+    else:
+        raise EvalConfigError("resume target must not be inside the source run")
+
+    for case, condition, repetition, source_dir in suite_entries(suite, source_root):
+        source_result = load_existing_result(source_dir / "result.json")
+        validate_existing_identity(
+            source_result,
+            suite=suite,
+            case=case,
+            condition=condition,
+            repetition=repetition,
+        )
+
+    shutil.copytree(source_root, run_root)
+    if (run_root / "run-summary.json").is_file():
+        shutil.copy2(run_root / "run-summary.json", run_root / "source-run-summary.json")
+
+    repo_commit, repo_dirty = git_provenance()
+    timeout = int(suite.data["defaults"]["timeout_seconds"])
+    collected: list[tuple[Path, dict[str, Any]]] = []
+    actions: list[dict[str, Any]] = []
+    entries = suite_entries(suite, run_root)
+    for index, (case, condition, repetition, run_dir) in enumerate(
+        entries,
+        start=1,
+    ):
+        source_result = load_existing_result(run_dir / "result.json")
+        validate_existing_identity(
+            source_result,
+            suite=suite,
+            case=case,
+            condition=condition,
+            repetition=repetition,
+        )
+        source_result_sha = sha256_file(run_dir / "result.json")
+        source_run_id = source_result["run_id"]
+        source_result["run_id"] = run_id
+        rewrite_manifest(run_dir, run_id)
+        recover_route_from_trace(source_result, run_dir)
+        can_reuse = (
+            source_result.get("executor", {}).get("exit_code") == 0
+            and artifacts_intact(source_result, run_dir / "output")
+        )
+        print(
+            f"[{index}/{len(entries)}] {case.id} / {condition.id}: "
+            f"{'rejudging existing artifacts' if can_reuse else 'rerunning executor'}",
+            file=sys.stderr,
+            flush=True,
+        )
+        lineage = {
+            "source_run_id": source_run_id,
+            "source_result_sha256": source_result_sha,
+            "action": "reused-executor-output" if can_reuse else "reran-executor",
+            "resumed_at": utc_now(),
+        }
+        values = existing_values(case, run_dir)
+        if can_reuse:
+            archive_judge_attempt(run_dir)
+            clear_judge_attempt(run_dir)
+            source_result["lineage"] = lineage
+            result = judge_one(
+                result=source_result,
+                values=values,
+                case=case,
+                judge_template=args.judge_command,
+                timeout=timeout,
+            )
+        else:
+            archive_full_attempt(run_dir)
+            clear_execution_attempt(run_dir)
+            provenance = dict(source_result["provenance"])
+            provenance.update({"repo_commit": repo_commit, "repo_dirty": repo_dirty})
+            result = initial_result(
+                run_id=run_id,
+                suite_id=suite.id,
+                case_id=case.id,
+                condition=source_result["condition"],
+                repetition=repetition,
+                provenance=provenance,
+            )
+            result["lineage"] = lineage
+            result = execute_one(
+                result=result,
+                values=values,
+                case=case,
+                agent_template=args.agent_command,
+                judge_template=args.judge_command,
+                timeout=timeout,
+            )
+        result_path = run_dir / "result.json"
+        collected.append((result_path, result))
+        actions.append(
+            {
+                "case_id": case.id,
+                "condition_id": condition.id,
+                "repetition": repetition,
+                "action": lineage["action"],
+                "status": result["status"],
+                "judge_status": result["judging"]["status"],
+            }
+        )
+
+    summary = write_run_summary(
+        run_id=run_id,
+        suite=suite,
+        mode="resume",
+        results=collected,
+        run_root=run_root,
+    )
+    resume_manifest = {
+        "schema_version": "1.0",
+        "source_run": str(source_root),
+        "source_run_id": actions and collected[0][1]["lineage"]["source_run_id"],
+        "run_id": run_id,
+        "created_at": utc_now(),
+        "actions": actions,
+    }
+    write_json(run_root / "resume-manifest.json", resume_manifest)
+    report = {
+        "ok": all(result["status"] != "failed" for _, result in collected),
+        "run_root": str(run_root),
+        **summary,
+    }
+    print(json.dumps(report, indent=2))
+    return 0 if report["ok"] else 1
+
+
 def command_execute(args: argparse.Namespace, mode: str) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
     suite = validate_suite(suite_path, ROOT)
@@ -721,10 +1321,19 @@ def command_execute(args: argparse.Namespace, mode: str) -> int:
     repo_commit, repo_dirty = git_provenance()
     timeout = int(suite.data["defaults"]["timeout_seconds"])
     collected: list[tuple[Path, dict[str, Any]]] = []
+    total_runs = sum(len(item.conditions) * item.repetitions for item in suite.runs)
+    run_number = 0
 
     for suite_run in suite.runs:
         for condition in suite_run.conditions:
             for repetition in range(1, suite_run.repetitions + 1):
+                run_number += 1
+                print(
+                    f"[{run_number}/{total_runs}] {suite_run.case.id} / {condition.id} / "
+                    f"rep-{repetition:02d}: materializing",
+                    file=sys.stderr,
+                    flush=True,
+                )
                 run_dir = (
                     run_root
                     / suite_run.case.id
@@ -743,6 +1352,12 @@ def command_execute(args: argparse.Namespace, mode: str) -> int:
                 )
                 result_path = run_dir / "result.json"
                 if mode == "run":
+                    print(
+                        f"[{run_number}/{total_runs}] {suite_run.case.id} / {condition.id}: "
+                        "executing",
+                        file=sys.stderr,
+                        flush=True,
+                    )
                     result = execute_one(
                         result=result,
                         values=values,
@@ -755,6 +1370,13 @@ def command_execute(args: argparse.Namespace, mode: str) -> int:
                     validate_result(result)
                     write_json(result_path, result)
                 collected.append((result_path, result))
+                print(
+                    f"[{run_number}/{total_runs}] {suite_run.case.id} / {condition.id}: "
+                    f"{result['status']} (judge={result['judging']['status']}, "
+                    f"score={result['judging']['overall_score']})",
+                    file=sys.stderr,
+                    flush=True,
+                )
 
     summary = build_summary(
         run_id=run_id,
@@ -775,6 +1397,25 @@ def build_parser() -> argparse.ArgumentParser:
 
     validate_parser = subparsers.add_parser("validate", help="validate schemas and a suite")
     validate_parser.add_argument("--suite", required=True, help="suite path, relative to repository root")
+
+    rejudge_parser = subparsers.add_parser(
+        "rejudge",
+        help="rerun only the judge for intact artifacts in an existing run",
+    )
+    rejudge_parser.add_argument("--suite", required=True, help="suite path, relative to repository root")
+    rejudge_parser.add_argument("--run-root", required=True, help="existing run directory")
+    rejudge_parser.add_argument("--judge-command", required=True, help="judge command template")
+
+    resume_parser = subparsers.add_parser(
+        "resume",
+        help="clone a run, rejudge intact outputs, and rerun failed executors",
+    )
+    resume_parser.add_argument("--suite", required=True, help="suite path, relative to repository root")
+    resume_parser.add_argument("--source-run", required=True, help="immutable source run directory")
+    resume_parser.add_argument("--results-dir", default="results", help="generated result root")
+    resume_parser.add_argument("--run-id", required=True, help="new run identifier")
+    resume_parser.add_argument("--agent-command", required=True, help="executor command template")
+    resume_parser.add_argument("--judge-command", required=True, help="judge command template")
 
     for command in ("materialize", "run"):
         child = subparsers.add_parser(command, help=f"{command} a suite")
@@ -799,6 +1440,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "validate":
             return command_validate(args)
+        if args.command == "rejudge":
+            return command_rejudge(args)
+        if args.command == "resume":
+            return command_resume(args)
         return command_execute(args, args.command)
     except EvalConfigError as exc:
         print(json.dumps({"ok": False, "error": str(exc)}, indent=2), file=sys.stderr)

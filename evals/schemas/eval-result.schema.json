@@ -38,9 +38,25 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["name", "source_sha256", "materialized_sha256", "ablations"],
+            "required": [
+              "name",
+              "path",
+              "requested_revision",
+              "resolved_revision",
+              "source_sha256",
+              "materialized_sha256",
+              "ablations"
+            ],
             "properties": {
               "name": {"$ref": "#/$defs/slug"},
+              "path": {"type": "string", "minLength": 1},
+              "requested_revision": {"type": ["string", "null"]},
+              "resolved_revision": {
+                "oneOf": [
+                  {"type": "null"},
+                  {"type": "string", "pattern": "^[a-f0-9]{40}$"}
+                ]
+              },
               "source_sha256": {"$ref": "#/$defs/sha256"},
               "materialized_sha256": {"$ref": "#/$defs/sha256"},
               "ablations": {"type": "array", "items": {"type": "object"}}
@@ -170,6 +186,25 @@
           }
         }
       ]
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_run_id",
+        "source_result_sha256",
+        "action",
+        "resumed_at"
+      ],
+      "properties": {
+        "source_run_id": {"type": "string", "minLength": 1},
+        "source_result_sha256": {"$ref": "#/$defs/sha256"},
+        "action": {
+          "type": "string",
+          "enum": ["reused-executor-output", "reran-executor"]
+        },
+        "resumed_at": {"type": "string", "minLength": 1}
+      }
     },
     "provenance": {
       "type": "object",

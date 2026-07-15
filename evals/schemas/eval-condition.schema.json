@@ -32,6 +32,7 @@
       "properties": {
         "name": {"$ref": "#/$defs/slug"},
         "path": {"type": "string", "minLength": 1},
+        "revision": {"type": "string", "minLength": 1},
         "ablations": {
           "type": "array",
           "items": {"$ref": "#/$defs/ablation"}

@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "product": "SignalDesk",
+  "assets": [
+    {
+      "path": "assets/signaldesk-command-center.png",
+      "status": "approved",
+      "identity": "official-current-product-ui",
+      "required": true,
+      "visual_job": "desktop command center evidence",
+      "treatment": "contain",
+      "crop_policy": "show the complete viewport; no crop"
+    },
+    {
+      "path": "assets/signaldesk-mobile-oncall.png",
+      "status": "approved",
+      "identity": "official-current-product-ui",
+      "required": true,
+      "visual_job": "mobile on-call workflow evidence",
+      "treatment": "contain",
+      "crop_policy": "show the complete portrait viewport; no crop"
+    },
+    {
+      "path": "assets/signaldesk-wordmark.png",
+      "status": "approved",
+      "identity": "official-brand",
+      "required": true,
+      "visual_job": "brand identification",
+      "treatment": "contain",
+      "crop_policy": "no crop"
+    },
+    {
+      "path": "assets/northstar-dashboard-decoy.png",
+      "status": "forbidden",
+      "identity": "third-party-demo-ui",
+      "required": false,
+      "reason": "Not a SignalDesk interface"
+    },
+    {
+      "path": "assets/generic-architecture-decoy.jpg",
+      "status": "forbidden",
+      "identity": "generic-mood-photo",
+      "required": false,
+      "reason": "Does not provide product or launch evidence"
+    }
+  ]
+}

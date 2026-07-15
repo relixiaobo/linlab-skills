@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "id": "presentation-image-improved-no-visual-instructions",
+  "label": "Image-improved Presentation tooling with visual instructions ablated",
+  "kind": "ablation",
+  "skills": [
+    {
+      "name": "presentation",
+      "path": "presentation",
+      "revision": "0fdd27c2d8f182d1785832c75da5362554b321f5",
+      "ablations": [
+        {
+          "op": "replace",
+          "path": "SKILL.md",
+          "replacement": "presentation/SKILL.md",
+          "reason": "Restore the pre-change top-level presentation workflow instructions."
+        },
+        {
+          "op": "replace",
+          "path": "agents/openai.yaml",
+          "replacement": "presentation/agents/openai.yaml",
+          "reason": "Restore the pre-change implicit-routing description."
+        },
+        {
+          "op": "replace",
+          "path": "references/asset-intake.md",
+          "replacement": "presentation/references/asset-intake.md",
+          "reason": "Remove the visual asset plan, relevance gate, and fit/crop instructions."
+        },
+        {
+          "op": "replace",
+          "path": "references/export.md",
+          "replacement": "presentation/references/export.md",
+          "reason": "Restore the pre-change export instructions."
+        },
+        {
+          "op": "replace",
+          "path": "references/studio.md",
+          "replacement": "presentation/references/studio.md",
+          "reason": "Restore the pre-change Studio sequence."
+        },
+        {
+          "op": "replace",
+          "path": "references/verification.md",
+          "replacement": "presentation/references/verification.md",
+          "reason": "Restore the pre-change visual verification instructions."
+        }
+      ]
+    }
+  ],
+  "executor_config": {
+    "skill_registry": "isolated",
+    "routing": "natural",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "medium",
+    "network_access": true,
+    "adapter_timeout_seconds": 1800
+  }
+}

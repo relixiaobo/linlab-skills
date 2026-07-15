@@ -16,7 +16,10 @@ User task case x execution condition x repetition -> result
 The control condition exposes no repository Skill. A `skill-enabled` condition
 exposes one or more exact Skill packages. An `ablation` condition starts from the
 same package and deterministically removes or replaces selected resources. Every
-result records hashes for both the source and materialized Skill.
+result records hashes for both the source and materialized Skill. A condition may
+pin `skills[].revision`; the runner resolves it to a full commit and materializes
+the Skill with `git archive`, so later working-tree changes cannot alter the
+intervention.
 
 This separation answers four different questions:
 
@@ -34,7 +37,7 @@ evals/
 |-- suites/        # paired experiment matrices and repetitions
 |-- conditions/    # baseline, Skill-enabled, and ablation interventions
 |-- runners/       # validation, materialization, execution, and aggregation
-|-- judges/        # reusable deterministic judges, when added
+|-- judges/        # reusable deterministic and blind model judges
 +-- regressions/   # promoted failures, when added
 
 tests/
@@ -104,6 +107,44 @@ python3 evals/runners/evalctl.py run \
   --judge-command 'judge-adapter --result {result} --oracle {oracle}'
 ```
 
+The repository adapters can run isolated Codex sessions and blind presentation
+review directly:
+
+```sh
+python3 evals/runners/evalctl.py run \
+  --suite evals/suites/presentation-image-smoke.json \
+  --results-dir /tmp/linlab-skill-eval-results \
+  --run-id presentation-image-smoke-001 \
+  --agent-command 'python3 {repo}/evals/runners/codex_exec_adapter.py' \
+  --judge-command 'python3 {repo}/evals/judges/presentation_judge_adapter.py'
+```
+
+Rejudge intact artifacts without invoking the Agent again:
+
+```sh
+python3 evals/runners/evalctl.py rejudge \
+  --suite evals/suites/presentation-image-smoke.json \
+  --run-root /tmp/linlab-skill-eval-results/presentation-image-smoke-001 \
+  --judge-command 'python3 {repo}/evals/judges/presentation_judge_adapter.py'
+```
+
+To preserve a failed run, clone it under a new run id, reuse intact executor
+outputs, and rerun only conditions whose executor artifacts are missing or no
+longer match their recorded hashes:
+
+```sh
+python3 evals/runners/evalctl.py resume \
+  --suite evals/suites/presentation-image-smoke.json \
+  --source-run /tmp/linlab-skill-eval-results/presentation-image-smoke-001 \
+  --results-dir /tmp/linlab-skill-eval-results \
+  --run-id presentation-image-smoke-001-recovery \
+  --agent-command 'python3 {repo}/evals/runners/codex_exec_adapter.py' \
+  --judge-command 'python3 {repo}/evals/judges/presentation_judge_adapter.py'
+```
+
+`resume` never mutates the source run. Each target result records whether it
+reused executor output or reran the executor, plus the source result hash.
+
 Agent commands may use `{repo}`, `{run}`, `{payload}`, `{prompt}`, `{input}`,
 `{skills}`, `{output}`, `{manifest}`, and `{agent_result}`. Judge commands may
 also use `{result}`, `{oracle}`, and `{judge_result}`. The runner rejects hidden
@@ -141,6 +182,12 @@ The adapter receives `EVAL_RUN_MANIFEST`, `EVAL_PROMPT_FILE`, `EVAL_INPUT_DIR`,
 All response, artifact, and trace paths must be regular files relative to
 `EVAL_OUTPUT_DIR`. The runner hashes them before judging.
 
+The bundled Codex adapter copies deliverables before interpreting the event
+stream. Malformed JSONL transport lines are skipped only during best-effort
+extraction and are recorded in `trace/parse-diagnostics.json`; the untouched raw
+trace remains authoritative. A malformed command-output event therefore cannot
+discard an otherwise completed artifact, route record, or final usage event.
+
 ## Judge Protocol
 
 The judge runs only after the Agent process has finished. It receives the hidden
@@ -169,6 +216,25 @@ total score and pass state null. Completed judging records explicit critical
 failures. Raw results include route, artifacts, hashes, model/config, token use,
 cost, latency, failures, and provenance. `run-summary.json` pairs each treatment
 with the baseline at the same case and repetition and reports metric deltas.
+
+The presentation judge first persists deterministic PPTX inspection, gate, and
+render evidence under `judge-evidence/`. Blind model review runs afterward and
+retries only transient provider failures such as 429, 502, timeouts, or stream
+disconnects. Every attempt is retained under `judge-trace/attempt-NN/`. Judge
+infrastructure failure leaves quality scores null; it is not a zero score.
+Structured output defaults to schema mode for the OpenAI provider and to a
+JSON-only prompt plus the same local protocol validation for custom providers.
+This avoids treating a provider's unsupported response-format parameter as a
+deck failure. Transient local renderer failures are also retried and remain
+judge infrastructure errors if they do not recover.
+
+Image-sensitive cases may declare
+`metadata.presentation_asset_expectations` in the hidden oracle. The
+presentation judge hashes source assets and joins them to PPTX media records,
+then deterministically caps image relevance or fit when required exact assets
+are missing, forbidden exact assets are embedded, or a required `contain` asset
+is cropped beyond its declared limit. The blind judge also receives both source
+assets and final slide renders for semantic comparison.
 
 ## Promotion Rule
 
