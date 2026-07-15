@@ -37,7 +37,7 @@ evals/
 |-- suites/        # paired experiment matrices and repetitions
 |-- conditions/    # baseline, Skill-enabled, and ablation interventions
 |-- runners/       # validation, materialization, execution, and aggregation
-|-- judges/        # reusable deterministic and blind model judges
+|-- judges/        # Judge Adapter registry and domain evidence/scoring adapters
 +-- regressions/   # promoted failures, when added
 
 tests/
@@ -97,15 +97,19 @@ python3 evals/runners/evalctl.py materialize \
   --run-id local-inspection
 ```
 
-Execute with an adapter and optional post-run judge:
+Execute with an Agent adapter. Each configured case resolves its Judge Adapter
+from the hidden oracle and `evals/judges/registry.json`:
 
 ```sh
 python3 evals/runners/evalctl.py run \
   --suite evals/suites/representative-ab.json \
   --run-id model-build-001 \
-  --agent-command 'agent-adapter --manifest {manifest}' \
-  --judge-command 'judge-adapter --result {result} --oracle {oracle}'
+  --agent-command 'agent-adapter --manifest {manifest}'
 ```
+
+`--judge-command 'judge-adapter --result {result} --oracle {oracle}'` is an
+explicit whole-suite override for development or compatibility. The result
+records it as `command-override` rather than a registry adapter.
 
 The repository adapters can run isolated Codex sessions and blind presentation
 review directly:
@@ -115,8 +119,7 @@ python3 evals/runners/evalctl.py run \
   --suite evals/suites/presentation-image-smoke.json \
   --results-dir /tmp/linlab-skill-eval-results \
   --run-id presentation-image-smoke-001 \
-  --agent-command 'python3 {repo}/evals/runners/codex_exec_adapter.py' \
-  --judge-command 'python3 {repo}/evals/judges/presentation_judge_adapter.py'
+  --agent-command 'python3 {repo}/evals/runners/codex_exec_adapter.py'
 ```
 
 Rejudge intact artifacts without invoking the Agent again:
@@ -124,8 +127,7 @@ Rejudge intact artifacts without invoking the Agent again:
 ```sh
 python3 evals/runners/evalctl.py rejudge \
   --suite evals/suites/presentation-image-smoke.json \
-  --run-root /tmp/linlab-skill-eval-results/presentation-image-smoke-001 \
-  --judge-command 'python3 {repo}/evals/judges/presentation_judge_adapter.py'
+  --run-root /tmp/linlab-skill-eval-results/presentation-image-smoke-001
 ```
 
 To preserve a failed run, clone it under a new run id, reuse intact executor
@@ -138,8 +140,7 @@ python3 evals/runners/evalctl.py resume \
   --source-run /tmp/linlab-skill-eval-results/presentation-image-smoke-001 \
   --results-dir /tmp/linlab-skill-eval-results \
   --run-id presentation-image-smoke-001-recovery \
-  --agent-command 'python3 {repo}/evals/runners/codex_exec_adapter.py' \
-  --judge-command 'python3 {repo}/evals/judges/presentation_judge_adapter.py'
+  --agent-command 'python3 {repo}/evals/runners/codex_exec_adapter.py'
 ```
 
 `resume` never mutates the source run. Each target result records whether it
@@ -188,9 +189,18 @@ extraction and are recorded in `trace/parse-diagnostics.json`; the untouched raw
 trace remains authoritative. A malformed command-output event therefore cannot
 discard an otherwise completed artifact, route record, or final usage event.
 
-## Judge Protocol
+## Judge Adapter Protocol
 
-The judge runs only after the Agent process has finished. It receives the hidden
+The hidden oracle may declare `evaluation.adapter`. The runner resolves that id
+from the versioned registry, verifies that it supports the case job, merges
+registry and case configuration, and records the exact adapter identity and
+registry hash in every result. Cases without an adapter remain unjudged unless
+`--judge-command` is supplied.
+
+The full registry, environment, evidence-manifest, and authoring contract is in
+`evals/judges/README.md`.
+
+An adapter runs only after the Agent process has finished. It receives the hidden
 oracle through `EVAL_ORACLE_FILE`, plus result, payload, and output paths. It
 writes `EVAL_JUDGE_RESULT_FILE`:
 
@@ -216,6 +226,10 @@ total score and pass state null. Completed judging records explicit critical
 failures. Raw results include route, artifacts, hashes, model/config, token use,
 cost, latency, failures, and provenance. `run-summary.json` pairs each treatment
 with the baseline at the same case and repetition and reports metric deltas.
+
+The runner also records adapter id, kind, protocol version, registry path/hash,
+exact command, merged config, logs, exit code, and a hash of the generated
+evidence manifest. Domain logic belongs in adapters, never in `evalctl`.
 
 The presentation judge first persists deterministic PPTX inspection, gate, and
 render evidence under `judge-evidence/`. Blind model review runs afterward and

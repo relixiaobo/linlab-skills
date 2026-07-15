@@ -11,6 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 EVALCTL = ROOT / "evals" / "runners" / "evalctl.py"
 SUITE = "tests/fixtures/evals/suites/runner-smoke.json"
+ADAPTER_SUITE = "tests/fixtures/evals/suites/adapter-routing.json"
+ADAPTER_REGISTRY = "tests/fixtures/evals/judge-registry.json"
 
 
 class EvalRunnerTests(unittest.TestCase):
@@ -29,6 +31,12 @@ class EvalRunnerTests(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertTrue(report["ok"])
         self.assertEqual(report["planned_run_count"], 4)
+        self.assertIsNone(report["judge_adapters"]["tiny-case"])
+
+    def test_declared_adapter_must_exist_in_the_selected_registry(self) -> None:
+        result = self.run_evalctl("validate", "--suite", ADAPTER_SUITE)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("unknown judge adapter: fixture-primary", result.stderr)
 
     def test_materialization_isolates_oracle_and_applies_ablation(self) -> None:
         with tempfile.TemporaryDirectory(prefix="eval_materialize_") as temp:
@@ -123,6 +131,90 @@ class EvalRunnerTests(unittest.TestCase):
             self.assertEqual(enabled_result["route"]["primary_skill"], "tiny-skill")
             self.assertEqual(enabled_result["executor"]["model"], "fixture-model")
             self.assertEqual({item["kind"] for item in enabled_result["artifacts"]}, {"response", "artifact"})
+            self.assertEqual(enabled_result["judge"]["adapter_id"], "command-override")
+            self.assertEqual(enabled_result["judge"]["kind"], "override")
+            self.assertRegex(
+                enabled_result["judge"]["evidence_manifest_sha256"],
+                r"^[a-f0-9]{64}$",
+            )
+
+    def test_registry_routes_each_case_to_its_declared_judge_adapter(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="eval_adapter_routing_") as temp:
+            agent = f"{sys.executable} {{repo}}/tests/fixtures/evals/fake_agent.py"
+            result = self.run_evalctl(
+                "run",
+                "--suite",
+                ADAPTER_SUITE,
+                "--judge-registry",
+                ADAPTER_REGISTRY,
+                "--results-dir",
+                temp,
+                "--run-id",
+                "adapter-routing-test",
+                "--agent-command",
+                agent,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            root = Path(temp) / "adapter-routing-test"
+            alpha = json.loads(
+                (root / "adapter-alpha" / "tiny-enabled" / "rep-01" / "result.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            beta = json.loads(
+                (root / "adapter-beta" / "tiny-enabled" / "rep-01" / "result.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(alpha["judge"]["adapter_id"], "fixture-primary")
+            self.assertEqual(alpha["judging"]["overall_score"], 1.0)
+            self.assertEqual(beta["judge"]["adapter_id"], "fixture-secondary")
+            self.assertEqual(beta["judging"]["overall_score"], 0.8)
+            self.assertEqual(beta["judge"]["config"]["score"], 0.8)
+            self.assertEqual(beta["judge"]["config"]["case_marker"], "beta")
+            manifest_path = root / "adapter-beta" / "tiny-enabled" / "rep-01" / beta["judge"][
+                "evidence_manifest_path"
+            ]
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual(manifest["adapter_id"], "fixture-secondary")
+            self.assertEqual(
+                [record["path"] for record in manifest["records"]],
+                ["secondary-evidence.json"],
+            )
+            summary = json.loads((root / "run-summary.json").read_text(encoding="utf-8"))
+            enabled_adapters = {
+                item["case_id"]: item["judge_adapter"]
+                for item in summary["results"]
+                if item["condition_id"] == "tiny-enabled"
+            }
+            self.assertEqual(
+                enabled_adapters,
+                {
+                    "adapter-alpha": "fixture-primary",
+                    "adapter-beta": "fixture-secondary",
+                },
+            )
+
+            rejudge = self.run_evalctl(
+                "rejudge",
+                "--suite",
+                ADAPTER_SUITE,
+                "--judge-registry",
+                ADAPTER_REGISTRY,
+                "--run-root",
+                str(root),
+            )
+            self.assertEqual(rejudge.returncode, 0, rejudge.stderr)
+            beta_after_rejudge = json.loads(
+                (root / "adapter-beta" / "tiny-enabled" / "rep-01" / "result.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(
+                beta_after_rejudge["judge"]["adapter_id"],
+                "fixture-secondary",
+            )
+            self.assertEqual(beta_after_rejudge["judging"]["overall_score"], 0.8)
 
     def test_agent_command_cannot_reference_hidden_oracle(self) -> None:
         with tempfile.TemporaryDirectory(prefix="eval_oracle_guard_") as temp:

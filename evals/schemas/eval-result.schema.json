@@ -172,6 +172,51 @@
         "summary": {"type": "string"}
       }
     },
+    "judge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "adapter_id",
+        "kind",
+        "protocol_version",
+        "registry_path",
+        "registry_sha256",
+        "command",
+        "exit_code",
+        "stdout_path",
+        "stderr_path",
+        "config",
+        "evidence_manifest_path",
+        "evidence_manifest_sha256"
+      ],
+      "properties": {
+        "adapter_id": {"type": ["string", "null"]},
+        "kind": {
+          "type": ["string", "null"],
+          "enum": ["deterministic", "model", "hybrid", "override", null]
+        },
+        "protocol_version": {"type": ["string", "null"]},
+        "registry_path": {"type": ["string", "null"]},
+        "registry_sha256": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/sha256"}
+          ]
+        },
+        "command": {"type": "array", "items": {"type": "string"}},
+        "exit_code": {"type": ["integer", "null"]},
+        "stdout_path": {"type": ["string", "null"]},
+        "stderr_path": {"type": ["string", "null"]},
+        "config": {"type": "object"},
+        "evidence_manifest_path": {"type": ["string", "null"]},
+        "evidence_manifest_sha256": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/sha256"}
+          ]
+        }
+      }
+    },
     "failure": {
       "oneOf": [
         {"type": "null"},

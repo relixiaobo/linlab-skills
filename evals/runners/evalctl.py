@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tarfile
 import time
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -25,8 +26,11 @@ if str(ROOT) not in sys.path:
 from evals.runners.eval_lib import (  # noqa: E402
     FAILURE_TAGS,
     EvalConfigError,
+    JudgeAdapterSpec,
     canonical_sha256,
+    load_judge_registry,
     repo_relative_path,
+    resolve_case_judge_adapter,
     resolve_git_revision,
     safe_child,
     sha256_file,
@@ -44,6 +48,7 @@ from evals.runners.codex_exec_adapter import (  # noqa: E402
 IGNORED_COPY_NAMES = {".DS_Store", "__pycache__", "node_modules", ".git"}
 AGENT_RESULT_NAME = "agent-result.json"
 JUDGE_RESULT_NAME = "judge-result.json"
+DEFAULT_JUDGE_REGISTRY = "evals/judges/registry.json"
 AGENT_PLACEHOLDERS = {
     "repo",
     "run",
@@ -55,6 +60,18 @@ AGENT_PLACEHOLDERS = {
     "manifest",
     "agent_result",
 }
+JUDGE_PLACEHOLDERS = AGENT_PLACEHOLDERS | {"result", "oracle", "judge_result"}
+
+
+@dataclass(frozen=True)
+class JudgeInvocation:
+    adapter_id: str
+    kind: str
+    protocol_version: str
+    command_template: str
+    registry_path: str | None
+    registry_sha256: str | None
+    config: dict[str, Any]
 
 
 def utc_now() -> str:
@@ -76,6 +93,57 @@ def check_run_id(value: str) -> str:
 def write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
+
+
+def resolve_registry_path(value: str) -> Path:
+    path = Path(value).expanduser()
+    return path.resolve() if path.is_absolute() else (ROOT / path).resolve()
+
+
+def judge_registry_for_args(args: argparse.Namespace) -> dict[str, JudgeAdapterSpec]:
+    return load_judge_registry(resolve_registry_path(args.judge_registry), ROOT)
+
+
+def judge_invocation_for_case(
+    *,
+    case: Any,
+    judge_override: str | None,
+    registry: dict[str, JudgeAdapterSpec],
+) -> JudgeInvocation | None:
+    if judge_override:
+        invocation = JudgeInvocation(
+            adapter_id="command-override",
+            kind="override",
+            protocol_version="1.0",
+            command_template=judge_override,
+            registry_path=None,
+            registry_sha256=None,
+            config=case.judge_config,
+        )
+    else:
+        adapter = resolve_case_judge_adapter(case, registry)
+        if adapter is None:
+            return None
+        try:
+            registry_path = adapter.registry_path.relative_to(ROOT).as_posix()
+        except ValueError:
+            registry_path = str(adapter.registry_path)
+        config = dict(adapter.config)
+        config.update(case.judge_config)
+        invocation = JudgeInvocation(
+            adapter_id=adapter.id,
+            kind=adapter.kind,
+            protocol_version=adapter.protocol_version,
+            command_template=adapter.command,
+            registry_path=registry_path,
+            registry_sha256=adapter.registry_sha256,
+            config=config,
+        )
+    format_command(
+        invocation.command_template,
+        {name: f"/{name}" for name in JUDGE_PLACEHOLDERS},
+    )
+    return invocation
 
 
 def ignored_copy(_directory: str, names: list[str]) -> set[str]:
@@ -323,6 +391,11 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
         raise EvalConfigError(f"invalid or missing {JUDGE_RESULT_NAME}: {exc}") from exc
     if not isinstance(data, dict):
         raise EvalConfigError(f"{JUDGE_RESULT_NAME} must contain an object")
+    unknown_fields = set(data) - {"scores", "failure_tags", "summary"}
+    if unknown_fields:
+        raise EvalConfigError(
+            f"judge protocol contains unknown fields: {sorted(unknown_fields)}"
+        )
 
     outcomes = {item["id"]: item for item in oracle["expected"]["outcomes"]}
     raw_scores = data.get("scores")
@@ -334,6 +407,17 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
     for raw in raw_scores:
         if not isinstance(raw, dict):
             raise EvalConfigError("judge score must be an object")
+        unknown_score_fields = set(raw) - {
+            "criterion_id",
+            "value",
+            "passed",
+            "rationale",
+            "evidence",
+        }
+        if unknown_score_fields:
+            raise EvalConfigError(
+                f"judge score contains unknown fields: {sorted(unknown_score_fields)}"
+            )
         criterion_id = raw.get("criterion_id")
         if criterion_id not in outcomes:
             raise EvalConfigError(f"judge scored unknown criterion: {criterion_id}")
@@ -349,6 +433,9 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
             isinstance(item, str) for item in evidence
         ):
             raise EvalConfigError(f"judge score {criterion_id} has invalid rationale or evidence")
+        passed = raw.get("passed")
+        if passed is not None and not isinstance(passed, bool):
+            raise EvalConfigError(f"judge score {criterion_id}.passed must be boolean")
         weight = float(outcomes[criterion_id]["weight"])
         weighted += float(value) * weight
         scores.append(
@@ -356,7 +443,7 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
                 "criterion_id": criterion_id,
                 "value": float(value),
                 "weight": weight,
-                "passed": bool(raw.get("passed", value >= 0.5)),
+                "passed": passed if passed is not None else value >= 0.5,
                 "rationale": rationale,
                 "evidence": evidence,
             }
@@ -381,6 +468,9 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
         for score in scores
         if outcomes[score["criterion_id"]]["critical"] and not score["passed"]
     )
+    summary = data.get("summary", "")
+    if not isinstance(summary, str):
+        raise EvalConfigError("judge protocol summary must be a string")
     return {
         "status": status,
         "overall_score": weighted if complete else None,
@@ -388,7 +478,7 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
         "critical_failures": critical_failures,
         "scores": scores,
         "failure_tags": list(dict.fromkeys(failure_tags)),
-        "summary": str(data.get("summary", "")),
+        "summary": summary,
     }
 
 
@@ -438,6 +528,20 @@ def initial_result(
             "estimated_cost_usd": None,
         },
         "artifacts": [],
+        "judge": {
+            "adapter_id": None,
+            "kind": None,
+            "protocol_version": None,
+            "registry_path": None,
+            "registry_sha256": None,
+            "command": [],
+            "exit_code": None,
+            "stdout_path": None,
+            "stderr_path": None,
+            "config": {},
+            "evidence_manifest_path": None,
+            "evidence_manifest_sha256": None,
+        },
         "judging": pending_judging(),
         "failure": None,
         "provenance": provenance,
@@ -617,12 +721,44 @@ def recover_route_from_trace(result: dict[str, Any], run_dir: Path) -> None:
         config["trace_parse_warning_lines"] = [item["line"] for item in diagnostics]
 
 
+def write_evidence_manifest(
+    *,
+    run_dir: Path,
+    invocation: JudgeInvocation,
+) -> tuple[str, str]:
+    evidence_dir = run_dir / "judge-evidence"
+    evidence_dir.mkdir(exist_ok=True)
+    manifest_path = evidence_dir / "evidence-manifest.json"
+    records: list[dict[str, Any]] = []
+    for path in sorted(evidence_dir.rglob("*")):
+        if path == manifest_path or not path.is_file() or path.is_symlink():
+            continue
+        records.append(
+            {
+                "path": path.relative_to(evidence_dir).as_posix(),
+                "sha256": sha256_file(path),
+                "bytes": path.stat().st_size,
+            }
+        )
+    write_json(
+        manifest_path,
+        {
+            "schema_version": "1.0",
+            "adapter_id": invocation.adapter_id,
+            "protocol_version": invocation.protocol_version,
+            "generated_at": utc_now(),
+            "records": records,
+        },
+    )
+    return manifest_path.relative_to(run_dir).as_posix(), sha256_file(manifest_path)
+
+
 def judge_one(
     *,
     result: dict[str, Any],
     values: dict[str, str],
     case: Any,
-    judge_template: str,
+    invocation: JudgeInvocation,
     timeout: int,
 ) -> dict[str, Any]:
     run_dir = Path(values["run"])
@@ -632,14 +768,32 @@ def judge_one(
     judge_result = Path(values["judge_result"])
     judge_result.unlink(missing_ok=True)
 
-    # Prior judge infrastructure failures are not evidence for the blind judge.
+    judge_command = format_command(invocation.command_template, values)
+    stdout_path = logs_dir / "judge.stdout.log"
+    stderr_path = logs_dir / "judge.stderr.log"
+    result.setdefault("judge", {})
+    result["judge"] = {
+        "adapter_id": invocation.adapter_id,
+        "kind": invocation.kind,
+        "protocol_version": invocation.protocol_version,
+        "registry_path": invocation.registry_path,
+        "registry_sha256": invocation.registry_sha256,
+        "command": judge_command,
+        "exit_code": None,
+        "stdout_path": stdout_path.relative_to(run_dir).as_posix(),
+        "stderr_path": stderr_path.relative_to(run_dir).as_posix(),
+        "config": invocation.config,
+        "evidence_manifest_path": None,
+        "evidence_manifest_sha256": None,
+    }
+
+    # Prior judge infrastructure failures are not evidence for the next judge.
     result["status"] = "completed"
     result["judging"] = pending_judging()
     result["failure"] = None
     validate_result(result)
     write_json(result_path, result)
 
-    judge_command = format_command(judge_template, values)
     judge_env = {key: value for key, value in os.environ.items() if not key.startswith("EVAL_")}
     judge_env.update(
         {
@@ -648,6 +802,11 @@ def judge_one(
             "EVAL_PAYLOAD_DIR": values["payload"],
             "EVAL_OUTPUT_DIR": values["output"],
             "EVAL_JUDGE_RESULT_FILE": values["judge_result"],
+            "EVAL_JUDGE_ADAPTER_ID": invocation.adapter_id,
+            "EVAL_JUDGE_PROTOCOL_VERSION": invocation.protocol_version,
+            "EVAL_JUDGE_CONFIG": json.dumps(invocation.config, sort_keys=True),
+            "EVAL_JUDGE_EVIDENCE_DIR": str(run_dir / "judge-evidence"),
+            "EVAL_JUDGE_TRACE_DIR": str(run_dir / "judge-trace"),
         }
     )
     judge_exit, judge_stdout, judge_stderr, judge_error = run_process(
@@ -656,8 +815,9 @@ def judge_one(
         env=judge_env,
         timeout=timeout,
     )
-    (logs_dir / "judge.stdout.log").write_text(judge_stdout, encoding="utf-8")
-    (logs_dir / "judge.stderr.log").write_text(judge_stderr, encoding="utf-8")
+    stdout_path.write_text(judge_stdout, encoding="utf-8")
+    stderr_path.write_text(judge_stderr, encoding="utf-8")
+    result["judge"]["exit_code"] = judge_exit
     if judge_exit != 0:
         result["status"] = "failed"
         result["judging"]["status"] = "failed"
@@ -677,6 +837,12 @@ def judge_one(
                 "category": "protocol-error",
                 "message": str(exc),
             }
+    evidence_path, evidence_sha = write_evidence_manifest(
+        run_dir=run_dir,
+        invocation=invocation,
+    )
+    result["judge"]["evidence_manifest_path"] = evidence_path
+    result["judge"]["evidence_manifest_sha256"] = evidence_sha
     validate_result(result)
     write_json(result_path, result)
     return result
@@ -688,7 +854,7 @@ def execute_one(
     values: dict[str, str],
     case: Any,
     agent_template: str,
-    judge_template: str | None,
+    judge_invocation: JudgeInvocation | None,
     timeout: int,
 ) -> dict[str, Any]:
     run_dir = Path(values["run"])
@@ -781,12 +947,12 @@ def execute_one(
     validate_result(result)
     write_json(result_path, result)
 
-    if result["status"] == "completed" and judge_template:
+    if result["status"] == "completed" and judge_invocation:
         result = judge_one(
             result=result,
             values=values,
             case=case,
-            judge_template=judge_template,
+            invocation=judge_invocation,
             timeout=timeout,
         )
     return result
@@ -816,6 +982,7 @@ def build_summary(
             "status": result["status"],
             "score": result["judging"]["overall_score"],
             "passed": result["judging"]["passed"],
+            "judge_adapter": (result.get("judge") or {}).get("adapter_id"),
             "result_path": path.relative_to(run_root).as_posix(),
         }
         for path, result in results
@@ -1052,6 +1219,21 @@ def write_run_summary(
 def command_validate(args: argparse.Namespace) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
     suite = validate_suite(suite_path, ROOT)
+    registry = judge_registry_for_args(args)
+    adapters = {
+        suite_run.case.id: (
+            invocation.adapter_id
+            if (
+                invocation := judge_invocation_for_case(
+                    case=suite_run.case,
+                    judge_override=None,
+                    registry=registry,
+                )
+            )
+            else None
+        )
+        for suite_run in suite.runs
+    }
     schemas = validate_schema_documents()
     count = sum(len(run.conditions) * run.repetitions for run in suite.runs)
     print(
@@ -1061,6 +1243,8 @@ def command_validate(args: argparse.Namespace) -> int:
                 "suite": suite.id,
                 "case_count": len(suite.runs),
                 "planned_run_count": count,
+                "judge_registry": str(resolve_registry_path(args.judge_registry)),
+                "judge_adapters": adapters,
                 "schemas": schemas,
             },
             indent=2,
@@ -1072,6 +1256,7 @@ def command_validate(args: argparse.Namespace) -> int:
 def command_rejudge(args: argparse.Namespace) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
     suite = validate_suite(suite_path, ROOT)
+    registry = judge_registry_for_args(args)
     run_root = Path(args.run_root).expanduser().resolve()
     if not run_root.is_dir():
         raise EvalConfigError(f"run root does not exist: {run_root}")
@@ -1132,11 +1317,21 @@ def command_rejudge(args: argparse.Namespace) -> int:
         archive_judge_attempt(run_dir)
         clear_judge_attempt(run_dir)
         values = existing_values(case, run_dir)
+        invocation = judge_invocation_for_case(
+            case=case,
+            judge_override=args.judge_command,
+            registry=registry,
+        )
+        if invocation is None:
+            raise EvalConfigError(
+                f"case {case.id} has no Judge Adapter; configure case.evaluation.adapter "
+                "or pass --judge-command"
+            )
         result = judge_one(
             result=result,
             values=values,
             case=case,
-            judge_template=args.judge_command,
+            invocation=invocation,
             timeout=timeout,
         )
         if result["judging"]["status"] in {"completed", "partial"}:
@@ -1166,6 +1361,7 @@ def command_rejudge(args: argparse.Namespace) -> int:
 def command_resume(args: argparse.Namespace) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
     suite = validate_suite(suite_path, ROOT)
+    registry = judge_registry_for_args(args)
     source_root = Path(args.source_run).expanduser().resolve()
     if not source_root.is_dir():
         raise EvalConfigError(f"source run does not exist: {source_root}")
@@ -1236,6 +1432,16 @@ def command_resume(args: argparse.Namespace) -> int:
             "resumed_at": utc_now(),
         }
         values = existing_values(case, run_dir)
+        invocation = judge_invocation_for_case(
+            case=case,
+            judge_override=args.judge_command,
+            registry=registry,
+        )
+        if invocation is None:
+            raise EvalConfigError(
+                f"case {case.id} has no Judge Adapter; configure case.evaluation.adapter "
+                "or pass --judge-command"
+            )
         if can_reuse:
             archive_judge_attempt(run_dir)
             clear_judge_attempt(run_dir)
@@ -1244,7 +1450,7 @@ def command_resume(args: argparse.Namespace) -> int:
                 result=source_result,
                 values=values,
                 case=case,
-                judge_template=args.judge_command,
+                invocation=invocation,
                 timeout=timeout,
             )
         else:
@@ -1266,7 +1472,7 @@ def command_resume(args: argparse.Namespace) -> int:
                 values=values,
                 case=case,
                 agent_template=args.agent_command,
-                judge_template=args.judge_command,
+                judge_invocation=invocation,
                 timeout=timeout,
             )
         result_path = run_dir / "result.json"
@@ -1310,6 +1516,7 @@ def command_resume(args: argparse.Namespace) -> int:
 def command_execute(args: argparse.Namespace, mode: str) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
     suite = validate_suite(suite_path, ROOT)
+    registry = judge_registry_for_args(args)
     run_id = check_run_id(args.run_id or default_run_id())
     results_root = Path(args.results_dir)
     if not results_root.is_absolute():
@@ -1358,12 +1565,17 @@ def command_execute(args: argparse.Namespace, mode: str) -> int:
                         file=sys.stderr,
                         flush=True,
                     )
+                    invocation = judge_invocation_for_case(
+                        case=suite_run.case,
+                        judge_override=args.judge_command,
+                        registry=registry,
+                    )
                     result = execute_one(
                         result=result,
                         values=values,
                         case=suite_run.case,
                         agent_template=args.agent_command,
-                        judge_template=args.judge_command,
+                        judge_invocation=invocation,
                         timeout=timeout,
                     )
                 else:
@@ -1397,6 +1609,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     validate_parser = subparsers.add_parser("validate", help="validate schemas and a suite")
     validate_parser.add_argument("--suite", required=True, help="suite path, relative to repository root")
+    validate_parser.add_argument(
+        "--judge-registry",
+        default=DEFAULT_JUDGE_REGISTRY,
+        help="Judge Adapter registry, relative to repository root",
+    )
 
     rejudge_parser = subparsers.add_parser(
         "rejudge",
@@ -1404,7 +1621,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     rejudge_parser.add_argument("--suite", required=True, help="suite path, relative to repository root")
     rejudge_parser.add_argument("--run-root", required=True, help="existing run directory")
-    rejudge_parser.add_argument("--judge-command", required=True, help="judge command template")
+    rejudge_parser.add_argument("--judge-command", help="override Judge Adapter command template")
+    rejudge_parser.add_argument(
+        "--judge-registry",
+        default=DEFAULT_JUDGE_REGISTRY,
+        help="Judge Adapter registry, relative to repository root",
+    )
 
     resume_parser = subparsers.add_parser(
         "resume",
@@ -1415,13 +1637,23 @@ def build_parser() -> argparse.ArgumentParser:
     resume_parser.add_argument("--results-dir", default="results", help="generated result root")
     resume_parser.add_argument("--run-id", required=True, help="new run identifier")
     resume_parser.add_argument("--agent-command", required=True, help="executor command template")
-    resume_parser.add_argument("--judge-command", required=True, help="judge command template")
+    resume_parser.add_argument("--judge-command", help="override Judge Adapter command template")
+    resume_parser.add_argument(
+        "--judge-registry",
+        default=DEFAULT_JUDGE_REGISTRY,
+        help="Judge Adapter registry, relative to repository root",
+    )
 
     for command in ("materialize", "run"):
         child = subparsers.add_parser(command, help=f"{command} a suite")
         child.add_argument("--suite", required=True, help="suite path, relative to repository root")
         child.add_argument("--results-dir", default="results", help="generated result root")
         child.add_argument("--run-id", help="stable run identifier")
+        child.add_argument(
+            "--judge-registry",
+            default=DEFAULT_JUDGE_REGISTRY,
+            help="Judge Adapter registry, relative to repository root",
+        )
         if command == "run":
             child.add_argument(
                 "--agent-command",

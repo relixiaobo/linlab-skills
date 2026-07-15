@@ -51,6 +51,34 @@ class CaseSpec:
     def id(self) -> str:
         return str(self.oracle["id"])
 
+    @property
+    def judge_adapter_id(self) -> str | None:
+        evaluation = self.oracle.get("evaluation")
+        if not isinstance(evaluation, dict):
+            return None
+        adapter = evaluation.get("adapter")
+        return str(adapter) if adapter else None
+
+    @property
+    def judge_config(self) -> dict[str, Any]:
+        evaluation = self.oracle.get("evaluation")
+        if not isinstance(evaluation, dict):
+            return {}
+        config = evaluation.get("config", {})
+        return dict(config) if isinstance(config, dict) else {}
+
+
+@dataclass(frozen=True)
+class JudgeAdapterSpec:
+    id: str
+    kind: str
+    protocol_version: str
+    command: str
+    jobs: tuple[str, ...]
+    config: dict[str, Any]
+    registry_path: Path
+    registry_sha256: str
+
 
 @dataclass(frozen=True)
 class ConditionSpec:
@@ -207,6 +235,104 @@ def _validate_schema_version(data: dict[str, Any], label: str) -> None:
         raise EvalConfigError(f"{label}.schema_version must be 1.0")
 
 
+def load_judge_registry(
+    path: Path,
+    root: Path = REPO_ROOT,
+) -> dict[str, JudgeAdapterSpec]:
+    path = path.resolve()
+    try:
+        path.relative_to(root.resolve())
+    except ValueError as exc:
+        raise EvalConfigError(f"judge registry escapes repository: {path}") from exc
+    if not path.is_file() or path.is_symlink():
+        raise EvalConfigError(f"judge registry must be a regular file: {path}")
+
+    data = load_document(path)
+    _validate_schema_version(data, f"judge registry {path.name}")
+    unknown_registry_fields = set(data) - {"schema_version", "adapters"}
+    if unknown_registry_fields:
+        raise EvalConfigError(
+            f"judge registry contains unknown fields: {sorted(unknown_registry_fields)}"
+        )
+    adapters = _require_list(data.get("adapters"), "judge registry adapters", nonempty=True)
+    registry_sha = sha256_file(path)
+    resolved: dict[str, JudgeAdapterSpec] = {}
+    for index, adapter in enumerate(adapters):
+        if not isinstance(adapter, dict):
+            raise EvalConfigError(f"judge adapter {index} must be an object")
+        unknown_adapter_fields = set(adapter) - {
+            "id",
+            "kind",
+            "protocol_version",
+            "command",
+            "jobs",
+            "description",
+            "config",
+        }
+        if unknown_adapter_fields:
+            raise EvalConfigError(
+                f"judge adapter {index} contains unknown fields: "
+                f"{sorted(unknown_adapter_fields)}"
+            )
+        adapter_id = _require_slug(adapter.get("id"), f"judge adapter {index}.id")
+        if adapter_id in resolved:
+            raise EvalConfigError(f"judge registry contains duplicate adapter: {adapter_id}")
+        kind = adapter.get("kind")
+        if kind not in {"deterministic", "model", "hybrid"}:
+            raise EvalConfigError(f"judge adapter {adapter_id}.kind is invalid")
+        protocol_version = adapter.get("protocol_version")
+        if protocol_version != "1.0":
+            raise EvalConfigError(
+                f"judge adapter {adapter_id}.protocol_version must be 1.0"
+            )
+        command = adapter.get("command")
+        if not isinstance(command, str) or not command.strip():
+            raise EvalConfigError(f"judge adapter {adapter_id}.command must be non-empty")
+        jobs = _require_list(adapter.get("jobs"), f"judge adapter {adapter_id}.jobs", nonempty=True)
+        for job in jobs:
+            _require_slug(job, f"judge adapter {adapter_id} job")
+        _unique(jobs, f"judge adapter {adapter_id}.jobs")
+        config = adapter.get("config", {})
+        if not isinstance(config, dict):
+            raise EvalConfigError(f"judge adapter {adapter_id}.config must be an object")
+        description = adapter.get("description")
+        if description is not None and not isinstance(description, str):
+            raise EvalConfigError(
+                f"judge adapter {adapter_id}.description must be a string"
+            )
+        resolved[adapter_id] = JudgeAdapterSpec(
+            id=adapter_id,
+            kind=str(kind),
+            protocol_version=str(protocol_version),
+            command=command,
+            jobs=tuple(str(job) for job in jobs),
+            config=dict(config),
+            registry_path=path,
+            registry_sha256=registry_sha,
+        )
+    return resolved
+
+
+def resolve_case_judge_adapter(
+    case: CaseSpec,
+    registry: dict[str, JudgeAdapterSpec],
+) -> JudgeAdapterSpec | None:
+    adapter_id = case.judge_adapter_id
+    if adapter_id is None:
+        return None
+    adapter = registry.get(adapter_id)
+    if adapter is None:
+        raise EvalConfigError(
+            f"case {case.id} references unknown judge adapter: {adapter_id}"
+        )
+    job = str(case.oracle["job"])
+    if job not in adapter.jobs:
+        raise EvalConfigError(
+            f"judge adapter {adapter.id} does not support case job {job}"
+        )
+    return adapter
+
+
 def validate_case(case_dir: Path, root: Path = REPO_ROOT) -> CaseSpec:
     case_dir = case_dir.resolve()
     try:
@@ -251,6 +377,20 @@ def validate_case(case_dir: Path, root: Path = REPO_ROOT) -> CaseSpec:
     for tag in tags:
         _require_slug(tag, "case tag")
     _unique(tags, "case.tags")
+
+    evaluation = oracle.get("evaluation")
+    if evaluation is not None:
+        if not isinstance(evaluation, dict):
+            raise EvalConfigError("case.evaluation must be an object")
+        unknown = set(evaluation) - {"adapter", "config"}
+        if unknown:
+            raise EvalConfigError(
+                f"case.evaluation contains unknown fields: {sorted(unknown)}"
+            )
+        _require_slug(evaluation.get("adapter"), "case.evaluation.adapter")
+        config = evaluation.get("config", {})
+        if not isinstance(config, dict):
+            raise EvalConfigError("case.evaluation.config must be an object")
 
     expected = oracle.get("expected")
     if not isinstance(expected, dict):
@@ -559,6 +699,34 @@ def validate_result(data: dict[str, Any]) -> None:
         isinstance(item, str) and SLUG_RE.fullmatch(item) for item in critical_failures
     ):
         raise EvalConfigError("result.judging.critical_failures must be a list of slugs")
+    judge = data.get("judge")
+    if judge is not None:
+        if not isinstance(judge, dict):
+            raise EvalConfigError("result.judge must be an object")
+        adapter_id = judge.get("adapter_id")
+        if adapter_id is not None:
+            _require_slug(adapter_id, "result.judge.adapter_id")
+        if judge.get("kind") not in {
+            None,
+            "deterministic",
+            "model",
+            "hybrid",
+            "override",
+        }:
+            raise EvalConfigError("result.judge.kind is invalid")
+        protocol_version = judge.get("protocol_version")
+        if protocol_version not in {None, "1.0"}:
+            raise EvalConfigError("result.judge.protocol_version is invalid")
+        command = judge.get("command")
+        if not isinstance(command, list) or not all(isinstance(item, str) for item in command):
+            raise EvalConfigError("result.judge.command must be a list of strings")
+        config = judge.get("config")
+        if not isinstance(config, dict):
+            raise EvalConfigError("result.judge.config must be an object")
+        for key in ("registry_sha256", "evidence_manifest_sha256"):
+            value = judge.get(key)
+            if value is not None and not SHA256_RE.fullmatch(str(value)):
+                raise EvalConfigError(f"result.judge.{key} is invalid")
 
 
 def sha256_file(path: Path) -> str:

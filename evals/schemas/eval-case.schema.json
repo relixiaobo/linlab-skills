@@ -27,6 +27,15 @@
       "type": "string",
       "enum": ["low", "medium", "high"]
     },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter"],
+      "properties": {
+        "adapter": {"$ref": "#/$defs/slug"},
+        "config": {"type": "object"}
+      }
+    },
     "expected": {
       "type": "object",
       "additionalProperties": false,

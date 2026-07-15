@@ -30,7 +30,8 @@ python3 evals/run_all_skill_checks.py
   baseline, Skill-enabled, visual-guidance ablation, and 3 repetitions.
 - `python3 -m unittest discover -s tests/unit -p 'test_*.py' -v` checks oracle
   isolation, revision-pinned materialization, JSONL recovery, natural route
-  evidence, protocol capture, judge vetoes, rejudge/resume, and paired deltas.
+  evidence, protocol capture, per-case Judge Adapter routing, evidence manifests,
+  judge vetoes, rejudge/resume, and paired deltas.
 - `python3 evals/runners/evalctl.py validate --suite
   evals/suites/presentation-image-smoke.json` validates the four-condition
   image-handling pilot before any model sessions are started.

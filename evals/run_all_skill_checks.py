@@ -120,6 +120,7 @@ def main() -> int:
         "tests/unit/eval_platform/test_presentation_judge.py",
         "tests/fixtures/evals/fake_agent.py",
         "tests/fixtures/evals/fake_judge.py",
+        "tests/fixtures/evals/fake_secondary_judge.py",
         "document/scripts/docx_tool.py",
         "presentation/scripts/pptx_tool.py",
         "presentation/scripts/evidence_tool.py",

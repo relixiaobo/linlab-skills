@@ -5,6 +5,9 @@
   "job": "create-presentation",
   "tags": ["artifact", "images", "routing", "visual-quality"],
   "risk_level": "high",
+  "evaluation": {
+    "adapter": "presentation"
+  },
   "expected": {
     "route": {
       "acceptable_primary_skills": ["presentation"],

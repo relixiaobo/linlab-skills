@@ -36,6 +36,10 @@ REQUIRED_ENV = {
     "EVAL_OUTPUT_DIR",
     "EVAL_JUDGE_RESULT_FILE",
 }
+OPTIONAL_PATH_ENV = {
+    "EVAL_JUDGE_EVIDENCE_DIR",
+    "EVAL_JUDGE_TRACE_DIR",
+}
 
 
 class JudgeError(RuntimeError):
@@ -56,7 +60,11 @@ def environment() -> dict[str, Path]:
     missing = sorted(name for name in REQUIRED_ENV if not os.environ.get(name))
     if missing:
         raise JudgeError(f"missing judge environment variables: {', '.join(missing)}")
-    return {name: Path(os.environ[name]).resolve() for name in REQUIRED_ENV}
+    values = {name: Path(os.environ[name]).resolve() for name in REQUIRED_ENV}
+    for name in OPTIONAL_PATH_ENV:
+        if os.environ.get(name):
+            values[name] = Path(os.environ[name]).resolve()
+    return values
 
 
 def run_command(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -842,6 +850,14 @@ def prepare_model_workspace(
 
 def run_judge(args: argparse.Namespace) -> dict[str, Any]:
     env = environment()
+    persistent_evidence_dir = env.get(
+        "EVAL_JUDGE_EVIDENCE_DIR",
+        env["EVAL_JUDGE_RESULT_FILE"].parent / "judge-evidence",
+    )
+    persistent_trace_dir = env.get(
+        "EVAL_JUDGE_TRACE_DIR",
+        env["EVAL_JUDGE_RESULT_FILE"].parent / "judge-trace",
+    )
     oracle = load_json(env["EVAL_ORACLE_FILE"])
     result = load_json(env["EVAL_RESULT_FILE"])
     pptx_files = find_pptx(env["EVAL_OUTPUT_DIR"], result)
@@ -867,9 +883,9 @@ def run_judge(args: argparse.Namespace) -> dict[str, Any]:
         )
         persist_deterministic_evidence(
             evidence,
-            env["EVAL_JUDGE_RESULT_FILE"].parent / "judge-evidence",
+            persistent_evidence_dir,
         )
-        (env["EVAL_JUDGE_RESULT_FILE"].parent / "judge-evidence" / "asset-matches.json").write_text(
+        (persistent_evidence_dir / "asset-matches.json").write_text(
             json.dumps(asset_matches, indent=2) + "\n",
             encoding="utf-8",
         )
@@ -896,7 +912,7 @@ def run_judge(args: argparse.Namespace) -> dict[str, Any]:
             oracle=oracle,
             workspace=model_workspace,
             image_paths=images,
-            trace_root=env["EVAL_JUDGE_RESULT_FILE"].parent / "judge-trace",
+            trace_root=persistent_trace_dir,
         )
         judgment = apply_deterministic_overrides(
             judgment,

@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "id": "adapter-routing",
+  "title": "Per-case Judge Adapter routing fixture",
+  "runs": [
+    {
+      "case": "tests/fixtures/evals/cases/adapter-alpha",
+      "conditions": [
+        "tests/fixtures/evals/conditions/baseline.json",
+        "tests/fixtures/evals/conditions/tiny-enabled.json"
+      ]
+    },
+    {
+      "case": "tests/fixtures/evals/cases/adapter-beta",
+      "conditions": [
+        "tests/fixtures/evals/conditions/baseline.json",
+        "tests/fixtures/evals/conditions/tiny-enabled.json"
+      ]
+    }
+  ],
+  "defaults": {
+    "repetitions": 1,
+    "timeout_seconds": 30
+  },
+  "comparison": {
+    "control_condition": "baseline",
+    "metrics": ["score", "total_tokens", "duration_ms"]
+  }
+}
