@@ -41,13 +41,13 @@ means the benchmark is measuring the wrong thing.
 The benchmark harness output lives under `data-analysis-workspace/` (not part of
 the shipped skill).
 
-## The implemented gate: `run_checks.py`
+## The implemented gate
 
 `cases.yaml` is the aspiration; `run_checks.py` is what actually runs today and
 ships with the skill:
 
 ```
-python3 evals/data-analysis/run_checks.py
+python3 tests/integration/data-analysis/run_checks.py
 ```
 
 It is the machine-checked counterpart to the Operating Rules (which are only
@@ -72,10 +72,13 @@ missing, the affected checks fail rather than skip. For a full local run:
 ```
 python3 -m venv .venv
 .venv/bin/python -m pip install -r data-analysis/requirements.txt
-.venv/bin/python evals/data-analysis/run_checks.py
+.venv/bin/python tests/integration/data-analysis/run_checks.py
 ```
 
 Exit code is non-zero if any check fails. Run it after touching any script: it
 exists because three real bugs once shipped in the verification tool undetected,
-and a wrong verifier is worse than none. New regressions should land here as a new
-`check(...)` before the fix.
+and a wrong verifier is worse than none. New deterministic regressions should
+land there as a new `check(...)` before the fix. Agent behavior cases use the
+common contracts under `evals/cases/` and `evals/suites/`;
+`evals/data-analysis/cases.yaml` is retained as a migration backlog rather than
+an executable suite.

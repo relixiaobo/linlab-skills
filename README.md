@@ -14,7 +14,8 @@ Personal Codex skills maintained by Linlab.
 - `spreadsheet` - source-first spreadsheet workbooks, XLSX/CSV inspection, formulas, validation, and workbook QA.
 - `video-studio` - manifest-driven local video editing, rendering, packaging, and QA.
 
-See `SKILL_STATUS.md` for each skill's status, boundary, source of truth, and next action.
+See `portfolio/SKILL_STATUS.md` for each skill's status, boundary, source of
+truth, and next action.
 
 Archived skills are kept under `archive/` for reference and are not installed by
 the default command.
@@ -48,16 +49,26 @@ Validate a skill with Codex's skill validator:
 python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py code-review
 ```
 
-Run repository-level eval checks:
+Run repository-level deterministic checks:
 
 ```sh
 python3 evals/run_all_skill_checks.py
-python3 evals/run_artifact_skill_checks.py
-python3 evals/presentation/run_checks.py
-python3 evals/shape-product-spec/run_checks.py
-python3 evals/data-analysis/run_checks.py
+python3 tests/integration/presentation/run_checks.py
+python3 tests/integration/shape-product-spec/run_checks.py
+python3 tests/integration/data-analysis/run_checks.py
 python3 evals/feed-processing/run_checks.py
 ```
+
+Validate the paired Agent evaluation suite separately:
+
+```sh
+python3 evals/runners/evalctl.py validate \
+  --suite evals/suites/representative-ab.json
+```
+
+See `evals/README.md` for isolated baseline, Skill-enabled, and ablation runs.
+The old `evals/<skill>/run_checks.py` commands remain as compatibility wrappers
+during migration.
 
 For a full `data-analysis` gate, install its dependencies first. A local venv is
 recommended because Homebrew Python may reject global pip installs:
@@ -65,12 +76,13 @@ recommended because Homebrew Python may reject global pip installs:
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -r data-analysis/requirements.txt
-.venv/bin/python evals/data-analysis/run_checks.py
+.venv/bin/python tests/integration/data-analysis/run_checks.py
 ```
 
-Eval definitions and fixtures are grouped by skill family under `evals/`, for
-example `evals/artifact-skills/`, `evals/data-analysis/`, and
-`evals/feed-processing/`.
+Agent evaluation cases are grouped by user job under `evals/cases/`, never by
+the Skill under test. Deterministic checks and their fixtures live under
+`tests/`. Legacy Skill-grouped eval definitions remain temporarily during
+migration.
 See `evals/VALIDATION_MATRIX.md` for the current validation level and limits for
 each skill.
 
@@ -80,6 +92,7 @@ Each skill folder is intentionally self-contained and should contain only runtim
 skill resources: `SKILL.md`, optional `agents/`, `references/`, `scripts/`, and
 `assets/`.
 
-Repository-level eval definitions and fixtures live under `evals/`. Generated
-`*-workspace/` folders are local evaluation outputs and are not part of the
-published source.
+Repository-level Agent experiments live under `evals/`; deterministic tests
+live under `tests/`; portfolio decisions live under `portfolio/`. Generated raw
+runs live under the ignored `results/` directory, while reviewed summaries may
+be committed under `reports/`.

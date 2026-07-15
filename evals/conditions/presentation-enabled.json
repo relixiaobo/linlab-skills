@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "id": "presentation-enabled",
+  "label": "Presentation Skill enabled",
+  "kind": "skill-enabled",
+  "skills": [
+    {
+      "name": "presentation",
+      "path": "presentation"
+    }
+  ],
+  "executor_config": {
+    "skill_registry": "isolated",
+    "routing": "natural"
+  }
+}

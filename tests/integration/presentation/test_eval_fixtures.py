@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 
 
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(__file__).resolve().parents[3]
 TOOL = REPO / "presentation" / "scripts" / "pptx_tool.py"
 EVALS = REPO / "evals" / "artifact-skills" / "presentation" / "evals.json"
 

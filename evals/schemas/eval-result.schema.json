@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://linlab.dev/schemas/eval-result.schema.json",
+  "title": "Skill evaluation run result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "suite_id",
+    "case_id",
+    "condition",
+    "repetition",
+    "status",
+    "timestamps",
+    "executor",
+    "route",
+    "usage",
+    "artifacts",
+    "judging",
+    "failure",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "run_id": {"type": "string", "minLength": 1},
+    "suite_id": {"$ref": "#/$defs/slug"},
+    "case_id": {"$ref": "#/$defs/slug"},
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "skills"],
+      "properties": {
+        "id": {"$ref": "#/$defs/slug"},
+        "kind": {"type": "string", "enum": ["baseline", "skill-enabled", "ablation"]},
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "source_sha256", "materialized_sha256", "ablations"],
+            "properties": {
+              "name": {"$ref": "#/$defs/slug"},
+              "source_sha256": {"$ref": "#/$defs/sha256"},
+              "materialized_sha256": {"$ref": "#/$defs/sha256"},
+              "ablations": {"type": "array", "items": {"type": "object"}}
+            }
+          }
+        }
+      }
+    },
+    "repetition": {"type": "integer", "minimum": 1},
+    "status": {
+      "type": "string",
+      "enum": ["materialized", "completed", "failed"]
+    },
+    "timestamps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["started_at", "completed_at", "duration_ms"],
+      "properties": {
+        "started_at": {"type": ["string", "null"]},
+        "completed_at": {"type": ["string", "null"]},
+        "duration_ms": {"type": ["integer", "null"], "minimum": 0}
+      }
+    },
+    "executor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "exit_code", "model", "config", "stdout_path", "stderr_path"],
+      "properties": {
+        "command": {"type": "array", "items": {"type": "string"}},
+        "exit_code": {"type": ["integer", "null"]},
+        "model": {"type": ["string", "null"]},
+        "config": {"type": "object"},
+        "stdout_path": {"type": ["string", "null"]},
+        "stderr_path": {"type": ["string", "null"]}
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary_skill", "selected_skills"],
+      "properties": {
+        "primary_skill": {"type": ["string", "null"]},
+        "selected_skills": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_tokens", "output_tokens", "total_tokens", "estimated_cost_usd"],
+      "properties": {
+        "input_tokens": {"type": ["integer", "null"], "minimum": 0},
+        "output_tokens": {"type": ["integer", "null"], "minimum": 0},
+        "total_tokens": {"type": ["integer", "null"], "minimum": 0},
+        "estimated_cost_usd": {"type": ["number", "null"], "minimum": 0}
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "bytes", "kind"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"$ref": "#/$defs/sha256"},
+          "bytes": {"type": "integer", "minimum": 0},
+          "kind": {"type": "string", "enum": ["response", "artifact", "trace"]}
+        }
+      }
+    },
+    "judging": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "overall_score",
+        "passed",
+        "critical_failures",
+        "scores",
+        "failure_tags",
+        "summary"
+      ],
+      "properties": {
+        "status": {"type": "string", "enum": ["pending", "partial", "completed", "failed"]},
+        "overall_score": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "passed": {"type": ["boolean", "null"]},
+        "critical_failures": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/slug"}
+        },
+        "scores": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["criterion_id", "value", "weight", "passed", "rationale", "evidence"],
+            "properties": {
+              "criterion_id": {"$ref": "#/$defs/slug"},
+              "value": {"type": "number", "minimum": 0, "maximum": 1},
+              "weight": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+              "passed": {"type": "boolean"},
+              "rationale": {"type": "string"},
+              "evidence": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        },
+        "failure_tags": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "summary": {"type": "string"}
+      }
+    },
+    "failure": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["stage", "category", "message"],
+          "properties": {
+            "stage": {"type": "string", "enum": ["materialize", "executor", "judge", "protocol"]},
+            "category": {"type": "string"},
+            "message": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repo_commit", "repo_dirty", "case_sha256", "oracle_sha256", "condition_sha256"],
+      "properties": {
+        "repo_commit": {"type": ["string", "null"]},
+        "repo_dirty": {"type": "boolean"},
+        "case_sha256": {"$ref": "#/$defs/sha256"},
+        "oracle_sha256": {"$ref": "#/$defs/sha256"},
+        "condition_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  },
+  "$defs": {
+    "slug": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

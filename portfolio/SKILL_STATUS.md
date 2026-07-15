@@ -43,11 +43,16 @@ from their names and descriptions, then loads only the selected `SKILL.md`.
 Users may install only one skill or a subset of this repository, so each skill
 must remain useful on its own and must not assume any other skill exists.
 
-The artifact skills (`presentation`, `document`, `spreadsheet`, and `pdf`) have
-shared trigger and smoke checks in `evals/artifact-skills/suite.json` and
-`evals/run_artifact_skill_checks.py`. Keep those evals focused on realistic user
-tasks, especially boundary cases where a file format appears but is not the
-primary artifact.
+The artifact skills (`presentation`, `document`, `spreadsheet`, and `pdf`) still
+have legacy shared trigger and smoke definitions in
+`evals/artifact-skills/suite.json` and `evals/run_artifact_skill_checks.py`.
+Migrate agent-behavior coverage into Skill-independent user-job cases under
+`evals/cases/`; keep deterministic file and tool checks under `tests/`.
+
+Treat a Skill as an intervention variable. Compare the same natural prompt and
+inputs under baseline, Skill-enabled, and relevant ablation conditions. Record
+quality, route, artifact, token, latency, and failure-taxonomy results before a
+portfolio keep/change/retire decision.
 
 Repository-level validation is tracked in `evals/VALIDATION_MATRIX.md` and can
 be run with `python3 evals/run_all_skill_checks.py`.

@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(__file__).resolve().parents[3]
 ROOT = REPO / "presentation"
 REFERENCES = ROOT / "references"
 SCHEMAS = ROOT / "assets" / "schemas"

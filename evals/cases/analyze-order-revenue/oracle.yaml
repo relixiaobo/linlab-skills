@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0",
+  "id": "analyze-order-revenue",
+  "title": "Analyze order revenue without join fan-out",
+  "job": "analyze-tabular-data",
+  "tags": ["analysis", "fanout", "routing", "verification"],
+  "risk_level": "medium",
+  "expected": {
+    "route": {
+      "acceptable_primary_skills": ["data-analysis"],
+      "forbidden_primary_skills": ["spreadsheet", "presentation"]
+    },
+    "outcomes": [
+      {
+        "id": "correct-route",
+        "description": "Select data-analysis as the primary workflow without an explicit Skill invocation.",
+        "weight": 0.1,
+        "critical": true,
+        "evidence_sources": ["route", "trace"]
+      },
+      {
+        "id": "correct-metrics",
+        "description": "Report paid revenue 400.00, 3 paid orders, and average paid order value 133.33 repeating, excluding the refunded order.",
+        "weight": 0.3,
+        "critical": true,
+        "evidence_sources": ["artifact", "response"]
+      },
+      {
+        "id": "fanout-control",
+        "description": "Identify order_id as order grain, detect repeated line keys, and avoid summing order-level revenue after a one-to-many join.",
+        "weight": 0.25,
+        "critical": true,
+        "evidence_sources": ["artifact", "trace"]
+      },
+      {
+        "id": "independent-verification",
+        "description": "Verify key numbers through an independent aggregation or reconciliation and state the filter, grain, and source coverage.",
+        "weight": 0.2,
+        "critical": true,
+        "evidence_sources": ["artifact", "trace"]
+      },
+      {
+        "id": "auditable-delivery",
+        "description": "Produce concise analysis.md and a complete findings.tsv whose key findings include evidence, verification, caveat, and status.",
+        "weight": 0.15,
+        "critical": false,
+        "evidence_sources": ["artifact"]
+      }
+    ],
+    "artifacts": [
+      {"id": "analysis", "pattern": "analysis.md", "required": true},
+      {"id": "findings", "pattern": "findings.tsv", "required": true}
+    ]
+  },
+  "judges": [
+    {
+      "id": "analysis-artifact-review",
+      "type": "model",
+      "criteria": [
+        "correct-route",
+        "correct-metrics",
+        "fanout-control",
+        "independent-verification",
+        "auditable-delivery"
+      ]
+    }
+  ],
+  "failure_taxonomy": [
+    "route-error",
+    "factuality",
+    "missing-artifact",
+    "process-compliance",
+    "verification",
+    "efficiency"
+  ],
+  "metadata": {
+    "origin": "migrated from evals/data-analysis sample fixtures",
+    "novelty": "small synthetic order dataset with injected fan-out risk"
+  }
+}

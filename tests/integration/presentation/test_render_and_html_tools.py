@@ -17,7 +17,7 @@ from pathlib import Path
 from unittest import mock
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 RENDER_TOOL = ROOT / "presentation" / "scripts" / "render_slides.py"
 HTML_TOOL = ROOT / "presentation" / "scripts" / "html_tool.mjs"
 HTML_TEMPLATE_ROOT = ROOT / "presentation" / "assets" / "templates" / "html-studio"

@@ -1,21 +1,16 @@
 #!/usr/bin/env python3
-"""Run presentation-specific schema, structure, and tooling checks."""
+"""Compatibility entry point for the relocated presentation integration tests."""
 
 from __future__ import annotations
 
+import subprocess
 import sys
-import unittest
 from pathlib import Path
 
 
-HERE = Path(__file__).resolve().parent
-
-
-def main() -> int:
-    suite = unittest.defaultTestLoader.discover(str(HERE), pattern="test_*.py")
-    result = unittest.TextTestRunner(verbosity=2).run(suite)
-    return 0 if result.wasSuccessful() else 1
+ROOT = Path(__file__).resolve().parents[2]
+TARGET = ROOT / "tests" / "integration" / "presentation" / "run_checks.py"
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(subprocess.call([sys.executable, str(TARGET), *sys.argv[1:]], cwd=ROOT))

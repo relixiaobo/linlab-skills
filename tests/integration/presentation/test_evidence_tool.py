@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(__file__).resolve().parents[3]
 TOOL = REPO / "presentation" / "scripts" / "evidence_tool.py"
 
 

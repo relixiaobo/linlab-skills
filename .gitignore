@@ -3,6 +3,7 @@
 
 # Generated evaluation and work artifacts
 *-workspace/
+results/
 *.zip
 
 # Runtime/build caches

@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "id": "runner-smoke",
+  "title": "Runner smoke suite",
+  "runs": [
+    {
+      "case": "tests/fixtures/evals/cases/tiny-case",
+      "conditions": [
+        "tests/fixtures/evals/conditions/baseline.json",
+        "tests/fixtures/evals/conditions/tiny-enabled.json",
+        "tests/fixtures/evals/conditions/tiny-ablated.json"
+      ]
+    }
+  ],
+  "defaults": {
+    "repetitions": 1,
+    "timeout_seconds": 30
+  },
+  "comparison": {
+    "control_condition": "baseline",
+    "metrics": ["score", "input_tokens", "total_tokens", "duration_ms"]
+  }
+}

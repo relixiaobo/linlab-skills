@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "id": "presentation-no-visual-guidance",
+  "label": "Presentation Skill with asset-selection guidance ablated",
+  "kind": "ablation",
+  "skills": [
+    {
+      "name": "presentation",
+      "path": "presentation",
+      "ablations": [
+        {
+          "op": "replace",
+          "path": "references/asset-intake.md",
+          "replacement": "evals/conditions/overlays/minimal-asset-intake.md",
+          "reason": "Measure the incremental value of visual planning, relevance, fit, and crop guidance."
+        }
+      ]
+    }
+  ],
+  "executor_config": {
+    "skill_registry": "isolated",
+    "routing": "natural"
+  }
+}

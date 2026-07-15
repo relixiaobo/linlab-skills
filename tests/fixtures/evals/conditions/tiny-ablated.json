@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "id": "tiny-ablated",
+  "label": "Fixture Skill ablated",
+  "kind": "ablation",
+  "skills": [
+    {
+      "name": "tiny-skill",
+      "path": "tests/fixtures/evals/skill",
+      "ablations": [
+        {
+          "op": "replace",
+          "path": "references/detail.md",
+          "replacement": "tests/fixtures/evals/overlay/detail.md",
+          "reason": "Exercise deterministic replacement."
+        }
+      ]
+    }
+  ]
+}

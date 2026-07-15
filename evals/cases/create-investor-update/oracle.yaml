@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0",
+  "id": "create-investor-update",
+  "title": "Create a visual, evidence-faithful investor update",
+  "job": "create-presentation",
+  "tags": ["artifact", "images", "routing", "visual-quality"],
+  "risk_level": "high",
+  "expected": {
+    "route": {
+      "acceptable_primary_skills": ["presentation"],
+      "forbidden_primary_skills": ["document", "pdf", "spreadsheet"]
+    },
+    "outcomes": [
+      {
+        "id": "correct-route",
+        "description": "Select presentation as the primary workflow without an explicit Skill invocation in the user prompt.",
+        "weight": 0.1,
+        "critical": true,
+        "evidence_sources": ["route", "trace"]
+      },
+      {
+        "id": "source-fidelity",
+        "description": "Preserve all stated metrics, dates, caveats, unpaid-team context, product gap, and investor ask without inventing traction claims.",
+        "weight": 0.2,
+        "critical": true,
+        "evidence_sources": ["artifact", "response"]
+      },
+      {
+        "id": "visual-plan",
+        "description": "Choose visual forms by slide job and distinguish real evidence, constructed visuals, conceptual media, and intentional text-only resets.",
+        "weight": 0.14,
+        "critical": false,
+        "evidence_sources": ["artifact", "trace"]
+      },
+      {
+        "id": "image-relevance",
+        "description": "Every image or screenshot has a specific communicative job; named products or interfaces use real evidence when available, and generic stock decoration is absent.",
+        "weight": 0.16,
+        "critical": true,
+        "evidence_sources": ["artifact", "trace"]
+      },
+      {
+        "id": "image-fit",
+        "description": "Raster and vector media preserve aspect ratio, important focal content, labels, faces, UI, and logos with no stretching or destructive crop.",
+        "weight": 0.15,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "editable-deliverable",
+        "description": "Deliver an editable PPTX with 9-11 coherent slides and speaker notes suitable for a 12-minute live update.",
+        "weight": 0.15,
+        "critical": true,
+        "evidence_sources": ["artifact", "response"]
+      },
+      {
+        "id": "rendered-verification",
+        "description": "Render and inspect the complete deck for hierarchy, readability, overlap, crop, asset quality, and cross-slide coherence before delivery.",
+        "weight": 0.1,
+        "critical": true,
+        "evidence_sources": ["artifact", "trace", "response"]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "editable-pptx",
+        "pattern": "*.pptx",
+        "required": true,
+        "description": "Editable presentation deliverable"
+      }
+    ]
+  },
+  "judges": [
+    {
+      "id": "route-and-process",
+      "type": "model",
+      "criteria": ["correct-route", "visual-plan", "rendered-verification"]
+    },
+    {
+      "id": "deck-artifact-review",
+      "type": "human",
+      "criteria": ["source-fidelity", "image-relevance", "image-fit", "editable-deliverable"]
+    }
+  ],
+  "failure_taxonomy": [
+    "route-error",
+    "factuality",
+    "missing-artifact",
+    "artifact-integrity",
+    "visual-quality",
+    "image-relevance",
+    "image-distortion",
+    "verification",
+    "efficiency"
+  ],
+  "metadata": {
+    "origin": "migrated from evals/artifact-skills/presentation",
+    "novelty": "private synthetic company update"
+  }
+}

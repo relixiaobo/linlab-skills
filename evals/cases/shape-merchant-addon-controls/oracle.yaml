@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0",
+  "id": "shape-merchant-addon-controls",
+  "title": "Shape messy merchant add-on notes into an executable product spec",
+  "job": "shape-product-decision",
+  "tags": ["product-spec", "routing", "requirements"],
+  "risk_level": "medium",
+  "expected": {
+    "route": {
+      "acceptable_primary_skills": ["shape-product-spec"],
+      "forbidden_primary_skills": ["document", "code-review"]
+    },
+    "outcomes": [
+      {
+        "id": "correct-route",
+        "description": "Select shape-product-spec as the primary workflow without an explicit Skill invocation.",
+        "weight": 0.1,
+        "critical": true,
+        "evidence_sources": ["route", "trace"]
+      },
+      {
+        "id": "evidence-fidelity",
+        "description": "Preserve the roles, two request entry points, audit requirement, success signal, and current owner behavior from the notes.",
+        "weight": 0.18,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "target-options",
+        "description": "Distinguish an ideal approval policy from the constrained first release and make tradeoffs explicit.",
+        "weight": 0.18,
+        "critical": false,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "flows-and-states",
+        "description": "Cover request, approve, reject, immediate owner enablement, audit visibility, and relevant empty, pending, denied, and error states.",
+        "weight": 0.2,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "scope-and-open-policy",
+        "description": "Keep mobile and budget forecasting out of v1 and leave owner approval as an explicit unresolved policy question.",
+        "weight": 0.16,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "testable-acceptance",
+        "description": "Use stable requirements and observable acceptance criteria rather than database fields or vague quality language.",
+        "weight": 0.18,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "product-spec",
+        "pattern": "*.md",
+        "required": true,
+        "description": "Decision-ready product specification"
+      }
+    ]
+  },
+  "judges": [
+    {
+      "id": "product-spec-review",
+      "type": "model",
+      "criteria": [
+        "correct-route",
+        "evidence-fidelity",
+        "target-options",
+        "flows-and-states",
+        "scope-and-open-policy",
+        "testable-acceptance"
+      ]
+    }
+  ],
+  "failure_taxonomy": [
+    "route-error",
+    "task-understanding",
+    "factuality",
+    "missing-artifact",
+    "process-compliance",
+    "verification",
+    "efficiency"
+  ],
+  "metadata": {
+    "origin": "migrated from evals/shape-product-spec",
+    "novelty": "synthetic enterprise merchant notes"
+  }
+}

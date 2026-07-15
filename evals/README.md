@@ -1,0 +1,183 @@
+# Skill Evaluation System
+
+This directory measures whether a Skill changes agent behavior for a user job.
+It does not contain deterministic tests for Skill scripts; those live under
+`tests/`.
+
+## Evaluation Model
+
+A Skill is an intervention variable. Cases are therefore organized by user job,
+not by Skill name:
+
+```text
+User task case x execution condition x repetition -> result
+```
+
+The control condition exposes no repository Skill. A `skill-enabled` condition
+exposes one or more exact Skill packages. An `ablation` condition starts from the
+same package and deterministically removes or replaces selected resources. Every
+result records hashes for both the source and materialized Skill.
+
+This separation answers four different questions:
+
+1. Did the agent route the user job correctly?
+2. Did the Skill improve the outcome or process?
+3. Which part of the Skill caused the change?
+4. Was the gain worth its token and time cost?
+
+## Directory Boundary
+
+```text
+evals/
+|-- schemas/       # versioned case, condition, suite, and result contracts
+|-- cases/         # user jobs; never grouped by the Skill under test
+|-- suites/        # paired experiment matrices and repetitions
+|-- conditions/    # baseline, Skill-enabled, and ablation interventions
+|-- runners/       # validation, materialization, execution, and aggregation
+|-- judges/        # reusable deterministic judges, when added
++-- regressions/   # promoted failures, when added
+
+tests/
+|-- unit/          # runner and pure-function tests
+|-- integration/   # deterministic Skill tool/workflow tests
++-- fixtures/      # machine-test fixtures
+
+results/           # generated raw runs; ignored by git
+reports/           # reviewed, decision-bearing evaluation reports
+portfolio/         # portfolio status and keep/change/retire decisions
+```
+
+Legacy definitions remain under `evals/artifact-skills/` and several
+Skill-named directories during migration. They are not the canonical format for
+new agent evaluations.
+
+## Case Isolation
+
+Each case has a hard Agent-visible/private split:
+
+```text
+case-id/
+|-- prompt.md      # Agent-visible, natural user request
+|-- input/         # Agent-visible source files
++-- oracle.yaml    # judge-only routes, outcomes, weights, and failure taxonomy
+```
+
+`prompt.md` must not contain `$skill-name` or otherwise force a Skill. The
+runner copies only `prompt.md`, `input/`, and condition-selected Skill packages
+into the payload directory. It does not copy `oracle.yaml`, put its path in the
+Agent environment, or include the condition id/kind in the adapter manifest.
+
+Checked-in `oracle.yaml` files use JSON-compatible YAML so validation needs only
+the Python standard library. General YAML syntax is accepted when PyYAML is
+installed.
+
+Filesystem separation is necessary but not sufficient. The executor adapter
+must start a fresh independent agent session, register exactly the Skills listed
+in `agent-manifest.json`, restrict the session to the payload/output roots, and
+avoid persistent memory from earlier runs. Do not pass expected answers,
+assertions, suspected bugs, intended fixes, or prior conclusions to the Agent.
+
+## Commands
+
+Validate the representative paired suite and all common schemas:
+
+```sh
+python3 evals/runners/evalctl.py validate \
+  --suite evals/suites/representative-ab.json
+```
+
+Materialize all payloads without invoking an Agent:
+
+```sh
+python3 evals/runners/evalctl.py materialize \
+  --suite evals/suites/representative-ab.json \
+  --run-id local-inspection
+```
+
+Execute with an adapter and optional post-run judge:
+
+```sh
+python3 evals/runners/evalctl.py run \
+  --suite evals/suites/representative-ab.json \
+  --run-id model-build-001 \
+  --agent-command 'agent-adapter --manifest {manifest}' \
+  --judge-command 'judge-adapter --result {result} --oracle {oracle}'
+```
+
+Agent commands may use `{repo}`, `{run}`, `{payload}`, `{prompt}`, `{input}`,
+`{skills}`, `{output}`, `{manifest}`, and `{agent_result}`. Judge commands may
+also use `{result}`, `{oracle}`, and `{judge_result}`. The runner rejects hidden
+oracle placeholders in an Agent command.
+
+## Executor Protocol
+
+The adapter receives `EVAL_RUN_MANIFEST`, `EVAL_PROMPT_FILE`, `EVAL_INPUT_DIR`,
+`EVAL_SKILLS_DIR`, `EVAL_OUTPUT_DIR`, and `EVAL_AGENT_RESULT_FILE`. It must write
+`EVAL_AGENT_RESULT_FILE` as JSON:
+
+```json
+{
+  "status": "completed",
+  "response_path": "response.md",
+  "artifacts": ["deck.pptx"],
+  "traces": ["trace.json"],
+  "route": {
+    "primary_skill": "presentation",
+    "selected_skills": ["presentation"]
+  },
+  "usage": {
+    "input_tokens": 12000,
+    "output_tokens": 3000,
+    "total_tokens": 15000,
+    "estimated_cost_usd": 0.42
+  },
+  "model": {
+    "name": "model-build-id",
+    "config": {"reasoning_effort": "high"}
+  }
+}
+```
+
+All response, artifact, and trace paths must be regular files relative to
+`EVAL_OUTPUT_DIR`. The runner hashes them before judging.
+
+## Judge Protocol
+
+The judge runs only after the Agent process has finished. It receives the hidden
+oracle through `EVAL_ORACLE_FILE`, plus result, payload, and output paths. It
+writes `EVAL_JUDGE_RESULT_FILE`:
+
+```json
+{
+  "scores": [
+    {
+      "criterion_id": "image-relevance",
+      "value": 0.8,
+      "passed": true,
+      "rationale": "Images carry specific slide jobs.",
+      "evidence": ["deck.pptx slide 4", "render/slide-004.png"]
+    }
+  ],
+  "failure_tags": [],
+  "summary": "No critical visual failure."
+}
+```
+
+The runner takes weights from the oracle, never from the judge, and computes the
+weighted score only when every criterion is present. Partial judging keeps its
+total score and pass state null. Completed judging records explicit critical
+failures. Raw results include route, artifacts, hashes, model/config, token use,
+cost, latency, failures, and provenance. `run-summary.json` pairs each treatment
+with the baseline at the same case and repetition and reports metric deltas.
+
+## Promotion Rule
+
+Do not promote a one-off failure directly into Skill prose. First classify it:
+
+- a deterministic tool or file-contract failure becomes a test under `tests/`;
+- a recurring agent behavior failure becomes a novel case or regression case;
+- an unclear rubric becomes a judge-contract change;
+- a real capability delta, repeated across fresh sessions, justifies changing
+  the Skill;
+- no quality gain with material token/time cost is evidence to simplify or
+  retire the Skill.

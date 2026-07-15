@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0",
+  "id": "baseline",
+  "label": "Base agent without repository Skills",
+  "kind": "baseline",
+  "skills": [],
+  "executor_config": {
+    "skill_registry": "isolated"
+  }
+}

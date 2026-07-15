@@ -1,0 +1,5 @@
+order_id,customer_id,order_date,status,revenue
+1001,C001,2026-01-01,paid,120.00
+1002,C002,2026-01-02,paid,80.00
+1003,C001,2026-01-03,refunded,40.00
+1004,C003,2026-01-04,paid,200.00

@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "id": "tiny-enabled",
+  "label": "Fixture Skill enabled",
+  "kind": "skill-enabled",
+  "skills": [
+    {
+      "name": "tiny-skill",
+      "path": "tests/fixtures/evals/skill"
+    }
+  ]
+}
