@@ -266,6 +266,13 @@ inflation, validates the findings ledger, and persists all of that evidence befo
 blind review. Missing metric values, filter scope, grain/fan-out controls,
 verification, or audit fields deterministically cap the corresponding score.
 
+The product-spec judge runs the portable spec inspector, records sections,
+stable IDs, acceptance criteria, and lint findings, then checks Case-defined
+source facts, options, flows, states, scope, and open-policy evidence before
+blind review. The Case contract controls which concepts and minimums matter;
+the adapter does not encode a single reference answer or reward template length.
+Missing required evidence deterministically caps only the affected criterion.
+
 Image-sensitive cases may declare
 `metadata.presentation_asset_expectations` in the hidden oracle. The
 presentation judge hashes source assets and joins them to PPTX media records,

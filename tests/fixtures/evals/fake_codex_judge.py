@@ -33,17 +33,32 @@ def main() -> int:
         raise RuntimeError("evaluation environment leaked into blind judge")
 
     workspace = Path(option_value(arguments, "--cd"))
-    required_workspace_files = (
+    required_workspace_files = [
         "source/prompt.md",
-        "source/input/orders.csv",
         "agent-result.json",
         "agent-response.md",
         "agent-trace-summary.json",
-        "artifacts/analysis.md",
-        "artifacts/findings.tsv",
-        "source-truth.json",
         "artifact-audit.json",
-    )
+    ]
+    if (workspace / "source/input/orders.csv").is_file():
+        required_workspace_files.extend(
+            [
+                "source/input/orders.csv",
+                "artifacts/analysis.md",
+                "artifacts/findings.tsv",
+                "source-truth.json",
+            ]
+        )
+    elif (workspace / "source/input/merchant_addon_notes.md").is_file():
+        required_workspace_files.extend(
+            [
+                "source/input/merchant_addon_notes.md",
+                "artifacts/product-spec.md",
+                "spec-check.json",
+            ]
+        )
+    else:
+        raise RuntimeError("blind workspace has an unknown domain fixture")
     missing = [
         name for name in required_workspace_files if not (workspace / name).is_file()
     ]

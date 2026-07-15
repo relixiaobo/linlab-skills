@@ -92,6 +92,8 @@ observation.
 - Ground every score in persisted evidence; do not reward response claims alone.
 - Put exact metric, filter, grain, and join expectations in structured case
   config so deterministic evidence can be recomputed independently.
+- Put product-spec facts, state coverage, scope boundaries, and structural
+  minimums in criterion-oriented case config instead of hard-coding one answer.
 - Treat a missing required artifact as missing evidence, not a model-review
   opportunity.
 - Keep domain-specific logic inside the adapter. Do not add presentation, code
@@ -100,11 +102,12 @@ observation.
 
 ## Current Coverage
 
-`presentation` and `data-analysis` are production hybrid adapters. Presentation
-persists PPTX inspection, render, and asset evidence; data-analysis independently
-recomputes metric truth and join fan-out, audits `analysis.md` and `findings.tsv`,
-then applies deterministic vetoes after blind review. The mixed fixture suite
-proves that one suite can resolve different adapters. Product-spec, code-review,
-and other artifact adapters remain explicit migration work. Suites must
-explicitly choose whether judging is required; only optional migration suites may
-contain cases without `evaluation.adapter`.
+`presentation`, `data-analysis`, and `product-spec` are production hybrid
+adapters. Presentation persists PPTX inspection, render, and asset evidence;
+data-analysis recomputes metric truth and join fan-out; product-spec runs the
+portable readiness inspector and audits Case-defined facts, options, flows,
+scope, stable IDs, and acceptance criteria. All apply deterministic vetoes after
+blind review. The representative suite requires judging and proves that one
+suite can resolve all three adapters. Code-review and other artifact adapters
+remain explicit migration work. Suites must explicitly choose whether judging
+is required; only optional suites may contain cases without `evaluation.adapter`.

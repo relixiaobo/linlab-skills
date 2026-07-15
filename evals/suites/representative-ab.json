@@ -32,7 +32,7 @@
     "timeout_seconds": 1800
   },
   "judging": {
-    "required": false
+    "required": true
   },
   "comparison": {
     "control_condition": "baseline",
@@ -41,6 +41,6 @@
   "metadata": {
     "case_organization": "user-job",
     "oracle_visibility": "judge-only",
-    "migration_status": "product-spec Judge Adapter is pending"
+    "migration_status": "all representative jobs have production Judge Adapters"
   }
 }
