@@ -5,6 +5,10 @@ production Judge Adapter runs completed, but the experiment has one repetition
 and exposed scoring-calibration defects. It is not decision-grade evidence for
 changing or retiring a Skill.
 
+Follow-up: [Representative Judge Calibration](representative-ab-20260715-calibration.md)
+implements the recommended evaluator fixes and rejudges the same immutable
+Agent outputs.
+
 ## Scope
 
 - Suite: `representative-ab`
