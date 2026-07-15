@@ -22,6 +22,9 @@
     "repetitions": 1,
     "timeout_seconds": 30
   },
+  "judging": {
+    "required": true
+  },
   "comparison": {
     "control_condition": "baseline",
     "metrics": ["score", "total_tokens", "duration_ms"]

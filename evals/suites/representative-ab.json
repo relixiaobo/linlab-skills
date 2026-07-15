@@ -31,12 +31,16 @@
     "repetitions": 3,
     "timeout_seconds": 1800
   },
+  "judging": {
+    "required": false
+  },
   "comparison": {
     "control_condition": "baseline",
     "metrics": ["score", "input_tokens", "output_tokens", "total_tokens", "duration_ms"]
   },
   "metadata": {
     "case_organization": "user-job",
-    "oracle_visibility": "judge-only"
+    "oracle_visibility": "judge-only",
+    "migration_status": "data-analysis and product-spec Judge Adapters are pending"
   }
 }

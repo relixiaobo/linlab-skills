@@ -52,19 +52,6 @@
       {"id": "findings", "pattern": "findings.tsv", "required": true}
     ]
   },
-  "judges": [
-    {
-      "id": "analysis-artifact-review",
-      "type": "model",
-      "criteria": [
-        "correct-route",
-        "correct-metrics",
-        "fanout-control",
-        "independent-verification",
-        "auditable-delivery"
-      ]
-    }
-  ],
   "failure_taxonomy": [
     "route-error",
     "factuality",

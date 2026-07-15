@@ -26,6 +26,8 @@ The hidden case oracle selects an adapter by stable id:
 adapter kind, and protocol version. Registry config is merged with case config;
 case values win. `--judge-command` remains an explicit whole-suite override for
 development and compatibility, and is recorded as adapter `command-override`.
+The adapter owns the complete evaluation strategy for the job, including any
+deterministic gates and model review. There is no second per-case judge dispatcher.
 
 ## Environment
 
@@ -43,7 +45,8 @@ The runner invokes an adapter with a clean copy of the process environment plus:
 - `EVAL_JUDGE_TRACE_DIR`: persistent model or tool trace directory.
 
 The adapter must not mutate Agent output. It may write only its result, evidence,
-and trace locations.
+and trace locations. The runner hashes the complete output tree before and after
+the adapter and reports `artifact-mutation` when this boundary is violated.
 
 ## Result Protocol
 
@@ -66,9 +69,13 @@ The adapter writes JSON compatible with
 }
 ```
 
-Criterion ids and failure tags must come from the hidden oracle. The runner adds
-oracle weights, computes the weighted score, identifies critical failures, and
-normalizes the result. Partial criterion coverage remains a partial judgment.
+Criterion ids and failure tags must come from the hidden oracle. Failure tags are
+domain-defined slugs rather than a core-runner enumeration. The JSON Schema is
+the authoritative structural contract and requires explicit pass state,
+rationale, evidence, failure tags, and summary. The runner adds oracle weights,
+computes the weighted score, identifies critical failures, and normalizes the
+result. Partial criterion coverage remains a partial judgment and cannot complete
+a required suite.
 
 After every attempt, the runner hashes every regular file under
 `judge-evidence/` into `evidence-manifest.json`. The result records adapter id,
@@ -94,5 +101,5 @@ observation.
 `presentation` is the first production adapter. The mixed fixture suite proves
 that one suite can resolve two different adapters. Canonical data-analysis,
 product-spec, code-review, and other artifact adapters remain explicit migration
-work; cases without `evaluation.adapter` stay unjudged unless a command override
-is supplied.
+work. Suites must explicitly choose whether judging is required; only optional
+migration suites may contain cases without `evaluation.adapter`.

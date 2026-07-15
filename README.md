@@ -52,7 +52,11 @@ python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py code-rev
 Run repository-level deterministic checks:
 
 ```sh
-python3 evals/run_all_skill_checks.py
+python3 -m venv .venv
+.venv/bin/python -m pip install \
+  -r evals/requirements.txt \
+  -r data-analysis/requirements.txt
+.venv/bin/python evals/run_all_skill_checks.py
 python3 tests/integration/presentation/run_checks.py
 python3 tests/integration/shape-product-spec/run_checks.py
 python3 tests/integration/data-analysis/run_checks.py
@@ -62,7 +66,7 @@ python3 evals/feed-processing/run_checks.py
 Validate the paired Agent evaluation suite separately:
 
 ```sh
-python3 evals/runners/evalctl.py validate \
+.venv/bin/python evals/runners/evalctl.py validate \
   --suite evals/suites/representative-ab.json
 ```
 

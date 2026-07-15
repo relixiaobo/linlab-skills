@@ -70,9 +70,10 @@ runner copies only `prompt.md`, `input/`, and condition-selected Skill packages
 into the payload directory. It does not copy `oracle.yaml`, put its path in the
 Agent environment, or include the condition id/kind in the adapter manifest.
 
-Checked-in `oracle.yaml` files use JSON-compatible YAML so validation needs only
-the Python standard library. General YAML syntax is accepted when PyYAML is
-installed.
+Checked-in `oracle.yaml` files use JSON-compatible YAML so PyYAML is optional.
+All structural contracts are enforced from the checked-in JSON Schemas through
+the dependencies declared in `evals/requirements.txt`; Python code adds only
+cross-field and filesystem safety rules.
 
 Filesystem separation is necessary but not sufficient. The executor adapter
 must start a fresh independent agent session, register exactly the Skills listed
@@ -82,17 +83,24 @@ assertions, suspected bugs, intended fixes, or prior conclusions to the Agent.
 
 ## Commands
 
+Install the evaluation and repository-validation dependencies once:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r evals/requirements.txt
+```
+
 Validate the representative paired suite and all common schemas:
 
 ```sh
-python3 evals/runners/evalctl.py validate \
+.venv/bin/python evals/runners/evalctl.py validate \
   --suite evals/suites/representative-ab.json
 ```
 
 Materialize all payloads without invoking an Agent:
 
 ```sh
-python3 evals/runners/evalctl.py materialize \
+.venv/bin/python evals/runners/evalctl.py materialize \
   --suite evals/suites/representative-ab.json \
   --run-id local-inspection
 ```
@@ -101,7 +109,7 @@ Execute with an Agent adapter. Each configured case resolves its Judge Adapter
 from the hidden oracle and `evals/judges/registry.json`:
 
 ```sh
-python3 evals/runners/evalctl.py run \
+.venv/bin/python evals/runners/evalctl.py run \
   --suite evals/suites/representative-ab.json \
   --run-id model-build-001 \
   --agent-command 'agent-adapter --manifest {manifest}'
@@ -115,7 +123,7 @@ The repository adapters can run isolated Codex sessions and blind presentation
 review directly:
 
 ```sh
-python3 evals/runners/evalctl.py run \
+.venv/bin/python evals/runners/evalctl.py run \
   --suite evals/suites/presentation-image-smoke.json \
   --results-dir /tmp/linlab-skill-eval-results \
   --run-id presentation-image-smoke-001 \
@@ -125,7 +133,7 @@ python3 evals/runners/evalctl.py run \
 Rejudge intact artifacts without invoking the Agent again:
 
 ```sh
-python3 evals/runners/evalctl.py rejudge \
+.venv/bin/python evals/runners/evalctl.py rejudge \
   --suite evals/suites/presentation-image-smoke.json \
   --run-root /tmp/linlab-skill-eval-results/presentation-image-smoke-001
 ```
@@ -135,7 +143,7 @@ outputs, and rerun only conditions whose executor artifacts are missing or no
 longer match their recorded hashes:
 
 ```sh
-python3 evals/runners/evalctl.py resume \
+.venv/bin/python evals/runners/evalctl.py resume \
   --suite evals/suites/presentation-image-smoke.json \
   --source-run /tmp/linlab-skill-eval-results/presentation-image-smoke-001 \
   --results-dir /tmp/linlab-skill-eval-results \
@@ -194,8 +202,16 @@ discard an otherwise completed artifact, route record, or final usage event.
 The hidden oracle may declare `evaluation.adapter`. The runner resolves that id
 from the versioned registry, verifies that it supports the case job, merges
 registry and case configuration, and records the exact adapter identity and
-registry hash in every result. Cases without an adapter remain unjudged unless
-`--judge-command` is supplied.
+registry hash in every result. The adapter owns the complete deterministic,
+model, or hybrid judging strategy; cases do not declare a second judge-routing
+model.
+
+Every suite explicitly sets `judging.required`. A required suite fails validation
+before execution when any case lacks an adapter, and a run succeeds only when all
+judgments are complete. Migration or payload-inspection suites may set it to
+`false`; their unjudged cases remain explicit in the summary instead of being
+mistaken for completed quality evaluations. `--judge-command` supplies a
+whole-suite adapter override.
 
 The full registry, environment, evidence-manifest, and authoring contract is in
 `evals/judges/README.md`.
@@ -229,7 +245,9 @@ with the baseline at the same case and repetition and reports metric deltas.
 
 The runner also records adapter id, kind, protocol version, registry path/hash,
 exact command, merged config, logs, exit code, and a hash of the generated
-evidence manifest. Domain logic belongs in adapters, never in `evalctl`.
+evidence manifest. It hashes the Agent output tree before and after judging and
+rejects an adapter that mutates it. Domain scoring logic and failure tags belong
+to the adapter and case contract, never in `evalctl`.
 
 The presentation judge first persists deterministic PPTX inspection, gate, and
 render evidence under `judge-evidence/`. Blind model review runs afterward and

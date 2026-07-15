@@ -339,8 +339,12 @@ def write_judge_schema(path: Path, criterion_ids: list[str], failure_tags: list[
                         "criterion_id": {"type": "string", "enum": criterion_ids},
                         "value": {"type": "number", "minimum": 0, "maximum": 1},
                         "passed": {"type": "boolean"},
-                        "rationale": {"type": "string"},
-                        "evidence": {"type": "array", "items": {"type": "string"}},
+                        "rationale": {"type": "string", "minLength": 1},
+                        "evidence": {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {"type": "string", "minLength": 1},
+                        },
                     },
                 },
             },
@@ -349,7 +353,7 @@ def write_judge_schema(path: Path, criterion_ids: list[str], failure_tags: list[
                 "uniqueItems": True,
                 "items": {"type": "string", "enum": failure_tags},
             },
-            "summary": {"type": "string"},
+            "summary": {"type": "string", "minLength": 1},
         },
     }
     path.write_text(json.dumps(schema, indent=2) + "\n", encoding="utf-8")

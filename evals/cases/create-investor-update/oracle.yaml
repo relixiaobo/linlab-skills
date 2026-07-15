@@ -73,18 +73,6 @@
       }
     ]
   },
-  "judges": [
-    {
-      "id": "route-and-process",
-      "type": "model",
-      "criteria": ["correct-route", "visual-plan", "rendered-verification"]
-    },
-    {
-      "id": "deck-artifact-review",
-      "type": "human",
-      "criteria": ["source-fidelity", "image-relevance", "image-fit", "editable-deliverable"]
-    }
-  ],
   "failure_taxonomy": [
     "route-error",
     "factuality",

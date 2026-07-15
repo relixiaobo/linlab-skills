@@ -22,14 +22,7 @@
       {"id": "fixture-artifact", "pattern": "artifact.txt", "required": true}
     ]
   },
-  "judges": [
-    {
-      "id": "fixture-judge",
-      "type": "deterministic",
-      "criteria": ["route-and-output"]
-    }
-  ],
-  "failure_taxonomy": ["route-error", "missing-artifact"],
+  "failure_taxonomy": ["route-error", "missing-artifact", "fixture-domain-check"],
   "metadata": {
     "hidden_sentinel": "HIDDEN_ORACLE_SENTINEL"
   }

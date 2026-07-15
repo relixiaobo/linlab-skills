@@ -13,6 +13,16 @@ EVALCTL = ROOT / "evals" / "runners" / "evalctl.py"
 SUITE = "tests/fixtures/evals/suites/runner-smoke.json"
 ADAPTER_SUITE = "tests/fixtures/evals/suites/adapter-routing.json"
 ADAPTER_REGISTRY = "tests/fixtures/evals/judge-registry.json"
+REQUIRED_JUDGING_SUITE = (
+    "tests/fixtures/evals/suites/judging-required-missing-adapter.json"
+)
+
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from evals.runners.eval_lib import EvalConfigError  # noqa: E402
+from evals.runners.evalctl import load_judge_protocol  # noqa: E402
+from evals.runners.schema_validation import validate_document  # noqa: E402
 
 
 class EvalRunnerTests(unittest.TestCase):
@@ -31,12 +41,82 @@ class EvalRunnerTests(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertTrue(report["ok"])
         self.assertEqual(report["planned_run_count"], 4)
+        self.assertFalse(report["judging_required"])
         self.assertIsNone(report["judge_adapters"]["tiny-case"])
+
+    def test_required_judging_rejects_a_case_without_an_adapter(self) -> None:
+        result = self.run_evalctl("validate", "--suite", REQUIRED_JUDGING_SUITE)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("requires judging", result.stderr)
+        self.assertIn("tiny-case", result.stderr)
+
+        with tempfile.TemporaryDirectory(prefix="required_judging_run_") as temp:
+            run = self.run_evalctl(
+                "run",
+                "--suite",
+                REQUIRED_JUDGING_SUITE,
+                "--results-dir",
+                temp,
+                "--run-id",
+                "must-not-materialize",
+                "--agent-command",
+                f"{sys.executable} {{repo}}/tests/fixtures/evals/fake_agent.py",
+            )
+            self.assertEqual(run.returncode, 2)
+            self.assertFalse((Path(temp) / "must-not-materialize").exists())
 
     def test_declared_adapter_must_exist_in_the_selected_registry(self) -> None:
         result = self.run_evalctl("validate", "--suite", ADAPTER_SUITE)
         self.assertEqual(result.returncode, 2)
         self.assertIn("unknown judge adapter: fixture-primary", result.stderr)
+
+    def test_judge_result_schema_requires_auditable_fields(self) -> None:
+        oracle = json.loads(
+            (ROOT / "tests/fixtures/evals/cases/tiny-case/oracle.yaml").read_text(
+                encoding="utf-8"
+            )
+        )
+        raw = {"scores": [{"criterion_id": "route-and-output", "value": 1.0}]}
+        with tempfile.TemporaryDirectory(prefix="invalid_judge_protocol_") as temp:
+            path = Path(temp) / "judge-result.json"
+            path.write_text(json.dumps(raw), encoding="utf-8")
+            with self.assertRaisesRegex(EvalConfigError, "required property"):
+                load_judge_protocol(path, oracle)
+
+    def test_case_schema_rejects_a_second_judge_dispatch_model(self) -> None:
+        oracle = json.loads(
+            (ROOT / "tests/fixtures/evals/cases/tiny-case/oracle.yaml").read_text(
+                encoding="utf-8"
+            )
+        )
+        oracle["judges"] = []
+        with self.assertRaisesRegex(EvalConfigError, "Additional properties"):
+            validate_document(oracle, "eval-case.schema.json", "fixture case")
+
+    def test_case_defined_domain_failure_tag_is_accepted(self) -> None:
+        oracle = json.loads(
+            (ROOT / "tests/fixtures/evals/cases/tiny-case/oracle.yaml").read_text(
+                encoding="utf-8"
+            )
+        )
+        raw = {
+            "scores": [
+                {
+                    "criterion_id": "route-and-output",
+                    "value": 0.0,
+                    "passed": False,
+                    "rationale": "Fixture domain check failed.",
+                    "evidence": ["artifact.txt"],
+                }
+            ],
+            "failure_tags": ["fixture-domain-check"],
+            "summary": "fixture domain failure",
+        }
+        with tempfile.TemporaryDirectory(prefix="domain_failure_tag_") as temp:
+            path = Path(temp) / "judge-result.json"
+            path.write_text(json.dumps(raw), encoding="utf-8")
+            normalized = load_judge_protocol(path, oracle)
+        self.assertEqual(normalized["failure_tags"], ["fixture-domain-check"])
 
     def test_materialization_isolates_oracle_and_applies_ablation(self) -> None:
         with tempfile.TemporaryDirectory(prefix="eval_materialize_") as temp:
@@ -216,6 +296,40 @@ class EvalRunnerTests(unittest.TestCase):
             )
             self.assertEqual(beta_after_rejudge["judging"]["overall_score"], 0.8)
 
+    def test_judge_adapter_cannot_mutate_agent_output(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="eval_mutating_judge_") as temp:
+            agent = f"{sys.executable} {{repo}}/tests/fixtures/evals/fake_agent.py"
+            judge = (
+                f"{sys.executable} "
+                "{repo}/tests/fixtures/evals/fake_mutating_judge.py"
+            )
+            result = self.run_evalctl(
+                "run",
+                "--suite",
+                SUITE,
+                "--results-dir",
+                temp,
+                "--run-id",
+                "mutating-judge-test",
+                "--agent-command",
+                agent,
+                "--judge-command",
+                judge,
+            )
+            self.assertEqual(result.returncode, 1, result.stderr)
+            run_result = json.loads(
+                (
+                    Path(temp)
+                    / "mutating-judge-test"
+                    / "tiny-case"
+                    / "tiny-enabled"
+                    / "rep-01"
+                    / "result.json"
+                ).read_text(encoding="utf-8")
+            )
+            self.assertEqual(run_result["status"], "failed")
+            self.assertEqual(run_result["failure"]["category"], "artifact-mutation")
+
     def test_agent_command_cannot_reference_hidden_oracle(self) -> None:
         with tempfile.TemporaryDirectory(prefix="eval_oracle_guard_") as temp:
             result = self.run_evalctl(
@@ -265,6 +379,45 @@ class EvalRunnerTests(unittest.TestCase):
             self.assertEqual(summary["mode"], "rejudge")
             attempt_root = run_root / "tiny-case" / "tiny-enabled" / "rep-01" / "attempts"
             self.assertTrue(any(attempt_root.iterdir()))
+
+    def test_rejudge_preflight_does_not_mutate_when_adapter_is_missing(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="eval_rejudge_preflight_") as temp:
+            agent = f"{sys.executable} {{repo}}/tests/fixtures/evals/fake_agent.py"
+            judge = f"{sys.executable} {{repo}}/tests/fixtures/evals/fake_judge.py"
+            initial = self.run_evalctl(
+                "run",
+                "--suite",
+                SUITE,
+                "--results-dir",
+                temp,
+                "--run-id",
+                "rejudge-preflight-source",
+                "--agent-command",
+                agent,
+                "--judge-command",
+                judge,
+            )
+            self.assertEqual(initial.returncode, 0, initial.stderr)
+            run_dir = (
+                Path(temp)
+                / "rejudge-preflight-source"
+                / "tiny-case"
+                / "tiny-enabled"
+                / "rep-01"
+            )
+            result_before = (run_dir / "result.json").read_bytes()
+
+            rejudge = self.run_evalctl(
+                "rejudge",
+                "--suite",
+                SUITE,
+                "--run-root",
+                str(Path(temp) / "rejudge-preflight-source"),
+            )
+            self.assertEqual(rejudge.returncode, 2)
+            self.assertIn("requires judging", rejudge.stderr)
+            self.assertEqual((run_dir / "result.json").read_bytes(), result_before)
+            self.assertFalse((run_dir / "attempts").exists())
 
     def test_resume_clones_source_and_reruns_only_failed_executors(self) -> None:
         with tempfile.TemporaryDirectory(prefix="eval_resume_") as temp:

@@ -11,7 +11,7 @@
     "job",
     "tags",
     "expected",
-    "judges"
+    "failure_taxonomy"
   ],
   "properties": {
     "schema_version": {"const": "1.0"},
@@ -70,11 +70,6 @@
         }
       }
     },
-    "judges": {
-      "type": "array",
-      "minItems": 1,
-      "items": {"$ref": "#/$defs/judge"}
-    },
     "failure_taxonomy": {
       "type": "array",
       "uniqueItems": true,
@@ -118,44 +113,8 @@
         "description": {"type": "string"}
       }
     },
-    "judge": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["id", "type", "criteria"],
-      "properties": {
-        "id": {"$ref": "#/$defs/slug"},
-        "type": {
-          "type": "string",
-          "enum": ["deterministic", "rubric", "model", "human"]
-        },
-        "criteria": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {"$ref": "#/$defs/slug"}
-        },
-        "notes": {"type": "string"}
-      }
-    },
     "failureTag": {
-      "type": "string",
-      "enum": [
-        "route-error",
-        "task-understanding",
-        "factuality",
-        "missing-artifact",
-        "artifact-integrity",
-        "visual-quality",
-        "image-relevance",
-        "image-distortion",
-        "process-compliance",
-        "verification",
-        "privacy",
-        "efficiency",
-        "executor-error",
-        "judge-error",
-        "protocol-error"
-      ]
+      "$ref": "#/$defs/slug"
     }
   }
 }

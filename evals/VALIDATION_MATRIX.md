@@ -4,7 +4,11 @@ This file records the repeatable checks for each skill. The authoritative
 command is:
 
 ```sh
-python3 evals/run_all_skill_checks.py
+python3 -m venv .venv
+.venv/bin/python -m pip install \
+  -r evals/requirements.txt \
+  -r data-analysis/requirements.txt
+.venv/bin/python evals/run_all_skill_checks.py
 ```
 
 ## Coverage
@@ -24,18 +28,19 @@ python3 evals/run_all_skill_checks.py
 
 ## Notes
 
-- `python3 evals/runners/evalctl.py validate --suite
+- `.venv/bin/python evals/runners/evalctl.py validate --suite
   evals/suites/representative-ab.json` validates the shared Agent-evaluation
   contracts. The suite contains 3 user-job cases and 21 planned runs across
   baseline, Skill-enabled, visual-guidance ablation, and 3 repetitions.
-- `python3 -m unittest discover -s tests/unit -p 'test_*.py' -v` checks oracle
+- `.venv/bin/python -m unittest discover -s tests/unit -p 'test_*.py' -v` checks oracle
   isolation, revision-pinned materialization, JSONL recovery, natural route
-  evidence, protocol capture, per-case Judge Adapter routing, evidence manifests,
+  evidence, authoritative schema enforcement, required judging, per-case Judge
+  Adapter routing, output immutability, domain failure tags, evidence manifests,
   judge vetoes, rejudge/resume, and paired deltas.
-- `python3 evals/runners/evalctl.py validate --suite
+- `.venv/bin/python evals/runners/evalctl.py validate --suite
   evals/suites/presentation-image-smoke.json` validates the four-condition
   image-handling pilot before any model sessions are started.
-- `python3 evals/runners/evalctl.py validate --suite
+- `.venv/bin/python evals/runners/evalctl.py validate --suite
   evals/suites/presentation-image-assets-smoke.json` validates the controlled
   asset-selection case with required desktop/mobile/brand images, forbidden
   distractors, and extreme aspect ratios.
@@ -45,5 +50,7 @@ python3 evals/run_all_skill_checks.py
   directories.
 - `evals/run_all_skill_checks.py` uses `.venv/bin/python` for data-analysis when
   present, otherwise the current Python interpreter.
+- The evaluation runner and Skill validator dependencies are declared in
+  `evals/requirements.txt`.
 - Legacy `evals/<skill>/run_checks.py` paths remain compatibility wrappers for
   the three migrated deterministic gates.

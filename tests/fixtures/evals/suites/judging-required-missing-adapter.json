@@ -1,15 +1,13 @@
 {
   "schema_version": "1.0",
-  "id": "runner-smoke",
-  "title": "Runner smoke suite",
+  "id": "judging-required-missing-adapter",
+  "title": "Required judging without a configured adapter",
   "runs": [
     {
       "case": "tests/fixtures/evals/cases/tiny-case",
       "conditions": [
         "tests/fixtures/evals/conditions/baseline.json",
-        "tests/fixtures/evals/conditions/tiny-enabled.json",
-        "tests/fixtures/evals/conditions/tiny-ablated.json",
-        "tests/fixtures/evals/conditions/tiny-revision.json"
+        "tests/fixtures/evals/conditions/tiny-enabled.json"
       ]
     }
   ],
@@ -18,10 +16,10 @@
     "timeout_seconds": 30
   },
   "judging": {
-    "required": false
+    "required": true
   },
   "comparison": {
     "control_condition": "baseline",
-    "metrics": ["score", "input_tokens", "total_tokens", "duration_ms"]
+    "metrics": ["score", "total_tokens", "duration_ms"]
   }
 }

@@ -63,20 +63,6 @@
       }
     ]
   },
-  "judges": [
-    {
-      "id": "product-spec-review",
-      "type": "model",
-      "criteria": [
-        "correct-route",
-        "evidence-fidelity",
-        "target-options",
-        "flows-and-states",
-        "scope-and-open-policy",
-        "testable-acceptance"
-      ]
-    }
-  ],
   "failure_taxonomy": [
     "route-error",
     "task-understanding",

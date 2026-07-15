@@ -24,7 +24,6 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from evals.runners.eval_lib import (  # noqa: E402
-    FAILURE_TAGS,
     EvalConfigError,
     JudgeAdapterSpec,
     canonical_sha256,
@@ -38,6 +37,10 @@ from evals.runners.eval_lib import (  # noqa: E402
     sha256_tree,
     validate_result,
     validate_suite,
+)
+from evals.runners.schema_validation import (  # noqa: E402
+    validate_all_schemas,
+    validate_document,
 )
 from evals.runners.codex_exec_adapter import (  # noqa: E402
     parse_jsonl_best_effort,
@@ -144,6 +147,31 @@ def judge_invocation_for_case(
         {name: f"/{name}" for name in JUDGE_PLACEHOLDERS},
     )
     return invocation
+
+
+def judge_invocations_for_suite(
+    *,
+    suite: Any,
+    judge_override: str | None,
+    registry: dict[str, JudgeAdapterSpec],
+    require_all: bool | None = None,
+) -> dict[str, JudgeInvocation | None]:
+    invocations = {
+        suite_run.case.id: judge_invocation_for_case(
+            case=suite_run.case,
+            judge_override=judge_override,
+            registry=registry,
+        )
+        for suite_run in suite.runs
+    }
+    missing = sorted(case_id for case_id, invocation in invocations.items() if invocation is None)
+    judging_required = suite.judging_required if require_all is None else require_all
+    if judging_required and missing:
+        raise EvalConfigError(
+            f"suite {suite.id} requires judging, but these cases have no Judge Adapter: "
+            f"{', '.join(missing)}"
+        )
+    return invocations
 
 
 def ignored_copy(_directory: str, names: list[str]) -> set[str]:
@@ -391,51 +419,21 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
         raise EvalConfigError(f"invalid or missing {JUDGE_RESULT_NAME}: {exc}") from exc
     if not isinstance(data, dict):
         raise EvalConfigError(f"{JUDGE_RESULT_NAME} must contain an object")
-    unknown_fields = set(data) - {"scores", "failure_tags", "summary"}
-    if unknown_fields:
-        raise EvalConfigError(
-            f"judge protocol contains unknown fields: {sorted(unknown_fields)}"
-        )
+    validate_document(data, "eval-judge-result.schema.json", JUDGE_RESULT_NAME)
 
     outcomes = {item["id"]: item for item in oracle["expected"]["outcomes"]}
-    raw_scores = data.get("scores")
-    if not isinstance(raw_scores, list) or not raw_scores:
-        raise EvalConfigError("judge protocol scores must be a non-empty list")
+    raw_scores = data["scores"]
     scores: list[dict[str, Any]] = []
     seen: set[str] = set()
     weighted = 0.0
     for raw in raw_scores:
-        if not isinstance(raw, dict):
-            raise EvalConfigError("judge score must be an object")
-        unknown_score_fields = set(raw) - {
-            "criterion_id",
-            "value",
-            "passed",
-            "rationale",
-            "evidence",
-        }
-        if unknown_score_fields:
-            raise EvalConfigError(
-                f"judge score contains unknown fields: {sorted(unknown_score_fields)}"
-            )
-        criterion_id = raw.get("criterion_id")
+        criterion_id = raw["criterion_id"]
         if criterion_id not in outcomes:
             raise EvalConfigError(f"judge scored unknown criterion: {criterion_id}")
         if criterion_id in seen:
             raise EvalConfigError(f"judge scored criterion twice: {criterion_id}")
         seen.add(criterion_id)
-        value = raw.get("value")
-        if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 1:
-            raise EvalConfigError(f"judge score {criterion_id} must be in [0, 1]")
-        rationale = raw.get("rationale", "")
-        evidence = raw.get("evidence", [])
-        if not isinstance(rationale, str) or not isinstance(evidence, list) or not all(
-            isinstance(item, str) for item in evidence
-        ):
-            raise EvalConfigError(f"judge score {criterion_id} has invalid rationale or evidence")
-        passed = raw.get("passed")
-        if passed is not None and not isinstance(passed, bool):
-            raise EvalConfigError(f"judge score {criterion_id}.passed must be boolean")
+        value = raw["value"]
         weight = float(outcomes[criterion_id]["weight"])
         weighted += float(value) * weight
         scores.append(
@@ -443,19 +441,14 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
                 "criterion_id": criterion_id,
                 "value": float(value),
                 "weight": weight,
-                "passed": passed if passed is not None else value >= 0.5,
-                "rationale": rationale,
-                "evidence": evidence,
+                "passed": raw["passed"],
+                "rationale": raw["rationale"],
+                "evidence": raw["evidence"],
             }
         )
 
-    failure_tags = data.get("failure_tags", [])
-    if not isinstance(failure_tags, list) or not all(isinstance(tag, str) for tag in failure_tags):
-        raise EvalConfigError("judge failure_tags must be a list of strings")
+    failure_tags = data["failure_tags"]
     allowed_tags = set(oracle.get("failure_taxonomy", []))
-    unknown_tags = set(failure_tags) - FAILURE_TAGS
-    if unknown_tags:
-        raise EvalConfigError(f"judge used unknown failure tags: {sorted(unknown_tags)}")
     case_unknown_tags = set(failure_tags) - allowed_tags
     if case_unknown_tags:
         raise EvalConfigError(
@@ -468,9 +461,6 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
         for score in scores
         if outcomes[score["criterion_id"]]["critical"] and not score["passed"]
     )
-    summary = data.get("summary", "")
-    if not isinstance(summary, str):
-        raise EvalConfigError("judge protocol summary must be a string")
     return {
         "status": status,
         "overall_score": weighted if complete else None,
@@ -478,7 +468,7 @@ def load_judge_protocol(path: Path, oracle: dict[str, Any]) -> dict[str, Any]:
         "critical_failures": critical_failures,
         "scores": scores,
         "failure_tags": list(dict.fromkeys(failure_tags)),
-        "summary": summary,
+        "summary": data["summary"],
     }
 
 
@@ -740,16 +730,19 @@ def write_evidence_manifest(
                 "bytes": path.stat().st_size,
             }
         )
-    write_json(
-        manifest_path,
-        {
-            "schema_version": "1.0",
-            "adapter_id": invocation.adapter_id,
-            "protocol_version": invocation.protocol_version,
-            "generated_at": utc_now(),
-            "records": records,
-        },
+    manifest = {
+        "schema_version": "1.0",
+        "adapter_id": invocation.adapter_id,
+        "protocol_version": invocation.protocol_version,
+        "generated_at": utc_now(),
+        "records": records,
+    }
+    validate_document(
+        manifest,
+        "eval-evidence-manifest.schema.json",
+        "Judge Adapter evidence manifest",
     )
+    write_json(manifest_path, manifest)
     return manifest_path.relative_to(run_dir).as_posix(), sha256_file(manifest_path)
 
 
@@ -762,11 +755,13 @@ def judge_one(
     timeout: int,
 ) -> dict[str, Any]:
     run_dir = Path(values["run"])
+    output_dir = Path(values["output"])
     result_path = Path(values["result"])
     logs_dir = run_dir / "logs"
     logs_dir.mkdir(exist_ok=True)
     judge_result = Path(values["judge_result"])
     judge_result.unlink(missing_ok=True)
+    output_sha256_before = sha256_tree(output_dir)
 
     judge_command = format_command(invocation.command_template, values)
     stdout_path = logs_dir / "judge.stdout.log"
@@ -818,7 +813,28 @@ def judge_one(
     stdout_path.write_text(judge_stdout, encoding="utf-8")
     stderr_path.write_text(judge_stderr, encoding="utf-8")
     result["judge"]["exit_code"] = judge_exit
-    if judge_exit != 0:
+    try:
+        output_sha256_after = sha256_tree(output_dir)
+    except EvalConfigError as exc:
+        output_sha256_after = None
+        mutation_message = f"Judge Adapter made Agent output unsafe: {exc}"
+    else:
+        mutation_message = (
+            "Judge Adapter mutated Agent output; adapters may write only judge result, "
+            "evidence, and trace paths"
+            if output_sha256_after != output_sha256_before
+            else None
+        )
+
+    if mutation_message:
+        result["status"] = "failed"
+        result["judging"]["status"] = "failed"
+        result["failure"] = {
+            "stage": "judge",
+            "category": "artifact-mutation",
+            "message": mutation_message,
+        }
+    elif judge_exit != 0:
         result["status"] = "failed"
         result["judging"]["status"] = "failed"
         result["failure"] = {
@@ -1019,31 +1035,46 @@ def build_summary(
                 "deltas": deltas,
             }
         )
+    judging_status_counts: dict[str, int] = {}
+    for _, result in results:
+        status = result["judging"]["status"]
+        judging_status_counts[status] = judging_status_counts.get(status, 0) + 1
     return {
         "schema_version": "1.0",
         "run_id": run_id,
         "suite_id": suite.id,
         "mode": mode,
+        "judging_required": suite.judging_required,
+        "judging_status_counts": judging_status_counts,
         "result_count": len(results),
         "results": entries,
         "comparisons": comparisons,
     }
 
 
+def evaluation_succeeded(
+    *,
+    suite: Any,
+    mode: str,
+    results: list[tuple[Path, dict[str, Any]]],
+) -> bool:
+    for _, result in results:
+        if result["status"] == "failed":
+            return False
+        if mode == "materialize":
+            continue
+        adapter_id = (result.get("judge") or {}).get("adapter_id")
+        if adapter_id is None:
+            if suite.judging_required:
+                return False
+            continue
+        if result["judging"]["status"] != "completed":
+            return False
+    return True
+
+
 def validate_schema_documents() -> list[str]:
-    schema_dir = ROOT / "evals" / "schemas"
-    names: list[str] = []
-    for path in sorted(schema_dir.glob("*.schema.json")):
-        try:
-            value = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            raise EvalConfigError(f"invalid schema JSON in {path}: {exc}") from exc
-        if value.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
-            raise EvalConfigError(f"{path} must declare JSON Schema draft 2020-12")
-        names.append(path.name)
-    if not names:
-        raise EvalConfigError("no evaluation schemas found")
-    return names
+    return validate_all_schemas()
 
 
 def suite_entries(suite: Any, run_root: Path) -> list[tuple[Any, Any, int, Path]]:
@@ -1220,19 +1251,14 @@ def command_validate(args: argparse.Namespace) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
     suite = validate_suite(suite_path, ROOT)
     registry = judge_registry_for_args(args)
+    invocations = judge_invocations_for_suite(
+        suite=suite,
+        judge_override=None,
+        registry=registry,
+    )
     adapters = {
-        suite_run.case.id: (
-            invocation.adapter_id
-            if (
-                invocation := judge_invocation_for_case(
-                    case=suite_run.case,
-                    judge_override=None,
-                    registry=registry,
-                )
-            )
-            else None
-        )
-        for suite_run in suite.runs
+        case_id: invocation.adapter_id if invocation else None
+        for case_id, invocation in invocations.items()
     }
     schemas = validate_schema_documents()
     count = sum(len(run.conditions) * run.repetitions for run in suite.runs)
@@ -1243,6 +1269,7 @@ def command_validate(args: argparse.Namespace) -> int:
                 "suite": suite.id,
                 "case_count": len(suite.runs),
                 "planned_run_count": count,
+                "judging_required": suite.judging_required,
                 "judge_registry": str(resolve_registry_path(args.judge_registry)),
                 "judge_adapters": adapters,
                 "schemas": schemas,
@@ -1257,6 +1284,12 @@ def command_rejudge(args: argparse.Namespace) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
     suite = validate_suite(suite_path, ROOT)
     registry = judge_registry_for_args(args)
+    invocations = judge_invocations_for_suite(
+        suite=suite,
+        judge_override=args.judge_command,
+        registry=registry,
+        require_all=True,
+    )
     run_root = Path(args.run_root).expanduser().resolve()
     if not run_root.is_dir():
         raise EvalConfigError(f"run root does not exist: {run_root}")
@@ -1317,16 +1350,8 @@ def command_rejudge(args: argparse.Namespace) -> int:
         archive_judge_attempt(run_dir)
         clear_judge_attempt(run_dir)
         values = existing_values(case, run_dir)
-        invocation = judge_invocation_for_case(
-            case=case,
-            judge_override=args.judge_command,
-            registry=registry,
-        )
-        if invocation is None:
-            raise EvalConfigError(
-                f"case {case.id} has no Judge Adapter; configure case.evaluation.adapter "
-                "or pass --judge-command"
-            )
+        invocation = invocations[case.id]
+        assert invocation is not None
         result = judge_one(
             result=result,
             values=values,
@@ -1334,7 +1359,7 @@ def command_rejudge(args: argparse.Namespace) -> int:
             invocation=invocation,
             timeout=timeout,
         )
-        if result["judging"]["status"] in {"completed", "partial"}:
+        if result["judging"]["status"] == "completed":
             succeeded += 1
         collected.append((result_path, result))
 
@@ -1346,8 +1371,13 @@ def command_rejudge(args: argparse.Namespace) -> int:
         results=collected,
         run_root=run_root,
     )
+    ok = succeeded == attempted and evaluation_succeeded(
+        suite=suite,
+        mode="rejudge",
+        results=collected,
+    )
     report = {
-        "ok": succeeded == attempted,
+        "ok": ok,
         "run_root": str(run_root),
         "attempted": attempted,
         "succeeded": succeeded,
@@ -1355,13 +1385,19 @@ def command_rejudge(args: argparse.Namespace) -> int:
         **summary,
     }
     print(json.dumps(report, indent=2))
-    return 0 if succeeded == attempted else 1
+    return 0 if ok else 1
 
 
 def command_resume(args: argparse.Namespace) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
     suite = validate_suite(suite_path, ROOT)
     registry = judge_registry_for_args(args)
+    invocations = judge_invocations_for_suite(
+        suite=suite,
+        judge_override=args.judge_command,
+        registry=registry,
+        require_all=True,
+    )
     source_root = Path(args.source_run).expanduser().resolve()
     if not source_root.is_dir():
         raise EvalConfigError(f"source run does not exist: {source_root}")
@@ -1432,16 +1468,8 @@ def command_resume(args: argparse.Namespace) -> int:
             "resumed_at": utc_now(),
         }
         values = existing_values(case, run_dir)
-        invocation = judge_invocation_for_case(
-            case=case,
-            judge_override=args.judge_command,
-            registry=registry,
-        )
-        if invocation is None:
-            raise EvalConfigError(
-                f"case {case.id} has no Judge Adapter; configure case.evaluation.adapter "
-                "or pass --judge-command"
-            )
+        invocation = invocations[case.id]
+        assert invocation is not None
         if can_reuse:
             archive_judge_attempt(run_dir)
             clear_judge_attempt(run_dir)
@@ -1505,7 +1533,11 @@ def command_resume(args: argparse.Namespace) -> int:
     }
     write_json(run_root / "resume-manifest.json", resume_manifest)
     report = {
-        "ok": all(result["status"] != "failed" for _, result in collected),
+        "ok": evaluation_succeeded(
+            suite=suite,
+            mode="resume",
+            results=collected,
+        ),
         "run_root": str(run_root),
         **summary,
     }
@@ -1516,7 +1548,14 @@ def command_resume(args: argparse.Namespace) -> int:
 def command_execute(args: argparse.Namespace, mode: str) -> int:
     suite_path = (ROOT / args.suite).resolve() if not Path(args.suite).is_absolute() else Path(args.suite)
     suite = validate_suite(suite_path, ROOT)
-    registry = judge_registry_for_args(args)
+    invocations: dict[str, JudgeInvocation | None] = {}
+    if mode == "run":
+        registry = judge_registry_for_args(args)
+        invocations = judge_invocations_for_suite(
+            suite=suite,
+            judge_override=args.judge_command,
+            registry=registry,
+        )
     run_id = check_run_id(args.run_id or default_run_id())
     results_root = Path(args.results_dir)
     if not results_root.is_absolute():
@@ -1565,17 +1604,12 @@ def command_execute(args: argparse.Namespace, mode: str) -> int:
                         file=sys.stderr,
                         flush=True,
                     )
-                    invocation = judge_invocation_for_case(
-                        case=suite_run.case,
-                        judge_override=args.judge_command,
-                        registry=registry,
-                    )
                     result = execute_one(
                         result=result,
                         values=values,
                         case=suite_run.case,
                         agent_template=args.agent_command,
-                        judge_invocation=invocation,
+                        judge_invocation=invocations[suite_run.case.id],
                         timeout=timeout,
                     )
                 else:
@@ -1599,8 +1633,9 @@ def command_execute(args: argparse.Namespace, mode: str) -> int:
     )
     summary_path = run_root / "run-summary.json"
     write_json(summary_path, summary)
-    print(json.dumps({"ok": True, "run_root": str(run_root), **summary}, indent=2))
-    return 0 if all(result["status"] != "failed" for _, result in collected) else 1
+    ok = evaluation_succeeded(suite=suite, mode=mode, results=collected)
+    print(json.dumps({"ok": ok, "run_root": str(run_root), **summary}, indent=2))
+    return 0 if ok else 1
 
 
 def build_parser() -> argparse.ArgumentParser:

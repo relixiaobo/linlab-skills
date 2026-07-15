@@ -168,7 +168,11 @@
             }
           }
         },
-        "failure_tags": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "failure_tags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/slug"}
+        },
         "summary": {"type": "string"}
       }
     },

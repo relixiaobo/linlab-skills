@@ -14,9 +14,9 @@
     "failure_tags": {
       "type": "array",
       "uniqueItems": true,
-      "items": {"type": "string", "minLength": 1}
+      "items": {"$ref": "#/$defs/slug"}
     },
-    "summary": {"type": "string"}
+    "summary": {"type": "string", "minLength": 1}
   },
   "$defs": {
     "slug": {
@@ -26,15 +26,16 @@
     "score": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["criterion_id", "value", "rationale", "evidence"],
+      "required": ["criterion_id", "value", "passed", "rationale", "evidence"],
       "properties": {
         "criterion_id": {"$ref": "#/$defs/slug"},
         "value": {"type": "number", "minimum": 0, "maximum": 1},
         "passed": {"type": "boolean"},
-        "rationale": {"type": "string"},
+        "rationale": {"type": "string", "minLength": 1},
         "evidence": {
           "type": "array",
-          "items": {"type": "string"}
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
         }
       }
     }

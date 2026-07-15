@@ -28,12 +28,5 @@
       {"id": "fixture-artifact", "pattern": "artifact.txt", "required": true}
     ]
   },
-  "judges": [
-    {
-      "id": "fixture-judge",
-      "type": "deterministic",
-      "criteria": ["route-and-output"]
-    }
-  ],
   "failure_taxonomy": ["route-error", "missing-artifact"]
 }

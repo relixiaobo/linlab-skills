@@ -4,7 +4,15 @@
   "title": "Skill evaluation suite",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "id", "title", "runs", "defaults", "comparison"],
+  "required": [
+    "schema_version",
+    "id",
+    "title",
+    "runs",
+    "defaults",
+    "judging",
+    "comparison"
+  ],
   "properties": {
     "schema_version": {"const": "1.0"},
     "id": {"$ref": "#/$defs/slug"},
@@ -22,6 +30,14 @@
       "properties": {
         "repetitions": {"type": "integer", "minimum": 1, "maximum": 100},
         "timeout_seconds": {"type": "integer", "minimum": 1, "maximum": 86400}
+      }
+    },
+    "judging": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required"],
+      "properties": {
+        "required": {"type": "boolean"}
       }
     },
     "comparison": {
