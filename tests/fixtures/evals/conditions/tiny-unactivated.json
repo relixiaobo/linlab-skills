@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
-  "id": "tiny-ablated",
-  "label": "Fixture Skill ablated",
+  "id": "tiny-unactivated",
+  "label": "Fixture Skill with an unactivated ablation",
   "kind": "ablation",
   "skills": [
     {
@@ -11,9 +11,9 @@
         {
           "op": "replace",
           "path": "references/detail.md",
-          "behavior": "tiny-detail-guidance",
+          "behavior": "tiny-unactivated-guidance",
           "replacement": "tests/fixtures/evals/overlay/detail.md",
-          "reason": "Exercise deterministic replacement."
+          "reason": "Prove that suites reject an ablation the case cannot activate."
         }
       ]
     }

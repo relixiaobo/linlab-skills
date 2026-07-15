@@ -5,6 +5,14 @@
   "job": "fixture-task",
   "tags": ["fixture"],
   "risk_level": "low",
+  "intervention_activations": [
+    {
+      "behavior": "tiny-detail-guidance",
+      "description": "The request exercises the detail guidance changed by the fixture ablation.",
+      "trigger_files": ["input/request.txt"],
+      "observable_outcomes": ["route-and-output"]
+    }
+  ],
   "expected": {
     "route": {
       "acceptable_primary_skills": ["tiny-skill"]

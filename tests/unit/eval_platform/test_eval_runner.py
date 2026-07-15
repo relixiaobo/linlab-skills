@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -16,11 +17,14 @@ ADAPTER_REGISTRY = "tests/fixtures/evals/judge-registry.json"
 REQUIRED_JUDGING_SUITE = (
     "tests/fixtures/evals/suites/judging-required-missing-adapter.json"
 )
+UNACTIVATED_ABLATION_SUITE = (
+    "tests/fixtures/evals/suites/unactivated-ablation.json"
+)
 
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from evals.runners.eval_lib import EvalConfigError  # noqa: E402
+from evals.runners.eval_lib import EvalConfigError, validate_case  # noqa: E402
 from evals.runners.evalctl import load_judge_protocol  # noqa: E402
 from evals.runners.schema_validation import validate_document  # noqa: E402
 
@@ -43,6 +47,76 @@ class EvalRunnerTests(unittest.TestCase):
         self.assertEqual(report["planned_run_count"], 4)
         self.assertFalse(report["judging_required"])
         self.assertIsNone(report["judge_adapters"]["tiny-case"])
+        self.assertEqual(
+            report["intervention_activations"]["tiny-case"],
+            {
+                "declared_behaviors": ["tiny-detail-guidance"],
+                "condition_behaviors": {
+                    "tiny-ablated": ["tiny-detail-guidance"]
+                },
+            },
+        )
+
+    def test_unactivated_ablation_is_rejected_before_materialization(self) -> None:
+        validation = self.run_evalctl(
+            "validate",
+            "--suite",
+            UNACTIVATED_ABLATION_SUITE,
+        )
+        self.assertEqual(validation.returncode, 2)
+        self.assertIn(
+            "condition tiny-unactivated has unactivated ablation behaviors: "
+            "['tiny-unactivated-guidance']",
+            validation.stderr,
+        )
+
+        with tempfile.TemporaryDirectory(prefix="unactivated_ablation_") as temp:
+            materialization = self.run_evalctl(
+                "materialize",
+                "--suite",
+                UNACTIVATED_ABLATION_SUITE,
+                "--results-dir",
+                temp,
+                "--run-id",
+                "must-not-materialize",
+            )
+            self.assertEqual(materialization.returncode, 2)
+            self.assertFalse((Path(temp) / "must-not-materialize").exists())
+
+    def test_case_intervention_triggers_and_outcomes_are_validated(self) -> None:
+        source = ROOT / "tests/fixtures/evals/cases/tiny-case"
+        with tempfile.TemporaryDirectory(prefix="intervention_case_") as temp:
+            root = Path(temp)
+            case_dir = root / "tiny-case"
+            shutil.copytree(source, case_dir)
+            oracle_path = case_dir / "oracle.yaml"
+            oracle = json.loads(oracle_path.read_text(encoding="utf-8"))
+            activation = oracle["intervention_activations"][0]
+
+            activation["trigger_files"] = ["prompt.md"]
+            oracle_path.write_text(json.dumps(oracle), encoding="utf-8")
+            with self.assertRaisesRegex(
+                EvalConfigError,
+                "trigger must be Agent-visible under input/",
+            ):
+                validate_case(case_dir, root)
+
+            activation["trigger_files"] = ["input/missing.txt"]
+            oracle_path.write_text(json.dumps(oracle), encoding="utf-8")
+            with self.assertRaisesRegex(
+                EvalConfigError,
+                "trigger is not a regular input file",
+            ):
+                validate_case(case_dir, root)
+
+            activation["trigger_files"] = ["input/request.txt"]
+            activation["observable_outcomes"] = ["missing-outcome"]
+            oracle_path.write_text(json.dumps(oracle), encoding="utf-8")
+            with self.assertRaisesRegex(
+                EvalConfigError,
+                r"references unknown outcomes: \['missing-outcome'\]",
+            ):
+                validate_case(case_dir, root)
 
     def test_validate_applies_suite_wide_repetitions_override(self) -> None:
         result = self.run_evalctl(
@@ -105,6 +179,22 @@ class EvalRunnerTests(unittest.TestCase):
         oracle["judges"] = []
         with self.assertRaisesRegex(EvalConfigError, "Additional properties"):
             validate_document(oracle, "eval-case.schema.json", "fixture case")
+
+    def test_ablation_schema_requires_behavior_and_reason(self) -> None:
+        path = ROOT / "tests/fixtures/evals/conditions/tiny-ablated.json"
+        for key in ("behavior", "reason"):
+            with self.subTest(key=key):
+                condition = json.loads(path.read_text(encoding="utf-8"))
+                del condition["skills"][0]["ablations"][0][key]
+                with self.assertRaisesRegex(
+                    EvalConfigError,
+                    f"'{key}' is a required property",
+                ):
+                    validate_document(
+                        condition,
+                        "eval-condition.schema.json",
+                        "fixture condition",
+                    )
 
     def test_case_defined_domain_failure_tag_is_accepted(self) -> None:
         oracle = json.loads(
@@ -236,6 +326,24 @@ class EvalRunnerTests(unittest.TestCase):
                 self.assertEqual(comparison["deltas"]["task_score"], 1.0)
                 self.assertEqual(comparison["deltas"]["input_tokens"], 10)
                 self.assertEqual(comparison["deltas"]["total_tokens"], 10)
+            behaviors_by_condition = {
+                item["condition_id"]: item["intervention_behaviors"]
+                for item in summary["results"]
+            }
+            self.assertEqual(
+                behaviors_by_condition["tiny-ablated"],
+                ["tiny-detail-guidance"],
+            )
+            self.assertEqual(behaviors_by_condition["baseline"], [])
+            ablation_comparison = next(
+                item
+                for item in summary["comparisons"]
+                if item["treatment_condition"] == "tiny-ablated"
+            )
+            self.assertEqual(
+                ablation_comparison["intervention_behaviors"],
+                ["tiny-detail-guidance"],
+            )
 
             enabled_result = json.loads(
                 (

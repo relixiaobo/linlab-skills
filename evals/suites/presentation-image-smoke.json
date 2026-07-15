@@ -9,8 +9,7 @@
       "conditions": [
         "evals/conditions/baseline.json",
         "evals/conditions/presentation-main.json",
-        "evals/conditions/presentation-image-improved.json",
-        "evals/conditions/presentation-image-improved-no-visual-instructions.json"
+        "evals/conditions/presentation-image-improved.json"
       ],
       "repetitions": 1
     }
@@ -29,6 +28,7 @@
   "metadata": {
     "case_organization": "user-job",
     "oracle_visibility": "judge-only",
-    "experiment": "presentation-image-improvement-0fdd27c"
+    "experiment": "presentation-image-improvement-0fdd27c",
+    "ablation_excluded": "The text-only case does not activate presentation asset handling."
   }
 }

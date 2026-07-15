@@ -8,6 +8,25 @@
   "evaluation": {
     "adapter": "presentation"
   },
+  "intervention_activations": [
+    {
+      "behavior": "presentation-asset-handling",
+      "description": "The case requires choosing approved product assets over distractors, preserving extreme aspect ratios, and verifying the rendered deck.",
+      "trigger_files": [
+        "input/assets/signaldesk-command-center.png",
+        "input/assets/signaldesk-mobile-oncall.png",
+        "input/assets/signaldesk-wordmark.png",
+        "input/assets/northstar-dashboard-decoy.png",
+        "input/assets/generic-architecture-decoy.jpg"
+      ],
+      "observable_outcomes": [
+        "visual-plan",
+        "image-relevance",
+        "image-fit",
+        "rendered-verification"
+      ]
+    }
+  ],
   "expected": {
     "route": {
       "acceptable_primary_skills": ["presentation"],

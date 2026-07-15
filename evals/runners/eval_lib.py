@@ -46,6 +46,13 @@ class CaseSpec:
         config = evaluation.get("config", {})
         return dict(config) if isinstance(config, dict) else {}
 
+    @property
+    def intervention_activations(self) -> dict[str, dict[str, Any]]:
+        return {
+            str(item["behavior"]): dict(item)
+            for item in self.oracle.get("intervention_activations", [])
+        }
+
 
 @dataclass(frozen=True)
 class JudgeAdapterSpec:
@@ -67,6 +74,18 @@ class ConditionSpec:
     @property
     def id(self) -> str:
         return str(self.data["id"])
+
+    @property
+    def ablation_behaviors(self) -> tuple[str, ...]:
+        return tuple(
+            sorted(
+                {
+                    str(ablation["behavior"])
+                    for skill in self.data.get("skills", [])
+                    for ablation in skill.get("ablations", [])
+                }
+            )
+        )
 
 
 @dataclass(frozen=True)
@@ -306,6 +325,33 @@ def validate_case(case_dir: Path, root: Path = REPO_ROOT) -> CaseSpec:
     if abs(total_weight - 1.0) > 1e-9:
         raise EvalConfigError(f"case outcome weights must sum to 1.0, got {total_weight}")
 
+    activation_behaviors: list[str] = []
+    for activation in oracle.get("intervention_activations", []):
+        behavior = str(activation["behavior"])
+        activation_behaviors.append(behavior)
+        for trigger_file in activation["trigger_files"]:
+            relative = repo_relative_path(trigger_file)
+            if not relative.parts or relative.parts[0] != "input":
+                raise EvalConfigError(
+                    f"case intervention {behavior} trigger must be Agent-visible under input/: "
+                    f"{trigger_file}"
+                )
+            trigger = safe_child(case_dir, relative.as_posix())
+            if not trigger.is_file() or trigger.is_symlink():
+                raise EvalConfigError(
+                    f"case intervention {behavior} trigger is not a regular input file: "
+                    f"{trigger_file}"
+                )
+        unknown_outcomes = sorted(
+            set(activation["observable_outcomes"]) - set(outcome_ids)
+        )
+        if unknown_outcomes:
+            raise EvalConfigError(
+                f"case intervention {behavior} references unknown outcomes: "
+                f"{unknown_outcomes}"
+            )
+    _unique(activation_behaviors, "case intervention behavior ids")
+
     artifact_ids: list[str] = []
     for artifact in expected.get("artifacts", []):
         artifact_id = artifact["id"]
@@ -403,6 +449,16 @@ def validate_suite(path: Path, root: Path = REPO_ROOT) -> SuiteSpec:
         _unique(condition_ids, f"suite run {case.id} condition ids")
         if control_id not in condition_ids:
             raise EvalConfigError(f"suite run {case.id} does not include control {control_id}")
+        activated_behaviors = set(case.intervention_activations)
+        for condition in conditions:
+            missing_behaviors = sorted(
+                set(condition.ablation_behaviors) - activated_behaviors
+            )
+            if missing_behaviors:
+                raise EvalConfigError(
+                    f"suite run {case.id} condition {condition.id} has unactivated "
+                    f"ablation behaviors: {missing_behaviors}"
+                )
         repetitions = item.get("repetitions", default_repetitions)
         resolved_runs.append(SuiteRunSpec(case, conditions, repetitions))
     return SuiteSpec(path.resolve(), data, tuple(resolved_runs))

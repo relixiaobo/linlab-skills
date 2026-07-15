@@ -12,36 +12,42 @@
         {
           "op": "replace",
           "path": "SKILL.md",
+          "behavior": "presentation-asset-handling",
           "replacement": "presentation/SKILL.md",
           "reason": "Restore the pre-change top-level presentation workflow instructions."
         },
         {
           "op": "replace",
           "path": "agents/openai.yaml",
+          "behavior": "presentation-asset-handling",
           "replacement": "presentation/agents/openai.yaml",
           "reason": "Restore the pre-change implicit-routing description."
         },
         {
           "op": "replace",
           "path": "references/asset-intake.md",
+          "behavior": "presentation-asset-handling",
           "replacement": "presentation/references/asset-intake.md",
           "reason": "Remove the visual asset plan, relevance gate, and fit/crop instructions."
         },
         {
           "op": "replace",
           "path": "references/export.md",
+          "behavior": "presentation-asset-handling",
           "replacement": "presentation/references/export.md",
           "reason": "Restore the pre-change export instructions."
         },
         {
           "op": "replace",
           "path": "references/studio.md",
+          "behavior": "presentation-asset-handling",
           "replacement": "presentation/references/studio.md",
           "reason": "Restore the pre-change Studio sequence."
         },
         {
           "op": "replace",
           "path": "references/verification.md",
+          "behavior": "presentation-asset-handling",
           "replacement": "presentation/references/verification.md",
           "reason": "Restore the pre-change visual verification instructions."
         }

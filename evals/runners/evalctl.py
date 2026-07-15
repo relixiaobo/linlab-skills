@@ -1048,6 +1048,18 @@ def metric_value(result: dict[str, Any], metric: str) -> int | float | None:
     return result["usage"].get(metric)
 
 
+def result_intervention_behaviors(result: dict[str, Any]) -> list[str]:
+    return sorted(
+        {
+            str(ablation["behavior"])
+            for skill in (result.get("condition") or {}).get("skills", [])
+            if isinstance(skill, dict)
+            for ablation in skill.get("ablations", [])
+            if isinstance(ablation, dict) and ablation.get("behavior")
+        }
+    )
+
+
 def build_summary(
     *,
     run_id: str,
@@ -1071,6 +1083,7 @@ def build_summary(
                     "duration_ms"
                 )
             ),
+            "intervention_behaviors": result_intervention_behaviors(result),
             "result_path": path.relative_to(run_root).as_posix(),
         }
         for path, result in results
@@ -1107,6 +1120,7 @@ def build_summary(
                 "repetition": treatment["repetition"],
                 "control_condition": control_id,
                 "treatment_condition": treatment_id,
+                "intervention_behaviors": result_intervention_behaviors(treatment),
                 "deltas": deltas,
             }
         )
@@ -1342,6 +1356,17 @@ def command_validate(args: argparse.Namespace) -> int:
         case_id: invocation.adapter_id if invocation else None
         for case_id, invocation in invocations.items()
     }
+    intervention_activations = {
+        suite_run.case.id: {
+            "declared_behaviors": sorted(suite_run.case.intervention_activations),
+            "condition_behaviors": {
+                condition.id: list(condition.ablation_behaviors)
+                for condition in suite_run.conditions
+                if condition.ablation_behaviors
+            },
+        }
+        for suite_run in suite.runs
+    }
     schemas = validate_schema_documents()
     count = sum(len(run.conditions) * run.repetitions for run in suite.runs)
     print(
@@ -1355,6 +1380,7 @@ def command_validate(args: argparse.Namespace) -> int:
                 "judging_required": suite.judging_required,
                 "judge_registry": str(resolve_registry_path(args.judge_registry)),
                 "judge_adapters": adapters,
+                "intervention_activations": intervention_activations,
                 "schemas": schemas,
             },
             indent=2,

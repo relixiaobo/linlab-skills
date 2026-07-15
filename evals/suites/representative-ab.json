@@ -8,8 +8,7 @@
       "case": "evals/cases/create-investor-update",
       "conditions": [
         "evals/conditions/baseline.json",
-        "evals/conditions/presentation-enabled.json",
-        "evals/conditions/presentation-no-visual-guidance.json"
+        "evals/conditions/presentation-enabled.json"
       ]
     },
     {

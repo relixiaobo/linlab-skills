@@ -42,10 +42,11 @@
     "ablation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["op", "path"],
+      "required": ["op", "path", "behavior", "reason"],
       "properties": {
         "op": {"type": "string", "enum": ["remove", "replace"]},
         "path": {"type": "string", "minLength": 1},
+        "behavior": {"$ref": "#/$defs/slug"},
         "replacement": {"type": "string", "minLength": 1},
         "reason": {"type": "string", "minLength": 1}
       }

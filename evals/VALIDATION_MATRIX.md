@@ -30,21 +30,28 @@ python3 -m venv .venv
 
 - `.venv/bin/python evals/runners/evalctl.py validate --suite
   evals/suites/representative-ab.json` validates the shared Agent-evaluation
-  contracts. The suite contains 3 user-job cases and 21 planned runs across
-  baseline, Skill-enabled, visual-guidance ablation, and 3 repetitions.
+  contracts. The suite contains 3 user-job cases and 18 planned runs across
+  baseline, Skill-enabled, and 3 repetitions. Behavior-specific ablations live
+  in suites whose cases explicitly activate them.
 - `.venv/bin/python -m unittest discover -s tests/unit -p 'test_*.py' -v` checks oracle
   isolation, revision-pinned materialization, JSONL recovery, natural route
   evidence, authoritative schema enforcement, required judging, per-case Judge
-  Adapter routing, output immutability, domain failure tags, presentation,
-  data-analysis, and product-spec deterministic vetoes, evidence manifests,
-  rejudge/resume, and paired deltas.
+  Adapter routing, intervention activation, output immutability, domain failure
+  tags, presentation, data-analysis, and product-spec deterministic vetoes,
+  evidence manifests, rejudge/resume, and paired deltas.
 - `.venv/bin/python evals/runners/evalctl.py validate --suite
-  evals/suites/presentation-image-smoke.json` validates the four-condition
-  image-handling pilot before any model sessions are started.
+  evals/suites/presentation-image-smoke.json` validates the three-condition
+  historical image-handling pilot before any model sessions are started. Its
+  text-only case intentionally excludes the visual-guidance ablation.
 - `.venv/bin/python evals/runners/evalctl.py validate --suite
   evals/suites/presentation-image-assets-smoke.json` validates the controlled
   asset-selection case with required desktop/mobile/brand images, forbidden
-  distractors, and extreme aspect ratios.
+  distractors, extreme aspect ratios, and the revision-pinned historical
+  visual-guidance ablation.
+- `.venv/bin/python evals/runners/evalctl.py validate --suite
+  evals/suites/presentation-current-image-assets-ab.json` validates the current
+  baseline/Skill/asset-guidance ablation experiment with 3 repetitions and
+  required judging.
 - Generated workspaces are ignored by git: `artifact-skills-workspace/`,
   `feed-processing-workspace/`, `video-studio-workspace/`, and other
   `*-workspace/`

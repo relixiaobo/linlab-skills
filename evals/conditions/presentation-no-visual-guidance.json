@@ -11,6 +11,7 @@
         {
           "op": "replace",
           "path": "references/asset-intake.md",
+          "behavior": "presentation-asset-handling",
           "replacement": "evals/conditions/overlays/minimal-asset-intake.md",
           "reason": "Measure the incremental value of visual planning, relevance, fit, and crop guidance."
         }

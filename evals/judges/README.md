@@ -94,6 +94,9 @@ preserves which evaluator actually produced the observation and its cost.
   quality failures.
 - Blind model judges to condition names and prior scores.
 - Ground every score in persisted evidence; do not reward response claims alone.
+- Judge every `intervention_activations[].observable_outcomes` id through the
+  normal outcome protocol and retain evidence that can reveal the declared
+  behavior change.
 - Put exact metric, filter, grain, and join expectations in structured case
   config so deterministic evidence can be recomputed independently.
 - Put product-spec facts, state coverage, scope boundaries, and structural

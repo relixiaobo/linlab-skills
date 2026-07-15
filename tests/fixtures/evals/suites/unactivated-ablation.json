@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "id": "unactivated-ablation",
+  "title": "Fixture suite with an unactivated ablation",
+  "runs": [
+    {
+      "case": "tests/fixtures/evals/cases/tiny-case",
+      "conditions": [
+        "tests/fixtures/evals/conditions/baseline.json",
+        "tests/fixtures/evals/conditions/tiny-unactivated.json"
+      ]
+    }
+  ],
+  "defaults": {
+    "repetitions": 1,
+    "timeout_seconds": 60
+  },
+  "judging": {
+    "required": false
+  },
+  "comparison": {
+    "control_condition": "baseline",
+    "metrics": ["score"]
+  }
+}

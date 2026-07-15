@@ -21,6 +21,21 @@ pin `skills[].revision`; the runner resolves it to a full commit and materialize
 the Skill with `git archive`, so later working-tree changes cannot alter the
 intervention.
 
+An ablation is valid only when the paired case can activate and observe the
+changed behavior. Every ablation operation declares a stable `behavior` id and
+an authoring `reason`. The hidden case oracle declares the matching
+`intervention_activations` entry with:
+
+- one or more existing, Agent-visible `input/` trigger files; and
+- one or more existing outcome ids that can reveal the behavior change.
+
+Suite validation rejects an ablation whose behavior is not activated by its
+case before any payload is materialized. `evalctl validate` prints the declared
+and condition behavior matrix, and `run-summary.json` carries the behavior ids
+on results and paired comparisons. This is a structural relevance gate, not
+proof that the intervention caused a delta; repeated paired results provide the
+empirical evidence.
+
 This separation answers four different questions:
 
 1. Did the agent route the user job correctly?
@@ -249,7 +264,8 @@ remaining weights. Partial judging keeps both scores and pass state null.
 Completed judging records explicit critical failures. Raw results include route,
 artifacts, hashes, model/config, token use, cost, latency, failures, and
 provenance. `run-summary.json` pairs each treatment with the baseline at the same
-case and repetition and reports both raw-score and Task-score deltas.
+case and repetition, reports both raw-score and Task-score deltas, and identifies
+the intervention behavior measured by every ablation comparison.
 
 The runner also records adapter id, kind, protocol version, registry path/hash,
 exact command, merged config, logs, exit code, Judge start/end/duration, Judge
