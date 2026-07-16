@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -395,6 +396,52 @@ def cap_score(score: dict[str, Any], cap: float, rationale: str, evidence: str) 
         score.setdefault("evidence", []).append(evidence)
 
 
+def slide_count_bounds(oracle: dict[str, Any]) -> tuple[int, int] | None:
+    evaluation = oracle.get("evaluation")
+    config = evaluation.get("config") if isinstance(evaluation, dict) else None
+    configured = config.get("slide_count") if isinstance(config, dict) else None
+    if configured is not None:
+        if not isinstance(configured, dict):
+            raise JudgeError("presentation slide_count config must be an object")
+        minimum = configured.get("minimum")
+        maximum = configured.get("maximum")
+        if (
+            not isinstance(minimum, int)
+            or isinstance(minimum, bool)
+            or not isinstance(maximum, int)
+            or isinstance(maximum, bool)
+            or minimum < 1
+            or maximum < minimum
+        ):
+            raise JudgeError(
+                "presentation slide_count config needs positive integer minimum/maximum"
+            )
+        return minimum, maximum
+
+    editable = next(
+        (
+            item
+            for item in (oracle.get("expected") or {}).get("outcomes", [])
+            if isinstance(item, dict) and item.get("id") == "editable-deliverable"
+        ),
+        None,
+    )
+    description = editable.get("description") if isinstance(editable, dict) else None
+    if not isinstance(description, str):
+        return None
+    match = re.search(
+        r"\b(\d+)\s*(?:-|to)\s*(\d+)\s+(?:coherent\s+)?slides?\b",
+        description,
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return None
+    minimum, maximum = (int(value) for value in match.groups())
+    if minimum < 1 or maximum < minimum:
+        raise JudgeError("editable-deliverable declares an invalid slide count range")
+    return minimum, maximum
+
+
 def apply_deterministic_overrides(
     judgment: dict[str, Any],
     *,
@@ -436,11 +483,12 @@ def apply_deterministic_overrides(
 
     slide_count = len(inspect.get("slides", []))
     notes_count = int(inspect.get("notes_count", 0) or 0)
-    if not 9 <= slide_count <= 11:
+    bounds = slide_count_bounds(oracle)
+    if bounds is not None and not bounds[0] <= slide_count <= bounds[1]:
         cap_score(
             indexed["editable-deliverable"],
             0.5,
-            f"Expected 9-11 slides but found {slide_count}.",
+            f"Expected {bounds[0]}-{bounds[1]} slides but found {slide_count}.",
             "pptx-inspect.json:slides",
         )
     if notes_count < slide_count:

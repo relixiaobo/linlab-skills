@@ -99,6 +99,9 @@ preserves which evaluator actually produced the observation and its cost.
   behavior change.
 - Put exact metric, filter, grain, and join expectations in structured case
   config so deterministic evidence can be recomputed independently.
+- Put presentation slide-count bounds in `evaluation.config.slide_count` with
+  integer `minimum` and `maximum` values. The adapter accepts rubric-text ranges
+  only as a compatibility fallback and never applies a global slide-count cap.
 - Put product-spec facts, state coverage, scope boundaries, and structural
   minimums in criterion-oriented case config instead of hard-coding one answer.
 - Treat a missing required artifact as missing evidence, not a model-review

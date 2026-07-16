@@ -6,11 +6,13 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from evals.judges.presentation_judge_adapter import (
+    JudgeError,
     apply_deterministic_overrides,
     build_asset_match_report,
     is_renderer_infrastructure_failure,
     is_transient_codex_failure,
     resolve_structured_output_mode,
+    slide_count_bounds,
 )
 
 
@@ -28,7 +30,15 @@ def oracle() -> dict:
         "expected": {
             "route": {"acceptable_primary_skills": ["presentation"]},
             "outcomes": [
-                {"id": item, "critical": item in {"correct-route", "image-fit"}}
+                {
+                    "id": item,
+                    "critical": item in {"correct-route", "image-fit"},
+                    "description": (
+                        "Deliver an editable PPTX with 9-11 coherent slides."
+                        if item == "editable-deliverable"
+                        else "fixture criterion"
+                    ),
+                }
                 for item in ids
             ],
         }
@@ -193,6 +203,74 @@ class PresentationJudgeTests(unittest.TestCase):
         scores = {item["criterion_id"]: item for item in output["scores"]}
         self.assertEqual(scores["editable-deliverable"]["value"], 0.5)
         self.assertFalse(scores["editable-deliverable"]["passed"])
+
+    def test_case_specific_slide_range_accepts_eight_slides(self) -> None:
+        case_oracle = oracle()
+        editable = next(
+            item
+            for item in case_oracle["expected"]["outcomes"]
+            if item["id"] == "editable-deliverable"
+        )
+        editable["description"] = (
+            "Deliver an editable PPTX with 8-10 coherent slides and speaker notes."
+        )
+        output = apply_deterministic_overrides(
+            judgment(),
+            oracle=case_oracle,
+            result={"route": {"primary_skill": "presentation"}},
+            inspect={
+                "ok": True,
+                "slides": [{} for _ in range(8)],
+                "notes_count": 8,
+                "image_aspect_distortions": [],
+                "severe_image_resolution_warnings": [],
+                "missing_image_dimensions": [],
+            },
+            commands={"inspect_exit": 0, "render_exit": 0},
+        )
+        scores = {item["criterion_id"]: item for item in output["scores"]}
+        self.assertEqual(scores["editable-deliverable"]["value"], 0.9)
+        self.assertTrue(scores["editable-deliverable"]["passed"])
+
+    def test_structured_slide_range_overrides_description_fallback(self) -> None:
+        case_oracle = oracle()
+        case_oracle["evaluation"] = {
+            "config": {"slide_count": {"minimum": 8, "maximum": 10}}
+        }
+        self.assertEqual(slide_count_bounds(case_oracle), (8, 10))
+
+    def test_missing_slide_range_does_not_apply_a_global_default(self) -> None:
+        case_oracle = oracle()
+        editable = next(
+            item
+            for item in case_oracle["expected"]["outcomes"]
+            if item["id"] == "editable-deliverable"
+        )
+        editable["description"] = "Deliver an editable presentation with notes."
+        output = apply_deterministic_overrides(
+            judgment(),
+            oracle=case_oracle,
+            result={"route": {"primary_skill": "presentation"}},
+            inspect={
+                "ok": True,
+                "slides": [{} for _ in range(7)],
+                "notes_count": 7,
+                "image_aspect_distortions": [],
+                "severe_image_resolution_warnings": [],
+                "missing_image_dimensions": [],
+            },
+            commands={"inspect_exit": 0, "render_exit": 0},
+        )
+        scores = {item["criterion_id"]: item for item in output["scores"]}
+        self.assertEqual(scores["editable-deliverable"]["value"], 0.9)
+
+    def test_invalid_structured_slide_range_is_rejected(self) -> None:
+        case_oracle = oracle()
+        case_oracle["evaluation"] = {
+            "config": {"slide_count": {"minimum": 11, "maximum": 9}}
+        }
+        with self.assertRaisesRegex(JudgeError, "positive integer minimum/maximum"):
+            slide_count_bounds(case_oracle)
 
 
 if __name__ == "__main__":
