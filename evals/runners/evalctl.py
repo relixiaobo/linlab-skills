@@ -1225,6 +1225,81 @@ def validate_existing_identity(
         )
 
 
+def regular_tree_files(root: Path, *, label: str) -> list[Path]:
+    if root.is_symlink() or not root.is_dir():
+        raise EvalConfigError(f"{label} is missing or is not a regular directory: {root}")
+    files: list[Path] = []
+    for path in root.rglob("*"):
+        if path.is_symlink():
+            raise EvalConfigError(f"{label} contains a symlink: {path}")
+        if path.is_file():
+            files.append(path)
+        elif not path.is_dir():
+            raise EvalConfigError(f"{label} contains a non-regular entry: {path}")
+    return files
+
+
+def validate_existing_payload(
+    result: dict[str, Any],
+    *,
+    run_dir: Path,
+    case: Any,
+    condition: Any,
+    repetition: int,
+) -> None:
+    location = f"{case.id}/{condition.id}/rep-{repetition:02d}"
+    payload = run_dir / "payload"
+    regular_tree_files(payload, label=f"materialized payload for {location}")
+    expected_payload_entries = {"prompt.md", "input", "skills"}
+    actual_payload_entries = {path.name for path in payload.iterdir()}
+    if actual_payload_entries != expected_payload_entries:
+        raise EvalConfigError(
+            f"materialized payload layout changed since the source run for {location}"
+        )
+
+    prompt_path = payload / "prompt.md"
+    if prompt_path.is_symlink() or not prompt_path.is_file():
+        raise EvalConfigError(
+            f"materialized case payload changed since the source run for {location}"
+        )
+    input_files = regular_tree_files(
+        payload / "input",
+        label=f"materialized case input for {location}",
+    )
+    actual_case_sha = sha256_paths([prompt_path, *input_files], payload)
+    if actual_case_sha != result["provenance"].get("case_sha256"):
+        raise EvalConfigError(
+            f"materialized case payload changed since the source run for {location}"
+        )
+
+    recorded_skills = result["condition"]["skills"]
+    expected_skill_names = [skill["name"] for skill in condition.data["skills"]]
+    recorded_skill_names = [skill["name"] for skill in recorded_skills]
+    if recorded_skill_names != expected_skill_names:
+        raise EvalConfigError(
+            f"recorded Skill set changed since the source run for {location}"
+        )
+
+    skills_dir = payload / "skills"
+    regular_tree_files(skills_dir, label=f"materialized Skills for {location}")
+    actual_skill_names = sorted(path.name for path in skills_dir.iterdir())
+    if actual_skill_names != sorted(expected_skill_names):
+        raise EvalConfigError(
+            f"materialized Skill set changed since the source run for {location}"
+        )
+    for skill in recorded_skills:
+        skill_dir = skills_dir / skill["name"]
+        regular_tree_files(
+            skill_dir,
+            label=f"materialized Skill {skill['name']} for {location}",
+        )
+        if sha256_tree(skill_dir) != skill["materialized_sha256"]:
+            raise EvalConfigError(
+                f"materialized Skill payload changed since the source run for "
+                f"{location}: {skill['name']}"
+            )
+
+
 def archive_attempt(run_dir: Path, label: str, names: tuple[str, ...]) -> Path:
     attempts = run_dir / "attempts"
     attempts.mkdir(exist_ok=True)
@@ -1447,6 +1522,13 @@ def command_rejudge(args: argparse.Namespace) -> int:
             condition=condition,
             repetition=repetition,
         )
+        validate_existing_payload(
+            result,
+            run_dir=run_dir,
+            case=case,
+            condition=condition,
+            repetition=repetition,
+        )
         recover_route_from_trace(result, run_dir)
         eligible = artifacts_intact(result, run_dir / "output")
         if not eligible:
@@ -1571,6 +1653,13 @@ def command_resume(args: argparse.Namespace) -> int:
             condition=condition,
             repetition=repetition,
         )
+        validate_existing_payload(
+            source_result,
+            run_dir=source_dir,
+            case=case,
+            condition=condition,
+            repetition=repetition,
+        )
 
     shutil.copytree(source_root, run_root)
     if (run_root / "run-summary.json").is_file():
@@ -1589,6 +1678,13 @@ def command_resume(args: argparse.Namespace) -> int:
         validate_existing_identity(
             source_result,
             suite=suite,
+            case=case,
+            condition=condition,
+            repetition=repetition,
+        )
+        validate_existing_payload(
+            source_result,
+            run_dir=run_dir,
             case=case,
             condition=condition,
             repetition=repetition,

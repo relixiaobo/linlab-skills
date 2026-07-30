@@ -645,6 +645,48 @@ class EvalRunnerTests(unittest.TestCase):
             self.assertEqual((run_dir / "result.json").read_bytes(), result_before)
             self.assertFalse((run_dir / "attempts").exists())
 
+    def test_rejudge_rejects_mutated_case_payload_before_mutating_run(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="eval_rejudge_payload_") as temp:
+            agent = f"{sys.executable} {{repo}}/tests/fixtures/evals/fake_agent.py"
+            judge = f"{sys.executable} {{repo}}/tests/fixtures/evals/fake_judge.py"
+            initial = self.run_evalctl(
+                "run",
+                "--suite",
+                SUITE,
+                "--results-dir",
+                temp,
+                "--run-id",
+                "rejudge-payload-source",
+                "--agent-command",
+                agent,
+                "--judge-command",
+                judge,
+            )
+            self.assertEqual(initial.returncode, 0, initial.stderr)
+            run_root = Path(temp) / "rejudge-payload-source"
+            run_dir = run_root / "tiny-case" / "tiny-enabled" / "rep-01"
+            result_before = (run_dir / "result.json").read_bytes()
+            summary_before = (run_root / "run-summary.json").read_bytes()
+            (run_dir / "payload" / "input" / "request.txt").write_text(
+                "mutated after materialization\n",
+                encoding="utf-8",
+            )
+
+            rejudge = self.run_evalctl(
+                "rejudge",
+                "--suite",
+                SUITE,
+                "--run-root",
+                str(run_root),
+                "--judge-command",
+                judge,
+            )
+            self.assertEqual(rejudge.returncode, 2)
+            self.assertIn("materialized case payload changed", rejudge.stderr)
+            self.assertEqual((run_dir / "result.json").read_bytes(), result_before)
+            self.assertEqual((run_root / "run-summary.json").read_bytes(), summary_before)
+            self.assertFalse((run_dir / "attempts").exists())
+
     def test_resume_clones_source_and_reruns_only_failed_executors(self) -> None:
         with tempfile.TemporaryDirectory(prefix="eval_resume_") as temp:
             agent = f"{sys.executable} {{repo}}/tests/fixtures/evals/fake_agent.py"
@@ -715,6 +757,59 @@ class EvalRunnerTests(unittest.TestCase):
             self.assertEqual(target_enabled["status"], "completed")
             summary = json.loads((target_root / "run-summary.json").read_text(encoding="utf-8"))
             self.assertEqual(summary["mode"], "resume")
+
+    def test_resume_rejects_mutated_skill_payload_before_cloning(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="eval_resume_payload_") as temp:
+            agent = f"{sys.executable} {{repo}}/tests/fixtures/evals/fake_agent.py"
+            judge = f"{sys.executable} {{repo}}/tests/fixtures/evals/fake_judge.py"
+            initial = self.run_evalctl(
+                "run",
+                "--suite",
+                SUITE,
+                "--results-dir",
+                temp,
+                "--run-id",
+                "resume-payload-source",
+                "--agent-command",
+                agent,
+                "--judge-command",
+                judge,
+            )
+            self.assertEqual(initial.returncode, 0, initial.stderr)
+            source_root = Path(temp) / "resume-payload-source"
+            skill_file = (
+                source_root
+                / "tiny-case"
+                / "tiny-enabled"
+                / "rep-01"
+                / "payload"
+                / "skills"
+                / "tiny-skill"
+                / "SKILL.md"
+            )
+            skill_file.write_text(
+                skill_file.read_text(encoding="utf-8") + "\nmutated after materialization\n",
+                encoding="utf-8",
+            )
+
+            resumed = self.run_evalctl(
+                "resume",
+                "--suite",
+                SUITE,
+                "--source-run",
+                str(source_root),
+                "--results-dir",
+                temp,
+                "--run-id",
+                "resume-payload-target",
+                "--agent-command",
+                agent,
+                "--judge-command",
+                judge,
+            )
+            self.assertEqual(resumed.returncode, 2)
+            self.assertIn("materialized Skill payload changed", resumed.stderr)
+            self.assertFalse((Path(temp) / "resume-payload-target").exists())
 
 
 if __name__ == "__main__":
