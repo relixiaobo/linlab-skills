@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-OUTPUT = ROOT / "evals" / "artifact-skills" / "presentation" / "source"
+OUTPUT = ROOT / "tests" / "fixtures" / "artifact-skills" / "presentation" / "source"
 
 P_NS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 A_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"

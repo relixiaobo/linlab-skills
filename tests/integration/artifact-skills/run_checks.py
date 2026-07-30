@@ -10,8 +10,8 @@ import zipfile
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
-SUITE = ROOT / "evals" / "artifact-skills" / "suite.json"
+ROOT = Path(__file__).resolve().parents[3]
+SUITE = ROOT / "tests" / "fixtures" / "artifact-skills" / "suite.json"
 
 
 def run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
@@ -55,7 +55,7 @@ def check_eval_file(path: Path) -> list[str]:
 
 def ensure_fixtures() -> list[str]:
     errors: list[str] = []
-    pdf_gen = run(["python3", "evals/artifact-skills/pdf/make_sample_pdfs.py"])
+    pdf_gen = run(["python3", "tests/fixtures/artifact-skills/pdf/make_sample_pdfs.py"])
     if pdf_gen.returncode != 0:
         errors.append(f"pdf sample generation failed: {pdf_gen.stderr.strip()}")
     return errors
@@ -74,11 +74,11 @@ def smoke_checks() -> list[str]:
     create_minimal_xlsx(xlsx)
 
     commands = [
-        ["node", "skills/document/scripts/markdown_tool.mjs", "inspect", "evals/artifact-skills/document/source/board_notes.md", "--out", "work/artifact-skills/document-md-report.json"],
+        ["node", "skills/document/scripts/markdown_tool.mjs", "inspect", "tests/fixtures/artifact-skills/document/source/board_notes.md", "--out", "work/artifact-skills/document-md-report.json"],
         ["python3", "skills/document/scripts/docx_tool.py", "inspect", str(docx), "--out", "work/artifact-skills/document-docx-report.json"],
-        ["python3", "skills/spreadsheet/scripts/table_tool.py", "inspect", "evals/artifact-skills/spreadsheet/source/messy_export.csv", "--out", "work/artifact-skills/spreadsheet-csv-report.json"],
+        ["python3", "skills/spreadsheet/scripts/table_tool.py", "inspect", "tests/fixtures/artifact-skills/spreadsheet/source/messy_export.csv", "--out", "work/artifact-skills/spreadsheet-csv-report.json"],
         ["python3", "skills/spreadsheet/scripts/workbook_tool.py", "inspect", str(xlsx), "--out", "work/artifact-skills/spreadsheet-xlsx-report.json"],
-        ["python3", "skills/pdf/scripts/pdf_tool.py", "inspect", "evals/artifact-skills/pdf/source/one_page.pdf", "--out", "work/artifact-skills/pdf-inspect-report.json"],
+        ["python3", "skills/pdf/scripts/pdf_tool.py", "inspect", "tests/fixtures/artifact-skills/pdf/source/one_page.pdf", "--out", "work/artifact-skills/pdf-inspect-report.json"],
     ]
     html = workspace / "presentation-smoke.html"
     html.parent.mkdir(parents=True, exist_ok=True)
@@ -92,7 +92,7 @@ def smoke_checks() -> list[str]:
     commands.append([
         "python3",
         "skills/presentation/scripts/render_slides.py",
-        "evals/artifact-skills/pdf/source/one_page.pdf",
+        "tests/fixtures/artifact-skills/pdf/source/one_page.pdf",
         "--out-dir",
         str(render_dir),
         "--dpi",

@@ -104,7 +104,7 @@
     "efficiency"
   ],
   "metadata": {
-    "origin": "migrated from evals/data-analysis sample fixtures",
+    "origin": "migrated from legacy data-analysis sample fixtures",
     "novelty": "small synthetic order dataset with injected fan-out risk"
   }
 }

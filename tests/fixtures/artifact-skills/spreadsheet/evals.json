@@ -5,9 +5,9 @@
     {
       "id": "spreadsheet-pricing-model",
       "name": "formula-workbook-model",
-      "prompt": "Use $spreadsheet to build a source-first XLSX pricing model from evals/artifact-skills/spreadsheet/source/pricing_inputs.csv. Include assumptions, formulas rather than hardcoded calculated outputs, named ranges or stable input cells, a validation/QA sheet, and a verification report. State any formula recalculation limitation.",
+      "prompt": "Use $spreadsheet to build a source-first XLSX pricing model from tests/fixtures/artifact-skills/spreadsheet/source/pricing_inputs.csv. Include assumptions, formulas rather than hardcoded calculated outputs, named ranges or stable input cells, a validation/QA sheet, and a verification report. State any formula recalculation limitation.",
       "files": [
-        "evals/artifact-skills/spreadsheet/source/pricing_inputs.csv"
+        "tests/fixtures/artifact-skills/spreadsheet/source/pricing_inputs.csv"
       ],
       "expected_skill": "spreadsheet",
       "assertions": [
@@ -21,9 +21,9 @@
     {
       "id": "spreadsheet-csv-cleaning",
       "name": "tabular-exchange-cleaning",
-      "prompt": "Use $spreadsheet to clean evals/artifact-skills/spreadsheet/source/messy_export.csv into a safe CSV for import into another system. Preserve account IDs exactly, flag formula-injection-like cells, and produce a short QA report. Do not make a DOCX report.",
+      "prompt": "Use $spreadsheet to clean tests/fixtures/artifact-skills/spreadsheet/source/messy_export.csv into a safe CSV for import into another system. Preserve account IDs exactly, flag formula-injection-like cells, and produce a short QA report. Do not make a DOCX report.",
       "files": [
-        "evals/artifact-skills/spreadsheet/source/messy_export.csv"
+        "tests/fixtures/artifact-skills/spreadsheet/source/messy_export.csv"
       ],
       "expected_skill": "spreadsheet",
       "assertions": [
@@ -36,9 +36,9 @@
     {
       "id": "spreadsheet-negative-memo-table",
       "name": "should-not-handle-document-table",
-      "prompt": "Write a policy memo using evals/artifact-skills/spreadsheet/source/messy_export.csv as source evidence. Include a small summary table in the memo, but the final artifact is a written document.",
+      "prompt": "Write a policy memo using tests/fixtures/artifact-skills/spreadsheet/source/messy_export.csv as source evidence. Include a small summary table in the memo, but the final artifact is a written document.",
       "files": [
-        "evals/artifact-skills/spreadsheet/source/messy_export.csv"
+        "tests/fixtures/artifact-skills/spreadsheet/source/messy_export.csv"
       ],
       "expected_skill": "document",
       "assertions": [

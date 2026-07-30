@@ -45,7 +45,8 @@ must remain useful on its own and must not assume any other skill exists.
 
 The artifact skills (`presentation`, `document`, `spreadsheet`, and `pdf`) still
 have legacy shared trigger and smoke definitions in
-`evals/artifact-skills/suite.json` and `evals/run_artifact_skill_checks.py`.
+`tests/fixtures/artifact-skills/suite.json` and
+`tests/integration/artifact-skills/run_checks.py`.
 Migrate agent-behavior coverage into Skill-independent user-job cases under
 `evals/cases/`; keep deterministic file and tool checks under `tests/`.
 

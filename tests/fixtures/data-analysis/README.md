@@ -80,5 +80,5 @@ exists because three real bugs once shipped in the verification tool undetected,
 and a wrong verifier is worse than none. New deterministic regressions should
 land there as a new `check(...)` before the fix. Agent behavior cases use the
 common contracts under `evals/cases/` and `evals/suites/`;
-`evals/data-analysis/cases.yaml` is retained as a migration backlog rather than
+`tests/fixtures/data-analysis/cases.yaml` is retained as a migration backlog rather than
 an executable suite.

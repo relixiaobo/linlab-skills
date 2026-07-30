@@ -5,9 +5,9 @@
     {
       "id": "document-board-memo",
       "name": "board-memo-from-source",
-      "prompt": "Use $document to turn evals/artifact-skills/document/source/board_notes.md into a concise board memo with a clear recommendation, source map, and predicted reader questions. Keep the source as Markdown and describe the DOCX export route.",
+      "prompt": "Use $document to turn tests/fixtures/artifact-skills/document/source/board_notes.md into a concise board memo with a clear recommendation, source map, and predicted reader questions. Keep the source as Markdown and describe the DOCX export route.",
       "files": [
-        "evals/artifact-skills/document/source/board_notes.md"
+        "tests/fixtures/artifact-skills/document/source/board_notes.md"
       ],
       "expected_skill": "document",
       "assertions": [
@@ -21,9 +21,9 @@
     {
       "id": "document-redline-review",
       "name": "review-comments-redline-route",
-      "prompt": "Use $document to review evals/artifact-skills/document/source/policy_draft.md as if it will become a DOCX with comments. Produce actionable comments, identify unclear claims, and state how tracked changes would be handled if a native DOCX were supplied.",
+      "prompt": "Use $document to review tests/fixtures/artifact-skills/document/source/policy_draft.md as if it will become a DOCX with comments. Produce actionable comments, identify unclear claims, and state how tracked changes would be handled if a native DOCX were supplied.",
       "files": [
-        "evals/artifact-skills/document/source/policy_draft.md"
+        "tests/fixtures/artifact-skills/document/source/policy_draft.md"
       ],
       "expected_skill": "document",
       "assertions": [
@@ -36,9 +36,9 @@
     {
       "id": "document-negative-workbook",
       "name": "should-not-handle-workbook-model",
-      "prompt": "Build an Excel model from evals/artifact-skills/document/source/pricing_inputs.csv with assumptions, formulas, named input cells, and a validation sheet. The workbook should recalculate when assumptions change.",
+      "prompt": "Build an Excel model from tests/fixtures/artifact-skills/document/source/pricing_inputs.csv with assumptions, formulas, named input cells, and a validation sheet. The workbook should recalculate when assumptions change.",
       "files": [
-        "evals/artifact-skills/document/source/pricing_inputs.csv"
+        "tests/fixtures/artifact-skills/document/source/pricing_inputs.csv"
       ],
       "expected_skill": "spreadsheet",
       "assertions": [

@@ -3,7 +3,7 @@
 
 This is the enforcement the rest of the skill lacks: the decision frameworks and
 the Operating Rules are instructions to the model, but THESE are assertions a
-machine checks. It synthesizes novel trap data (per evals/data-analysis/README.md
+machine checks. It synthesizes novel trap data (per tests/fixtures/data-analysis/README.md
 -- never famous datasets) and asserts the scripts catch the traps, that the trust badge cannot be
 shown without real verification, and that the renderers still produce output.
 

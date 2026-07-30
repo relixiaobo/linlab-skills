@@ -5,10 +5,10 @@
     {
       "id": "video-local-edit-trim-subs",
       "name": "local-edit-trim-subs",
-      "prompt": "Take evals/video-studio/media/source_clip.mp4 and make a 5-second clip from the start. Burn in the subtitles from evals/video-studio/media/captions.srt, and make sure the audio does not cut off abruptly at the end. Give me the final mp4.",
+      "prompt": "Take tests/fixtures/video-studio/media/source_clip.mp4 and make a 5-second clip from the start. Burn in the subtitles from tests/fixtures/video-studio/media/captions.srt, and make sure the audio does not cut off abruptly at the end. Give me the final mp4.",
       "files": [
-        "evals/video-studio/media/source_clip.mp4",
-        "evals/video-studio/media/captions.srt"
+        "tests/fixtures/video-studio/media/source_clip.mp4",
+        "tests/fixtures/video-studio/media/captions.srt"
       ],
       "assertions": [
         "Produces a final mp4 approximately 5 seconds long",
@@ -22,9 +22,9 @@
     {
       "id": "video-web-to-video",
       "name": "web-to-video",
-      "prompt": "Turn evals/video-studio/media/dashboard.html into a vertical short video, 1080x1920, about 6 seconds, suitable for posting as a Reel. Capture it with a headless browser, not screen recording.",
+      "prompt": "Turn tests/fixtures/video-studio/media/dashboard.html into a vertical short video, 1080x1920, about 6 seconds, suitable for posting as a Reel. Capture it with a headless browser, not screen recording.",
       "files": [
-        "evals/video-studio/media/dashboard.html"
+        "tests/fixtures/video-studio/media/dashboard.html"
       ],
       "assertions": [
         "Produces a final video at 1080x1920",
@@ -37,9 +37,9 @@
     {
       "id": "video-platform-package-douyin",
       "name": "platform-package-douyin",
-      "prompt": "Make a Douyin short-form package from evals/video-studio/media/source_clip.mp4. It should be vertical 9:16, under 10 seconds, with a cover image and the title '产品上线'. Give me a handoff package ready to publish, but do not upload anything anywhere.",
+      "prompt": "Make a Douyin short-form package from tests/fixtures/video-studio/media/source_clip.mp4. It should be vertical 9:16, under 10 seconds, with a cover image and the title '产品上线'. Give me a handoff package ready to publish, but do not upload anything anywhere.",
       "files": [
-        "evals/video-studio/media/source_clip.mp4"
+        "tests/fixtures/video-studio/media/source_clip.mp4"
       ],
       "assertions": [
         "Produces a vertical 1080x1920 final video under 10 seconds long",

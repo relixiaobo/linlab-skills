@@ -65,10 +65,6 @@ reports/           # reviewed, decision-bearing evaluation reports
 portfolio/         # portfolio status and keep/change/retire decisions
 ```
 
-Legacy definitions remain under `evals/artifact-skills/` and several
-Skill-named directories during migration. They are not the canonical format for
-new agent evaluations.
-
 ## Case Isolation
 
 Each case has a hard Agent-visible/private split:

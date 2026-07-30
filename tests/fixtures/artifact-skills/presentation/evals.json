@@ -5,9 +5,9 @@
     {
       "id": "presentation-studio-new-deck",
       "name": "content-specific-creative-deck",
-      "prompt": "Use $presentation to turn evals/artifact-skills/presentation/source/quarterly_update.md into an exceptional, visually distinctive 9-11 slide investor presentation. This is a new deck for a 12-minute live founder update, not a template-fill exercise. Deliver an editable PPTX and keep every metric and caveat faithful to the source.",
+      "prompt": "Use $presentation to turn tests/fixtures/artifact-skills/presentation/source/quarterly_update.md into an exceptional, visually distinctive 9-11 slide investor presentation. This is a new deck for a 12-minute live founder update, not a template-fill exercise. Deliver an editable PPTX and keep every metric and caveat faithful to the source.",
       "files": [
-        "evals/artifact-skills/presentation/source/quarterly_update.md"
+        "tests/fixtures/artifact-skills/presentation/source/quarterly_update.md"
       ],
       "expected_skill": "presentation",
       "assertions": [
@@ -26,7 +26,7 @@
       "name": "existing-deck-as-source-material",
       "prompt": "Use $presentation to completely restructure an attached 14-slide annual strategy PPTX. The current story and design are weak, so you may reorder, merge, or split slides and replace the visual system. Treat the old deck as source material: preserve every factual claim, number, citation, customer quote, and required brand asset unless you explicitly flag a conflict. Deliver a substantially better, editable PPTX.",
       "files": [
-        "evals/artifact-skills/presentation/source/annual_strategy_source.pptx"
+        "tests/fixtures/artifact-skills/presentation/source/annual_strategy_source.pptx"
       ],
       "expected_skill": "presentation",
       "assertions": [
@@ -44,7 +44,7 @@
       "name": "beautify-with-preservation-matrix",
       "prompt": "Use $presentation to beautify an attached 18-slide sales deck one-to-one. Keep the exact slide count, slide order, wording, numbers, charts, speaker notes, theme/master, logos, aspect ratio, and which content appears on each slide. You may improve typography, spacing, alignment, color application, and object geometry, but do not rewrite or restructure the story. Return an editable PPTX.",
       "files": [
-        "evals/artifact-skills/presentation/source/sales_redesign_source.pptx"
+        "tests/fixtures/artifact-skills/presentation/source/sales_redesign_source.pptx"
       ],
       "expected_skill": "presentation",
       "assertions": [
@@ -62,7 +62,7 @@
       "name": "single-target-pptx-edit",
       "prompt": "Use $presentation to edit an attached board_deck.pptx. On slide 7, change only the subtitle text from 'Q3 pipeline' to 'Q4 pipeline'. Do not alter any other text, formatting, geometry, animation, speaker note, theme, relationship, slide order, or package metadata. Return the edited PPTX and evidence that only the requested target changed.",
       "files": [
-        "evals/artifact-skills/presentation/source/board_deck.pptx"
+        "tests/fixtures/artifact-skills/presentation/source/board_deck.pptx"
       ],
       "expected_skill": "presentation",
       "assertions": [
@@ -79,9 +79,9 @@
     {
       "id": "presentation-html-investor-update",
       "name": "agent-maintainable-html-deck",
-      "prompt": "Use $presentation to turn evals/artifact-skills/presentation/source/quarterly_update.md into a polished 6-slide browser-presentable deck for a live founder update. Deliver canonical HTML, include speaker notes for each slide, use a consistent visual system, and produce a final verification report. Do not create a marketing landing page.",
+      "prompt": "Use $presentation to turn tests/fixtures/artifact-skills/presentation/source/quarterly_update.md into a polished 6-slide browser-presentable deck for a live founder update. Deliver canonical HTML, include speaker notes for each slide, use a consistent visual system, and produce a final verification report. Do not create a marketing landing page.",
       "files": [
-        "evals/artifact-skills/presentation/source/quarterly_update.md"
+        "tests/fixtures/artifact-skills/presentation/source/quarterly_update.md"
       ],
       "expected_skill": "presentation",
       "assertions": [
@@ -97,9 +97,9 @@
     {
       "id": "presentation-pdf-handout-boundary",
       "name": "pdf-handout-from-deck-source",
-      "prompt": "Use $presentation to create a short reading/share deck from evals/artifact-skills/presentation/source/product_brief.md and export or describe the PDF handout route. Keep the deck source editable for future agent revisions. The PDF is only the handout deliverable, not the source of truth.",
+      "prompt": "Use $presentation to create a short reading/share deck from tests/fixtures/artifact-skills/presentation/source/product_brief.md and export or describe the PDF handout route. Keep the deck source editable for future agent revisions. The PDF is only the handout deliverable, not the source of truth.",
       "files": [
-        "evals/artifact-skills/presentation/source/product_brief.md"
+        "tests/fixtures/artifact-skills/presentation/source/product_brief.md"
       ],
       "expected_skill": "presentation",
       "assertions": [
@@ -112,9 +112,9 @@
     {
       "id": "presentation-negative-report",
       "name": "should-not-handle-long-report",
-      "prompt": "Create a 5-page written board memo from evals/artifact-skills/presentation/source/quarterly_update.md. It should be a narrative document with headings and a source map, not slides.",
+      "prompt": "Create a 5-page written board memo from tests/fixtures/artifact-skills/presentation/source/quarterly_update.md. It should be a narrative document with headings and a source map, not slides.",
       "files": [
-        "evals/artifact-skills/presentation/source/quarterly_update.md"
+        "tests/fixtures/artifact-skills/presentation/source/quarterly_update.md"
       ],
       "expected_skill": "document",
       "assertions": [

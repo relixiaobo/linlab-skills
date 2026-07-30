@@ -15,8 +15,8 @@ import sys
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[2]
-EVALS = ROOT / "evals" / "code-review" / "evals.json"
+ROOT = Path(__file__).resolve().parents[3]
+EVALS = ROOT / "tests" / "fixtures" / "code-review" / "evals.json"
 
 
 def load_json(path: Path) -> dict:

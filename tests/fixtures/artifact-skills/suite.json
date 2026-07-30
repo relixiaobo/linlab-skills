@@ -7,10 +7,10 @@
     "pdf"
   ],
   "eval_files": [
-    "evals/artifact-skills/presentation/evals.json",
-    "evals/artifact-skills/document/evals.json",
-    "evals/artifact-skills/spreadsheet/evals.json",
-    "evals/artifact-skills/pdf/evals.json"
+    "tests/fixtures/artifact-skills/presentation/evals.json",
+    "tests/fixtures/artifact-skills/document/evals.json",
+    "tests/fixtures/artifact-skills/spreadsheet/evals.json",
+    "tests/fixtures/artifact-skills/pdf/evals.json"
   ],
   "method": {
     "trigger_eval": "Run prompts in fresh sessions when possible. Record which skill should trigger and whether another skill would be a better primary route.",

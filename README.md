@@ -60,7 +60,7 @@ python3 -m venv .venv
 python3 tests/integration/presentation/run_checks.py
 python3 tests/integration/shape-product-spec/run_checks.py
 python3 tests/integration/data-analysis/run_checks.py
-python3 evals/feed-processing/run_checks.py
+python3 tests/integration/feed-processing/run_checks.py
 ```
 
 Validate the paired Agent evaluation suite separately:
@@ -71,9 +71,6 @@ Validate the paired Agent evaluation suite separately:
 ```
 
 See `evals/README.md` for isolated baseline, Skill-enabled, and ablation runs.
-The old `evals/<skill>/run_checks.py` commands remain as compatibility wrappers
-during migration.
-
 For a full `data-analysis` gate, install its dependencies first. A local venv is
 recommended because Homebrew Python may reject global pip installs:
 

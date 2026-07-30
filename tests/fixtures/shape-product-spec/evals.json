@@ -5,10 +5,10 @@
     {
       "id": "product-spec-from-messy-notes",
       "name": "Create decision-ready product spec from scattered notes",
-      "prompt": "Use $shape-product-spec to turn evals/shape-product-spec/source/merchant_addon_notes.md into a decision-ready and execution-ready product spec with evidence, decisions, clean-slate vs brownfield options, current constraints, flows, product rules, non-goals, acceptance criteria, execution context, and open questions.",
+      "prompt": "Use $shape-product-spec to turn tests/fixtures/shape-product-spec/source/merchant_addon_notes.md into a decision-ready and execution-ready product spec with evidence, decisions, clean-slate vs brownfield options, current constraints, flows, product rules, non-goals, acceptance criteria, execution context, and open questions.",
       "expected_skill": "shape-product-spec",
       "files": [
-        "evals/shape-product-spec/source/merchant_addon_notes.md"
+        "tests/fixtures/shape-product-spec/source/merchant_addon_notes.md"
       ],
       "assertions": [
         "Definition separates regional manager request flow from finance approval flow.",
@@ -21,10 +21,10 @@
     {
       "id": "review-conflicting-product-doc",
       "name": "Review contradictory existing product document",
-      "prompt": "Use $shape-product-spec to review evals/shape-product-spec/source/conflicting_product_doc.md. Lead with blocking contradictions, unsupported assumptions, missing acceptance criteria, unclear objectives or constraints, prototype copy problems, and implementation-detail leakage.",
+      "prompt": "Use $shape-product-spec to review tests/fixtures/shape-product-spec/source/conflicting_product_doc.md. Lead with blocking contradictions, unsupported assumptions, missing acceptance criteria, unclear objectives or constraints, prototype copy problems, and implementation-detail leakage.",
       "expected_skill": "shape-product-spec",
       "files": [
-        "evals/shape-product-spec/source/conflicting_product_doc.md"
+        "tests/fixtures/shape-product-spec/source/conflicting_product_doc.md"
       ],
       "assertions": [
         "Review flags mutually contradictory approver permissions.",
@@ -37,10 +37,10 @@
     {
       "id": "story-map-from-research-snippets",
       "name": "Create story map from research snippets",
-      "prompt": "Use $shape-product-spec to turn evals/shape-product-spec/source/interview_snippets.md into a story map and MVP product spec for enterprise teammate invites, including backbone, MVP/R2/Future slices, assumptions, risks, and acceptance criteria.",
+      "prompt": "Use $shape-product-spec to turn tests/fixtures/shape-product-spec/source/interview_snippets.md into a story map and MVP product spec for enterprise teammate invites, including backbone, MVP/R2/Future slices, assumptions, risks, and acceptance criteria.",
       "expected_skill": "shape-product-spec",
       "files": [
-        "evals/shape-product-spec/source/interview_snippets.md"
+        "tests/fixtures/shape-product-spec/source/interview_snippets.md"
       ],
       "assertions": [
         "Output uses a user-journey backbone before implementation tasks.",

@@ -5,10 +5,10 @@
     {
       "id": "pdf-native-page-ops",
       "name": "merge-rotate-render-pdf",
-      "prompt": "Use $pdf to inspect evals/artifact-skills/pdf/source/one_page.pdf and evals/artifact-skills/pdf/source/two_page.pdf, merge them into one PDF, rotate only the first page 90 degrees, render the output pages to PNG for visual QA, and produce a verification report.",
+      "prompt": "Use $pdf to inspect tests/fixtures/artifact-skills/pdf/source/one_page.pdf and tests/fixtures/artifact-skills/pdf/source/two_page.pdf, merge them into one PDF, rotate only the first page 90 degrees, render the output pages to PNG for visual QA, and produce a verification report.",
       "files": [
-        "evals/artifact-skills/pdf/source/one_page.pdf",
-        "evals/artifact-skills/pdf/source/two_page.pdf"
+        "tests/fixtures/artifact-skills/pdf/source/one_page.pdf",
+        "tests/fixtures/artifact-skills/pdf/source/two_page.pdf"
       ],
       "expected_skill": "pdf",
       "assertions": [
@@ -23,9 +23,9 @@
     {
       "id": "pdf-extract-evidence",
       "name": "pdf-extraction-with-page-citations",
-      "prompt": "Use $pdf to extract the key evidence from evals/artifact-skills/pdf/source/source_report.pdf into Markdown. Include page numbers for every extracted claim, state extraction limitations, and do not rewrite this as a new business memo.",
+      "prompt": "Use $pdf to extract the key evidence from tests/fixtures/artifact-skills/pdf/source/source_report.pdf into Markdown. Include page numbers for every extracted claim, state extraction limitations, and do not rewrite this as a new business memo.",
       "files": [
-        "evals/artifact-skills/pdf/source/source_report.pdf"
+        "tests/fixtures/artifact-skills/pdf/source/source_report.pdf"
       ],
       "expected_skill": "pdf",
       "assertions": [
@@ -38,9 +38,9 @@
     {
       "id": "pdf-negative-source-doc",
       "name": "should-not-edit-generated-pdf-source-change",
-      "prompt": "I have the editable source at evals/artifact-skills/pdf/source/source_memo.md and need the wording changed, then a PDF exported. Use the source file as the source of truth, not the old PDF.",
+      "prompt": "I have the editable source at tests/fixtures/artifact-skills/pdf/source/source_memo.md and need the wording changed, then a PDF exported. Use the source file as the source of truth, not the old PDF.",
       "files": [
-        "evals/artifact-skills/pdf/source/source_memo.md"
+        "tests/fixtures/artifact-skills/pdf/source/source_memo.md"
       ],
       "expected_skill": "document",
       "assertions": [

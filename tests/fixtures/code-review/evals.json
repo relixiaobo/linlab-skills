@@ -5,16 +5,16 @@
     {
       "id": "local-diff-secret-logging",
       "name": "local diff catches introduced secret logging",
-      "prompt": "Use $code-review to review the local diff represented by evals/code-review/fixtures/security-diff/before.py and after.py. Lead with findings only if there is a high-confidence bug or rule violation.",
+      "prompt": "Use $code-review to review the local diff represented by tests/fixtures/code-review/fixtures/security-diff/before.py and after.py. Lead with findings only if there is a high-confidence bug or rule violation.",
       "files": [
-        "evals/code-review/fixtures/security-diff/AGENTS.md",
-        "evals/code-review/fixtures/security-diff/before.py",
-        "evals/code-review/fixtures/security-diff/after.py"
+        "tests/fixtures/code-review/fixtures/security-diff/AGENTS.md",
+        "tests/fixtures/code-review/fixtures/security-diff/before.py",
+        "tests/fixtures/code-review/fixtures/security-diff/after.py"
       ],
       "expected_findings": [
         {
           "id": "authorization-header-logged",
-          "file": "evals/code-review/fixtures/security-diff/after.py",
+          "file": "tests/fixtures/code-review/fixtures/security-diff/after.py",
           "line": 7,
           "severity": "High",
           "minimum_confidence": 80,

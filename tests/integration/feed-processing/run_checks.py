@@ -14,11 +14,11 @@ from pathlib import Path
 from typing import Any
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 SKILL = ROOT / "skills" / "feed-processing"
 SCRIPTS = SKILL / "scripts"
 ASSETS = SKILL / "assets" / "fixtures"
-FIXTURES = ROOT / "evals" / "feed-processing" / "fixtures"
+FIXTURES = ROOT / "tests" / "fixtures" / "feed-processing"
 WORK = ROOT / "work" / "feed-processing" / "eval-smoke"
 NODE = shutil.which("node")
 results = {"pass": 0, "fail": 0}

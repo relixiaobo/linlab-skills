@@ -10,19 +10,19 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 TOOL = REPO / "skills" / "presentation" / "scripts" / "pptx_tool.py"
-EVALS = REPO / "evals" / "artifact-skills" / "presentation" / "evals.json"
+EVALS = REPO / "tests" / "fixtures" / "artifact-skills" / "presentation" / "evals.json"
 
 EXPECTED = {
     "presentation-studio-full-restructure": (
-        "evals/artifact-skills/presentation/source/annual_strategy_source.pptx",
+        "tests/fixtures/artifact-skills/presentation/source/annual_strategy_source.pptx",
         14,
     ),
     "presentation-studio-constrained-redesign": (
-        "evals/artifact-skills/presentation/source/sales_redesign_source.pptx",
+        "tests/fixtures/artifact-skills/presentation/source/sales_redesign_source.pptx",
         18,
     ),
     "presentation-surgeon-single-target": (
-        "evals/artifact-skills/presentation/source/board_deck.pptx",
+        "tests/fixtures/artifact-skills/presentation/source/board_deck.pptx",
         10,
     ),
 }
