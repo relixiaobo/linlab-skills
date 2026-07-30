@@ -1,6 +1,6 @@
 {
   "skill_name": "pdf",
-  "skill_path": "pdf",
+  "skill_path": "skills/pdf",
   "evals": [
     {
       "id": "pdf-native-page-ops",

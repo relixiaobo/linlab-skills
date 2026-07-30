@@ -71,7 +71,7 @@ missing, the affected checks fail rather than skip. For a full local run:
 
 ```
 python3 -m venv .venv
-.venv/bin/python -m pip install -r data-analysis/requirements.txt
+.venv/bin/python -m pip install -r skills/data-analysis/requirements.txt
 .venv/bin/python tests/integration/data-analysis/run_checks.py
 ```
 

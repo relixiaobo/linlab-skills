@@ -15,7 +15,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SKILL = ROOT / "feed-processing"
+SKILL = ROOT / "skills" / "feed-processing"
 SCRIPTS = SKILL / "scripts"
 ASSETS = SKILL / "assets" / "fixtures"
 FIXTURES = ROOT / "evals" / "feed-processing" / "fixtures"

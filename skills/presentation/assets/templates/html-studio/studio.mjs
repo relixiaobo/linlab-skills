@@ -29,7 +29,7 @@ for (const root of roots) {
 }
 
 if (!tool) {
-  console.error('Cannot locate presentation/scripts/studio_tool.mjs. Set PRESENTATION_SKILL_DIR.');
+  console.error('Cannot locate skills/presentation/scripts/studio_tool.mjs. Set PRESENTATION_SKILL_DIR.');
   process.exit(1);
 }
 

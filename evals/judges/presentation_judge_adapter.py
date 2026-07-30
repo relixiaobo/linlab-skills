@@ -112,7 +112,7 @@ def deterministic_evidence(pptx: Path, evidence_dir: Path) -> dict[str, Any]:
     inspect = run_command(
         [
             sys.executable,
-            str(ROOT / "presentation" / "scripts" / "pptx_tool.py"),
+            str(ROOT / "skills" / "presentation" / "scripts" / "pptx_tool.py"),
             "inspect",
             str(pptx),
             "--out",
@@ -123,7 +123,7 @@ def deterministic_evidence(pptx: Path, evidence_dir: Path) -> dict[str, Any]:
     gate = run_command(
         [
             sys.executable,
-            str(ROOT / "presentation" / "scripts" / "pptx_tool.py"),
+            str(ROOT / "skills" / "presentation" / "scripts" / "pptx_tool.py"),
             "gate",
             str(pptx),
             "--out",
@@ -133,7 +133,7 @@ def deterministic_evidence(pptx: Path, evidence_dir: Path) -> dict[str, Any]:
     )
     render_command = [
         sys.executable,
-        str(ROOT / "presentation" / "scripts" / "render_slides.py"),
+        str(ROOT / "skills" / "presentation" / "scripts" / "render_slides.py"),
         str(pptx),
         "--out-dir",
         str(render_dir),

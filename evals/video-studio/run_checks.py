@@ -12,7 +12,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SKILL = ROOT / "video-studio"
+SKILL = ROOT / "skills" / "video-studio"
 MEDIA = ROOT / "evals" / "video-studio" / "media"
 WORK = ROOT / "work" / "video-studio" / "eval-smoke"
 PY = sys.executable

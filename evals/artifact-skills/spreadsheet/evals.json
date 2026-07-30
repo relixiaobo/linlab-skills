@@ -1,6 +1,6 @@
 {
   "skill_name": "spreadsheet",
-  "skill_path": "spreadsheet",
+  "skill_path": "skills/spreadsheet",
   "evals": [
     {
       "id": "spreadsheet-pricing-model",

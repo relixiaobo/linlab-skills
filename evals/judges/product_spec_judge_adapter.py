@@ -35,7 +35,7 @@ REQUIRED_ENV = {
     "EVAL_OUTPUT_DIR",
     "EVAL_JUDGE_RESULT_FILE",
 }
-SPEC_CHECK = ROOT / "shape-product-spec" / "scripts" / "spec_check.py"
+SPEC_CHECK = ROOT / "skills" / "shape-product-spec" / "scripts" / "spec_check.py"
 
 
 class ProductSpecJudgeError(RuntimeError):

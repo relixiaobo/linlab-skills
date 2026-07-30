@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 REPO = Path(__file__).resolve().parents[3]
-ROOT = REPO / "presentation"
+ROOT = REPO / "skills" / "presentation"
 REFERENCES = ROOT / "references"
 SCHEMAS = ROOT / "assets" / "schemas"
 FIXTURES = Path(__file__).resolve().parent / "schema-fixtures" / "valid"

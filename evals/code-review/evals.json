@@ -1,6 +1,6 @@
 {
   "skill_name": "code-review",
-  "skill_path": "code-review",
+  "skill_path": "skills/code-review",
   "evals": [
     {
       "id": "local-diff-secret-logging",

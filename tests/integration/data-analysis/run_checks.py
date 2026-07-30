@@ -21,7 +21,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPTS = ROOT / "data-analysis" / "scripts"
+SCRIPTS = ROOT / "skills" / "data-analysis" / "scripts"
 PY = sys.executable
 results = {"pass": 0, "fail": 0, "skip": 0}
 

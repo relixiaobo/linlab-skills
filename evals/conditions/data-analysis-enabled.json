@@ -6,7 +6,7 @@
   "skills": [
     {
       "name": "data-analysis",
-      "path": "data-analysis"
+      "path": "skills/data-analysis"
     }
   ],
   "executor_config": {

@@ -1,6 +1,6 @@
 {
   "skill_name": "video-studio",
-  "skill_path": "video-studio",
+  "skill_path": "skills/video-studio",
   "evals": [
     {
       "id": "video-local-edit-trim-subs",

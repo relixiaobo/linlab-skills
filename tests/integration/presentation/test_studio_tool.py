@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 REPO = Path(__file__).resolve().parents[3]
-TOOL = REPO / "presentation" / "scripts" / "studio_tool.mjs"
+TOOL = REPO / "skills" / "presentation" / "scripts" / "studio_tool.mjs"
 
 
 class StudioToolTests(unittest.TestCase):

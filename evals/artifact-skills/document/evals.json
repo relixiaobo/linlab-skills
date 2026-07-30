@@ -1,6 +1,6 @@
 {
   "skill_name": "document",
-  "skill_path": "document",
+  "skill_path": "skills/document",
   "evals": [
     {
       "id": "document-board-memo",

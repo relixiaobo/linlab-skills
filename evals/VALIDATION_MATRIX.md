@@ -7,7 +7,7 @@ command is:
 python3 -m venv .venv
 .venv/bin/python -m pip install \
   -r evals/requirements.txt \
-  -r data-analysis/requirements.txt
+  -r skills/data-analysis/requirements.txt
 .venv/bin/python evals/run_all_skill_checks.py
 ```
 
@@ -16,7 +16,7 @@ python3 -m venv .venv
 | Skill | Structural | Script syntax | Smoke / workflow gate | Current limit |
 | --- | --- | --- | --- | --- |
 | `code-review` | `quick_validate.py` | n/a | `evals/code-review/run_checks.py` validates a realistic local-diff fixture and expected finding anchors | Does not grade model review prose; use forward-testing for reviewer judgment quality. |
-| `data-analysis` | `quick_validate.py` | `py_compile` | `.venv/bin/python tests/integration/data-analysis/run_checks.py` runs deterministic verification, report, chart, and table checks | Requires `data-analysis/requirements.txt` for full `18 passed, 0 failed, 0 skipped`; the production Judge Adapter recomputes metric truth, grain, and fan-out for `analyze-order-revenue` before blind review. |
+| `data-analysis` | `quick_validate.py` | `py_compile` | `.venv/bin/python tests/integration/data-analysis/run_checks.py` runs deterministic verification, report, chart, and table checks | Requires `skills/data-analysis/requirements.txt` for full `18 passed, 0 failed, 0 skipped`; the production Judge Adapter recomputes metric truth, grain, and fan-out for `analyze-order-revenue` before blind review. |
 | `document` | `quick_validate.py` | `py_compile` + `node --check` | `evals/run_artifact_skill_checks.py` inspects Markdown and DOCX-style tool surfaces | Does not render DOCX visually; use host document tools for visual QA on real documents. |
 | `pdf` | `quick_validate.py` | `py_compile` | `evals/run_artifact_skill_checks.py` generates/inspects sample PDFs and runs PDF smoke checks | Merge/split/rotate need `pypdf`; OCR/redaction need external engines and task-specific tests. |
 | `presentation` | `quick_validate.py` | `py_compile` + `node --check` | `tests/integration/presentation/run_checks.py` covers schemas, catalogs, Studio tooling, PPTX/HTML/render regressions, and complex PPTX fixtures | Paired `create-investor-update` evaluation covers natural routing, factual fidelity, visual quality, artifacts, and cost; `create-incident-response-launch` adds required and forbidden official assets, aspect/crop integrity, UI legibility, and rendered image review. |

@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 FIXTURES = ROOT / "tests" / "fixtures" / "shape-product-spec"
-SPEC_CHECK = ROOT / "shape-product-spec" / "scripts" / "spec_check.py"
+SPEC_CHECK = ROOT / "skills" / "shape-product-spec" / "scripts" / "spec_check.py"
 
 
 def run(cmd: list[str]) -> subprocess.CompletedProcess[str]:

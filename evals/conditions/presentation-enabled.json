@@ -6,7 +6,7 @@
   "skills": [
     {
       "name": "presentation",
-      "path": "presentation"
+      "path": "skills/presentation"
     }
   ],
   "executor_config": {

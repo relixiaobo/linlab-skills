@@ -13,16 +13,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 QUICK_VALIDATE = Path.home() / ".codex" / "skills" / ".system" / "skill-creator" / "scripts" / "quick_validate.py"
 SKILLS = [
-    "code-review",
-    "data-analysis",
-    "document",
-    "feed-processing",
-    "pdf",
-    "presentation",
-    "shape-product-spec",
-    "spreadsheet",
-    "video-studio",
-    "archive/research",
+    ("code-review", "skills/code-review"),
+    ("data-analysis", "skills/data-analysis"),
+    ("document", "skills/document"),
+    ("feed-processing", "skills/feed-processing"),
+    ("pdf", "skills/pdf"),
+    ("presentation", "skills/presentation"),
+    ("shape-product-spec", "skills/shape-product-spec"),
+    ("spreadsheet", "skills/spreadsheet"),
+    ("video-studio", "skills/video-studio"),
+    ("archive/research", "archive/research"),
 ]
 
 
@@ -55,8 +55,11 @@ def main() -> int:
             "stderr_tail": f"missing {QUICK_VALIDATE}",
         })
     else:
-        for skill in SKILLS:
-            checks.append(run(f"quick_validate:{skill}", [sys.executable, str(QUICK_VALIDATE), skill]))
+        for check_name, skill_path in SKILLS:
+            checks.append(run(
+                f"quick_validate:{check_name}",
+                [sys.executable, str(QUICK_VALIDATE), skill_path],
+            ))
 
     checks.extend([
         run("eval-platform-unit", [
@@ -131,26 +134,26 @@ def main() -> int:
         "tests/fixtures/evals/fake_judge.py",
         "tests/fixtures/evals/fake_mutating_judge.py",
         "tests/fixtures/evals/fake_secondary_judge.py",
-        "document/scripts/docx_tool.py",
-        "presentation/scripts/pptx_tool.py",
-        "presentation/scripts/evidence_tool.py",
-        "presentation/scripts/render_slides.py",
-        "pdf/scripts/pdf_tool.py",
-        "shape-product-spec/scripts/spec_check.py",
-        "spreadsheet/scripts/table_tool.py",
-        "spreadsheet/scripts/workbook_tool.py",
-        "video-studio/scripts/build_publish_package.py",
-        "video-studio/scripts/captions_from_script.py",
-        "video-studio/scripts/composite_overlay.py",
-        "video-studio/scripts/doctor.py",
-        "video-studio/scripts/make_cover.py",
-        "video-studio/scripts/probe_media.py",
-        "video-studio/scripts/qa_video.py",
-        "video-studio/scripts/render_ffmpeg.py",
-        "video-studio/scripts/render_frames_to_video.py",
-        "video-studio/scripts/render_manim.py",
-        "video-studio/scripts/scene_timing.py",
-        "video-studio/scripts/validate_manifest.py",
+        "skills/document/scripts/docx_tool.py",
+        "skills/presentation/scripts/pptx_tool.py",
+        "skills/presentation/scripts/evidence_tool.py",
+        "skills/presentation/scripts/render_slides.py",
+        "skills/pdf/scripts/pdf_tool.py",
+        "skills/shape-product-spec/scripts/spec_check.py",
+        "skills/spreadsheet/scripts/table_tool.py",
+        "skills/spreadsheet/scripts/workbook_tool.py",
+        "skills/video-studio/scripts/build_publish_package.py",
+        "skills/video-studio/scripts/captions_from_script.py",
+        "skills/video-studio/scripts/composite_overlay.py",
+        "skills/video-studio/scripts/doctor.py",
+        "skills/video-studio/scripts/make_cover.py",
+        "skills/video-studio/scripts/probe_media.py",
+        "skills/video-studio/scripts/qa_video.py",
+        "skills/video-studio/scripts/render_ffmpeg.py",
+        "skills/video-studio/scripts/render_frames_to_video.py",
+        "skills/video-studio/scripts/render_manim.py",
+        "skills/video-studio/scripts/scene_timing.py",
+        "skills/video-studio/scripts/validate_manifest.py",
     ]
     python_files.extend(
         str(path.relative_to(ROOT))
@@ -161,27 +164,28 @@ def main() -> int:
     node = shutil.which("node")
     if node:
         for script in [
-            "document/scripts/markdown_tool.mjs",
-            "presentation/scripts/html_tool.mjs",
-            "presentation/scripts/render_theme_previews.mjs",
-            "presentation/scripts/studio_tool.mjs",
+            "skills/document/scripts/markdown_tool.mjs",
+            "skills/presentation/scripts/html_tool.mjs",
+            "skills/presentation/scripts/render_theme_previews.mjs",
+            "skills/presentation/scripts/studio_tool.mjs",
             "tests/fixtures/evals/presentation-image-assets/render_assets.mjs",
-            "feed-processing/scripts/feed_diff.mjs",
-            "feed-processing/scripts/feed_discover.mjs",
-            "feed-processing/scripts/feed_fetch.mjs",
-            "feed-processing/scripts/feed_pack.mjs",
-            "feed-processing/scripts/feed_parse.mjs",
-            "feed-processing/scripts/feed_profile.mjs",
-            "feed-processing/scripts/feed_rules.mjs",
-            "feed-processing/scripts/feed_window.mjs",
-            "feed-processing/scripts/full_text_extract.mjs",
-            "feed-processing/scripts/lib/feed_common.mjs",
-            "feed-processing/scripts/opml_tool.mjs",
-            "feed-processing/scripts/source_list.mjs",
-            "feed-processing/scripts/validate_feed_pack.mjs",
-            "video-studio/scripts/capture_web_frames.mjs",
+            "skills/feed-processing/scripts/feed_diff.mjs",
+            "skills/feed-processing/scripts/feed_discover.mjs",
+            "skills/feed-processing/scripts/feed_fetch.mjs",
+            "skills/feed-processing/scripts/feed_pack.mjs",
+            "skills/feed-processing/scripts/feed_parse.mjs",
+            "skills/feed-processing/scripts/feed_profile.mjs",
+            "skills/feed-processing/scripts/feed_rules.mjs",
+            "skills/feed-processing/scripts/feed_window.mjs",
+            "skills/feed-processing/scripts/full_text_extract.mjs",
+            "skills/feed-processing/scripts/lib/feed_common.mjs",
+            "skills/feed-processing/scripts/opml_tool.mjs",
+            "skills/feed-processing/scripts/source_list.mjs",
+            "skills/feed-processing/scripts/validate_feed_pack.mjs",
+            "skills/video-studio/scripts/capture_web_frames.mjs",
         ]:
-            checks.append(run(f"node-check:{script}", [node, "--check", script]))
+            check_name = script.removeprefix("skills/")
+            checks.append(run(f"node-check:{check_name}", [node, "--check", script]))
     else:
         checks.append({
             "name": "node-check",

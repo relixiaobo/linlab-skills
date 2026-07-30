@@ -1,6 +1,6 @@
 {
   "skill_name": "presentation",
-  "skill_path": "presentation",
+  "skill_path": "skills/presentation",
   "evals": [
     {
       "id": "presentation-studio-new-deck",

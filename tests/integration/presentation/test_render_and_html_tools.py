@@ -18,9 +18,9 @@ from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[3]
-RENDER_TOOL = ROOT / "presentation" / "scripts" / "render_slides.py"
-HTML_TOOL = ROOT / "presentation" / "scripts" / "html_tool.mjs"
-HTML_TEMPLATE_ROOT = ROOT / "presentation" / "assets" / "templates" / "html-studio"
+RENDER_TOOL = ROOT / "skills" / "presentation" / "scripts" / "render_slides.py"
+HTML_TOOL = ROOT / "skills" / "presentation" / "scripts" / "html_tool.mjs"
+HTML_TEMPLATE_ROOT = ROOT / "skills" / "presentation" / "assets" / "templates" / "html-studio"
 HTML_TEMPLATE = HTML_TEMPLATE_ROOT / "deck.html"
 
 
@@ -528,7 +528,7 @@ class HtmlInspectorTests(unittest.TestCase):
             shutil.copytree(HTML_TEMPLATE_ROOT, project, dirs_exist_ok=True)
             (project / "theme").mkdir()
             shutil.copy2(
-                ROOT / "presentation" / "assets" / "themes" / "analytical-ledger" / "tokens.css",
+                ROOT / "skills" / "presentation" / "assets" / "themes" / "analytical-ledger" / "tokens.css",
                 project / "theme" / "tokens.css",
             )
             result = subprocess.run(

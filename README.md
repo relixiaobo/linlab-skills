@@ -26,15 +26,15 @@ For Codex CLI, copy or symlink a skill folder into the user skills directory:
 
 ```sh
 mkdir -p ~/.agents/skills
-ln -s "$PWD/code-review" ~/.agents/skills/code-review
+ln -s "$PWD/skills/code-review" ~/.agents/skills/code-review
 ```
 
 To install all skills:
 
 ```sh
 mkdir -p ~/.agents/skills
-for skill in code-review data-analysis document feed-processing pdf presentation shape-product-spec spreadsheet video-studio; do
-  ln -s "$PWD/$skill" "$HOME/.agents/skills/$skill"
+for skill in skills/*; do
+  ln -s "$PWD/$skill" "$HOME/.agents/skills/${skill##*/}"
 done
 ```
 
@@ -46,7 +46,7 @@ appear in `/skills` or `$` completion, restart Codex CLI.
 Validate a skill with Codex's skill validator:
 
 ```sh
-python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py code-review
+python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/code-review
 ```
 
 Run repository-level deterministic checks:
@@ -55,7 +55,7 @@ Run repository-level deterministic checks:
 python3 -m venv .venv
 .venv/bin/python -m pip install \
   -r evals/requirements.txt \
-  -r data-analysis/requirements.txt
+  -r skills/data-analysis/requirements.txt
 .venv/bin/python evals/run_all_skill_checks.py
 python3 tests/integration/presentation/run_checks.py
 python3 tests/integration/shape-product-spec/run_checks.py
@@ -79,7 +79,7 @@ recommended because Homebrew Python may reject global pip installs:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/python -m pip install -r data-analysis/requirements.txt
+.venv/bin/python -m pip install -r skills/data-analysis/requirements.txt
 .venv/bin/python tests/integration/data-analysis/run_checks.py
 ```
 

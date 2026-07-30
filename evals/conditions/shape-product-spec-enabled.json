@@ -6,7 +6,7 @@
   "skills": [
     {
       "name": "shape-product-spec",
-      "path": "shape-product-spec"
+      "path": "skills/shape-product-spec"
     }
   ],
   "executor_config": {

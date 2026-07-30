@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Focused regression tests for presentation/scripts/pptx_tool.py."""
+"""Focused regression tests for skills/presentation/scripts/pptx_tool.py."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-TOOL = ROOT / "presentation" / "scripts" / "pptx_tool.py"
+TOOL = ROOT / "skills" / "presentation" / "scripts" / "pptx_tool.py"
 
 
 CONTENT_TYPES = """<?xml version="1.0" encoding="UTF-8"?>

@@ -1,6 +1,6 @@
 {
   "skill_name": "shape-product-spec",
-  "skill_path": "shape-product-spec",
+  "skill_path": "skills/shape-product-spec",
   "evals": [
     {
       "id": "product-spec-from-messy-notes",
