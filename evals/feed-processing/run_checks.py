@@ -19,7 +19,7 @@ SKILL = ROOT / "feed-processing"
 SCRIPTS = SKILL / "scripts"
 ASSETS = SKILL / "assets" / "fixtures"
 FIXTURES = ROOT / "evals" / "feed-processing" / "fixtures"
-WORK = ROOT / "feed-processing-workspace" / "eval-smoke"
+WORK = ROOT / "work" / "feed-processing" / "eval-smoke"
 NODE = shutil.which("node")
 results = {"pass": 0, "fail": 0}
 

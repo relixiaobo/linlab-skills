@@ -2,7 +2,7 @@
 .claude/
 
 # Generated evaluation and work artifacts
-*-workspace/
+work/
 results/
 *.zip
 

@@ -14,7 +14,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 SKILL = ROOT / "video-studio"
 MEDIA = ROOT / "evals" / "video-studio" / "media"
-WORK = ROOT / "video-studio-workspace" / "eval-smoke"
+WORK = ROOT / "work" / "video-studio" / "eval-smoke"
 PY = sys.executable
 
 
@@ -39,7 +39,7 @@ def write_manifest() -> Path:
         "platform": "local",
         "canvas": {"width": 640, "height": 360, "fps": 30},
         "sources": [
-            {"id": "main", "type": "video", "path": "../../evals/video-studio/media/source_clip.mp4"}
+            {"id": "main", "type": "video", "path": "../../../evals/video-studio/media/source_clip.mp4"}
         ],
         "clips": [
             {"id": "clip1", "source": "main", "start": 0.0, "end": 2.0, "fit": "contain", "crop": "center"}

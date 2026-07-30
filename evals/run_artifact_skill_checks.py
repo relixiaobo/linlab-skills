@@ -64,7 +64,7 @@ def ensure_fixtures() -> list[str]:
 def smoke_checks() -> list[str]:
     errors: list[str] = []
 
-    workspace = ROOT / "artifact-skills-workspace"
+    workspace = ROOT / "work" / "artifact-skills"
     workspace.mkdir(parents=True, exist_ok=True)
     docx = workspace / "document-smoke.docx"
     pptx = workspace / "presentation-smoke.pptx"
@@ -74,11 +74,11 @@ def smoke_checks() -> list[str]:
     create_minimal_xlsx(xlsx)
 
     commands = [
-        ["node", "document/scripts/markdown_tool.mjs", "inspect", "evals/artifact-skills/document/source/board_notes.md", "--out", "artifact-skills-workspace/document-md-report.json"],
-        ["python3", "document/scripts/docx_tool.py", "inspect", str(docx), "--out", "artifact-skills-workspace/document-docx-report.json"],
-        ["python3", "spreadsheet/scripts/table_tool.py", "inspect", "evals/artifact-skills/spreadsheet/source/messy_export.csv", "--out", "artifact-skills-workspace/spreadsheet-csv-report.json"],
-        ["python3", "spreadsheet/scripts/workbook_tool.py", "inspect", str(xlsx), "--out", "artifact-skills-workspace/spreadsheet-xlsx-report.json"],
-        ["python3", "pdf/scripts/pdf_tool.py", "inspect", "evals/artifact-skills/pdf/source/one_page.pdf", "--out", "artifact-skills-workspace/pdf-inspect-report.json"],
+        ["node", "document/scripts/markdown_tool.mjs", "inspect", "evals/artifact-skills/document/source/board_notes.md", "--out", "work/artifact-skills/document-md-report.json"],
+        ["python3", "document/scripts/docx_tool.py", "inspect", str(docx), "--out", "work/artifact-skills/document-docx-report.json"],
+        ["python3", "spreadsheet/scripts/table_tool.py", "inspect", "evals/artifact-skills/spreadsheet/source/messy_export.csv", "--out", "work/artifact-skills/spreadsheet-csv-report.json"],
+        ["python3", "spreadsheet/scripts/workbook_tool.py", "inspect", str(xlsx), "--out", "work/artifact-skills/spreadsheet-xlsx-report.json"],
+        ["python3", "pdf/scripts/pdf_tool.py", "inspect", "evals/artifact-skills/pdf/source/one_page.pdf", "--out", "work/artifact-skills/pdf-inspect-report.json"],
     ]
     html = workspace / "presentation-smoke.html"
     html.parent.mkdir(parents=True, exist_ok=True)
@@ -86,8 +86,8 @@ def smoke_checks() -> list[str]:
         "<!doctype html><html><body><section class='slide'><h1>Eval</h1></section></body></html>\n",
         encoding="utf-8",
     )
-    commands.append(["node", "presentation/scripts/html_tool.mjs", "inspect", str(html), "--out", "artifact-skills-workspace/presentation-html-report.json"])
-    commands.append(["python3", "presentation/scripts/pptx_tool.py", "inspect", str(pptx), "--out", "artifact-skills-workspace/presentation-pptx-report.json"])
+    commands.append(["node", "presentation/scripts/html_tool.mjs", "inspect", str(html), "--out", "work/artifact-skills/presentation-html-report.json"])
+    commands.append(["python3", "presentation/scripts/pptx_tool.py", "inspect", str(pptx), "--out", "work/artifact-skills/presentation-pptx-report.json"])
     render_dir = workspace / "presentation-render-smoke"
     commands.append([
         "python3",
@@ -412,7 +412,7 @@ def write_forward_test_prompts(suite: dict) -> None:
                 "prompt": item["prompt"],
                 "files": item.get("files", []),
             })
-    out = ROOT / "artifact-skills-workspace" / "forward-test-prompts.json"
+    out = ROOT / "work" / "artifact-skills" / "forward-test-prompts.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps({"prompts": prompts}, indent=2) + "\n", encoding="utf-8")
 

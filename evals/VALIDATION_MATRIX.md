@@ -52,10 +52,7 @@ python3 -m venv .venv
   evals/suites/presentation-current-image-assets-ab.json` validates the current
   baseline/Skill/asset-guidance ablation experiment with 3 repetitions and
   required judging.
-- Generated workspaces are ignored by git: `artifact-skills-workspace/`,
-  `feed-processing-workspace/`, `video-studio-workspace/`, and other
-  `*-workspace/`
-  directories.
+- Generated workspaces live under the ignored `work/` directory.
 - `evals/run_all_skill_checks.py` uses `.venv/bin/python` for data-analysis when
   present, otherwise the current Python interpreter.
 - The evaluation runner and Skill validator dependencies are declared in
