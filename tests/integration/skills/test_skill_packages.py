@@ -21,6 +21,17 @@ ALLOWED_FRONTMATTER_PROPERTIES = {
     "allowed-tools",
     "metadata",
 }
+ALLOWED_SKILL_TOP_LEVEL = {
+    "SKILL.md",
+    "agents",
+    "references",
+    "scripts",
+    "assets",
+    "requirements.txt",
+    "package.json",
+    "package-lock.json",
+}
+SKILL_DIRECTORY_ENTRIES = {"agents", "references", "scripts", "assets"}
 SKILL_PACKAGES = (
     ("code-review", ROOT / "skills" / "code-review"),
     ("data-analysis", ROOT / "skills" / "data-analysis"),
@@ -32,6 +43,11 @@ SKILL_PACKAGES = (
     ("spreadsheet", ROOT / "skills" / "spreadsheet"),
     ("video-studio", ROOT / "skills" / "video-studio"),
     ("archive/research", ROOT / "archive" / "research"),
+)
+ACTIVE_SKILL_PACKAGES = tuple(
+    (logical_name, skill_path)
+    for logical_name, skill_path in SKILL_PACKAGES
+    if skill_path.parent == ROOT / "skills"
 )
 
 
@@ -113,11 +129,60 @@ def validate_skill(skill_path: Path) -> tuple[bool, str]:
     return True, "Skill is valid!"
 
 
+def validate_active_inventory() -> tuple[bool, str]:
+    expected = {skill_path.name for _, skill_path in ACTIVE_SKILL_PACKAGES}
+    actual = {path.name for path in (ROOT / "skills").iterdir() if path.is_dir()}
+    if actual != expected:
+        missing = sorted(expected - actual)
+        unexpected = sorted(actual - expected)
+        return False, f"Active Skill inventory mismatch: missing={missing}, unexpected={unexpected}"
+    return True, "Active Skill inventory is valid!"
+
+
+def validate_skill_structure(skill_path: Path) -> tuple[bool, str]:
+    if skill_path.parent != ROOT / "skills":
+        return True, "Archived Skill structure is not part of the active-package gate."
+
+    entries = {path.name: path for path in skill_path.iterdir()}
+    unexpected = sorted(set(entries) - ALLOWED_SKILL_TOP_LEVEL)
+    if unexpected:
+        return False, f"Unexpected top-level entries: {unexpected}"
+
+    for name, path in entries.items():
+        if name in SKILL_DIRECTORY_ENTRIES and not path.is_dir():
+            return False, f"Top-level entry must be a directory: {name}"
+        if name not in SKILL_DIRECTORY_ENTRIES and not path.is_file():
+            return False, f"Top-level entry must be a file: {name}"
+    return True, "Skill package structure is valid!"
+
+
+def validate_package(skill_path: Path) -> tuple[bool, str]:
+    for validator, target in (
+        (validate_active_inventory, None),
+        (validate_skill, skill_path),
+        (validate_skill_structure, skill_path),
+    ):
+        valid, message = validator() if target is None else validator(target)
+        if not valid:
+            return valid, message
+    return True, "Skill package is valid!"
+
+
 class SkillPackageTests(unittest.TestCase):
+    def test_active_skill_inventory_matches_manifest(self) -> None:
+        valid, message = validate_active_inventory()
+        self.assertTrue(valid, message)
+
     def test_active_and_archived_skill_packages(self) -> None:
         for logical_name, skill_path in SKILL_PACKAGES:
             with self.subTest(skill=logical_name):
                 valid, message = validate_skill(skill_path)
+                self.assertTrue(valid, message)
+
+    def test_active_skill_top_level_structure(self) -> None:
+        for logical_name, skill_path in ACTIVE_SKILL_PACKAGES:
+            with self.subTest(skill=logical_name):
+                valid, message = validate_skill_structure(skill_path)
                 self.assertTrue(valid, message)
 
 
@@ -132,7 +197,7 @@ def main(argv: list[str]) -> int:
     skill_path = Path(argv[1])
     if not skill_path.is_absolute():
         skill_path = ROOT / skill_path
-    valid, message = validate_skill(skill_path)
+    valid, message = validate_package(skill_path)
     print(message)
     return 0 if valid else 1
 

@@ -1,6 +1,6 @@
 # 仓库重组执行计划
 
-状态: v4, 已按 codex review 三轮意见修订, 待复审
+状态: v4 已执行完成, 2026-07-30 归档
 作者: Claude (结构分析会话, 2026-07-30)
 修订记录:
 v2 采纳 codex review 第一轮全部 5 条意见 — (1) 放弃 pytest, 保留 unittest discover;
@@ -21,6 +21,25 @@ skipped);统一定义 `status: passed|failed|skipped` 语义, 不再用 `ok` 兼
 (2) Phase 0 基线命令块前补 `mkdir -p reports/restructure-baseline-20260730`。
 执行方式: 按 Phase 顺序执行, 每个 Phase 一个独立 commit, 结束时必须通过该 Phase 的验证门。
 本文档在最终 Phase 完成后删除或归档到 `reports/`。
+
+## 执行记录
+
+- Phase 0 (`9653297`): 工具链预检通过, 提交 41/41 全绿基线。
+- Phase 1 (`e69430e`): 生成工作区归并到 `work/`, 41/41 通过。`rss`
+  与 `feed-processing` 内容不同,因此均保留; 未获得 ZIP 删除确认,两个 ZIP
+  保守移入 `work/`。
+- Phase 2 (`06ed883`): 9 个在役技能移入 `skills/`, 41/41 通过;
+  pinned condition 的历史路径语义保持不变。
+- Phase 3 (`03de380`): 旧 eval 目录全部分流至 `tests/integration/` 和
+  `tests/fixtures/`, 41/41 与基线 ID/状态一致; 4 个 suite 与 56 个 unit
+  tests 通过。
+- Phase 4 (`885a6fe`): 唯一确定性入口改为 `tests/run_all.py`;
+  无 `~/.codex` 环境下 43 个强制检查通过, 10 个外部交叉检查按设计
+  skipped, 0 failed; 41 个基线 ID 经映射后无缺失、无状态回退。
+- Phase 5 (本归档提交): 删除空 `analysis_runs/` 和冗余包内 `.gitignore`,
+  加入 9-skill inventory 与顶层白名单守门。最终总入口 53/53 passed;
+  41 个基线检查映射对照通过,无新失败或非法 skip; 根目录 9 项,
+  `skills/` 恰好 9 个在役包。需所有者另行确认的 `portfolio/` 可选移动未执行。
 
 ---
 
