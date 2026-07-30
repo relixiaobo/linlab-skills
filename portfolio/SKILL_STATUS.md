@@ -56,7 +56,7 @@ quality, route, artifact, token, latency, and failure-taxonomy results before a
 portfolio keep/change/retire decision.
 
 Repository-level validation is tracked in `evals/VALIDATION_MATRIX.md` and can
-be run with `python3 evals/run_all_skill_checks.py`.
+be run with `.venv/bin/python tests/run_all.py`.
 
 Use this file only as portfolio guidance. If artifacts should be reusable, make
 them ordinary files with clear names and contents. Do not encode dependencies on

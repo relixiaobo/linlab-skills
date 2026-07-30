@@ -43,47 +43,28 @@ appear in `/skills` or `$` completion, restart Codex CLI.
 
 ## Validate
 
-Validate a skill with Codex's skill validator:
-
-```sh
-python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/code-review
-```
-
-Run repository-level deterministic checks:
+Create the repository environment and install its declared dependencies:
 
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install \
   -r evals/requirements.txt \
   -r skills/data-analysis/requirements.txt
-.venv/bin/python evals/run_all_skill_checks.py
-python3 tests/integration/presentation/run_checks.py
-python3 tests/integration/shape-product-spec/run_checks.py
-python3 tests/integration/data-analysis/run_checks.py
-python3 tests/integration/feed-processing/run_checks.py
 ```
 
-Validate the paired Agent evaluation suite separately:
+Run the deterministic repository gate, or validate one Agent evaluation suite
+in isolation:
 
 ```sh
+.venv/bin/python tests/run_all.py
 .venv/bin/python evals/runners/evalctl.py validate \
   --suite evals/suites/representative-ab.json
 ```
 
 See `evals/README.md` for isolated baseline, Skill-enabled, and ablation runs.
-For a full `data-analysis` gate, install its dependencies first. A local venv is
-recommended because Homebrew Python may reject global pip installs:
-
-```sh
-python3 -m venv .venv
-.venv/bin/python -m pip install -r skills/data-analysis/requirements.txt
-.venv/bin/python tests/integration/data-analysis/run_checks.py
-```
-
 Agent evaluation cases are grouped by user job under `evals/cases/`, never by
 the Skill under test. Deterministic checks and their fixtures live under
-`tests/`. Legacy Skill-grouped eval definitions remain temporarily during
-migration.
+`tests/`.
 See `evals/VALIDATION_MATRIX.md` for the current validation level and limits for
 each skill.
 
