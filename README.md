@@ -14,8 +14,8 @@ Personal Codex skills maintained by Linlab.
 - `spreadsheet` - source-first spreadsheet workbooks, XLSX/CSV inspection, formulas, validation, and workbook QA.
 - `video-studio` - manifest-driven local video editing, rendering, packaging, and QA.
 
-See `portfolio/SKILL_STATUS.md` for each skill's status, boundary, source of
-truth, and next action.
+See `PORTFOLIO.md` for each skill's status, boundary, source of truth, and next
+action.
 
 Archived skills are kept under `archive/` for reference and are not installed by
 the default command.
@@ -75,6 +75,6 @@ skill resources: `SKILL.md`, optional `agents/`, `references/`, `scripts/`, and
 `assets/`.
 
 Repository-level Agent experiments live under `evals/`; deterministic tests
-live under `tests/`; portfolio decisions live under `portfolio/`. Generated raw
+live under `tests/`; portfolio decisions live in `PORTFOLIO.md`. Generated raw
 runs live under the ignored `results/` directory, while reviewed summaries may
 be committed under `reports/`.

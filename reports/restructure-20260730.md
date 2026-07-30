@@ -39,7 +39,8 @@ skipped);统一定义 `status: passed|failed|skipped` 语义, 不再用 `ok` 兼
 - Phase 5 (本归档提交): 删除空 `analysis_runs/` 和冗余包内 `.gitignore`,
   加入 9-skill inventory 与顶层白名单守门。最终总入口 53/53 passed;
   41 个基线检查映射对照通过,无新失败或非法 skip; 根目录 9 项,
-  `skills/` 恰好 9 个在役包。需所有者另行确认的 `portfolio/` 可选移动未执行。
+  `skills/` 恰好 9 个在役包。所有者后续确认可选移动,`portfolio/SKILL_STATUS.md`
+  已移为根目录 `PORTFOLIO.md`,空 `portfolio/` 目录已删除。
 
 ---
 

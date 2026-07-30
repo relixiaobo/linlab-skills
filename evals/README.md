@@ -62,7 +62,7 @@ tests/
 
 results/           # generated raw runs; ignored by git
 reports/           # reviewed, decision-bearing evaluation reports
-portfolio/         # portfolio status and keep/change/retire decisions
+PORTFOLIO.md       # portfolio status and keep/change/retire decisions
 ```
 
 ## Case Isolation
