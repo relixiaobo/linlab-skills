@@ -30,7 +30,7 @@
       "kind": "hybrid",
       "protocol_version": "1.0",
       "command": "{python} {repo}/evals/judges/document_judge_adapter.py",
-      "jobs": ["create-document", "review-document"],
+      "jobs": ["create-document"],
       "description": "Deterministic document structure and source-coverage evidence followed by blind reader-quality review."
     }
   ]

@@ -281,6 +281,49 @@ class DocumentJudgeTests(unittest.TestCase):
         self.assertIn("process-compliance", output["failure_tags"])
         self.assertIn("Deterministic check", score["rationale"])
 
+    def test_sample_prose_is_only_an_inspection_hint(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="document_sample_") as temp:
+            root = Path(temp)
+            output_dir = root / "output"
+            output_dir.mkdir()
+            memo_path = write_good_artifacts(output_dir)
+            memo_path.write_text(
+                memo_path.read_text(encoding="utf-8")
+                + "\nThe pilot sample contains the complete invited cohort.\n",
+                encoding="utf-8",
+            )
+            report, check_run = run_markdown_check(
+                memo_path,
+                "board-memo.md",
+                root / "evidence",
+            )
+            audit = build_artifact_audit(
+                config(),
+                result(),
+                memo_path,
+                report,
+                check_run,
+            )
+
+        self.assertIn("sample", report["placeholder_hits"])
+        structure = audit["criterion_checks"]["reader-readiness"]["structure"]
+        self.assertEqual(structure["placeholder_hits"], [])
+        self.assertTrue(structure["placeholder_free"])
+        output = apply_deterministic_overrides(
+            judgment(),
+            oracle=oracle(),
+            config=config(),
+            result=result(),
+            artifact_audit=audit,
+        )
+        score = next(
+            item
+            for item in output["scores"]
+            if item["criterion_id"] == "reader-readiness"
+        )
+        self.assertEqual(score["value"], 0.9)
+        self.assertNotIn("process-compliance", output["failure_tags"])
+
     def test_missing_artifact_result_preserves_deterministic_route_score(self) -> None:
         output = missing_artifact_result(oracle(), result())
         scores = {item["criterion_id"]: item for item in output["scores"]}
@@ -349,6 +392,11 @@ class DocumentJudgeTests(unittest.TestCase):
             )
             memo_path = write_good_artifacts(output_dir)
             leaked_path = str(output_dir / "board-memo.md")
+            memo_path.write_text(
+                memo_path.read_text(encoding="utf-8")
+                + f"\nSource map artifact: {leaked_path}\n",
+                encoding="utf-8",
+            )
             (output_dir / "response.md").write_text(
                 f"I tested {leaked_path}.\n", encoding="utf-8"
             )
@@ -392,6 +440,13 @@ class DocumentJudgeTests(unittest.TestCase):
                 "I tested agent-output/board-memo.md.",
                 (workspace / "agent-response.md").read_text(encoding="utf-8"),
             )
+            blind_memo = (
+                workspace / "artifacts" / "board-memo.md"
+            ).read_text(encoding="utf-8")
+            self.assertIn(
+                "Source map artifact: agent-output/board-memo.md", blind_memo
+            )
+            self.assertIn(leaked_path, memo_path.read_text(encoding="utf-8"))
             workspace_bytes = b"\n".join(
                 path.read_bytes()
                 for path in sorted(workspace.rglob("*"))
@@ -483,7 +538,7 @@ class DocumentJudgeTests(unittest.TestCase):
         self.assertIsNotNone(adapter)
         assert adapter is not None
         self.assertEqual(adapter.id, "document")
-        self.assertIn("create-document", adapter.jobs)
+        self.assertEqual(adapter.jobs, ("create-document",))
         suite = json.loads(
             (ROOT / "evals" / "suites" / "document-board-memo-ab.json").read_text(
                 encoding="utf-8"

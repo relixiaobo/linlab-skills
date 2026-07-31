@@ -37,6 +37,13 @@ REQUIRED_ENV = {
     "EVAL_JUDGE_RESULT_FILE",
 }
 MARKDOWN_TOOL = ROOT / "skills" / "document" / "scripts" / "markdown_tool.mjs"
+EXPLICIT_PLACEHOLDER_RE = re.compile(
+    r"\b(?:lorem|ipsum|todo|placeholder|dummy|xxxx)\b"
+    r"|\bsample\s+(?:text|title|subtitle|copy|content)\b"
+    r"|\[(?:todo|placeholder)[^\]]*\]"
+    r"|\breplace\s+(?:this|with)\b",
+    re.IGNORECASE,
+)
 
 
 class DocumentJudgeError(RuntimeError):
@@ -196,6 +203,12 @@ def normalize_text(text: str) -> str:
     return re.sub(r"[\W_]+", " ", text.casefold()).strip()
 
 
+def explicit_placeholder_hits(text: str) -> list[str]:
+    return sorted(
+        {match.group(0).casefold() for match in EXPLICIT_PLACEHOLDER_RE.finditer(text)}
+    )
+
+
 def audit_concepts(concepts: dict[str, Any], text: str) -> dict[str, Any]:
     normalized = normalize_text(text)
     result: dict[str, Any] = {}
@@ -311,9 +324,7 @@ def build_artifact_audit(
         headings = []
     heading_count = report.get("heading_count", 0)
     word_count = report.get("word_count", 0)
-    placeholders = report.get("placeholder_hits")
-    if not isinstance(placeholders, list):
-        placeholders = []
+    placeholders = explicit_placeholder_hits(text)
     structure_config = config["structure"]
     structure = {
         "minimum_heading_count": structure_config["minimum_heading_count"],
@@ -556,7 +567,12 @@ def prepare_model_workspace(
     artifact_dir.mkdir()
     relative = config["artifact"]["path"]
     source = artifact_path(env["EVAL_OUTPUT_DIR"], relative)
-    shutil.copy2(source, artifact_dir / Path(relative).name)
+    (artifact_dir / Path(relative).name).write_text(
+        sanitize_blind_value(
+            source.read_text(encoding="utf-8", errors="replace"), redactions
+        ),
+        encoding="utf-8",
+    )
     assert_blind_workspace_clean(
         workspace,
         forbidden_markers=set(redactions),
