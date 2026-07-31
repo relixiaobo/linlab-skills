@@ -103,7 +103,7 @@ not actually blind: nested path fields in `precision-edit.json` exposed the
 condition directory. Those scores are superseded and are not reported above.
 Commit `fd1b402` recursively redacts run, condition, repository, Agent-output,
 and Judge-evidence paths in the temporary model workspace and rejects the
-review whenever condition IDs, run IDs, or run-root paths remain. It also:
+review whenever condition IDs or complete run paths remain. It also:
 
 - recomputes `passed` after every deterministic cap and always appends the
   deterministic rationale and evidence;
@@ -118,6 +118,14 @@ run-root marker. Generated tool-report file paths were relative under `source/`
 or `judge-evidence/`; a recursive query for absolute strings in each
 `precision-edit.json` returned an empty set.
 
+A follow-up review found that treating a bare run ID as a global marker could
+reject or mutate ordinary text when a valid short ID such as `test` appeared in
+the prompt, input, or Agent response. Commit `3300bd8` limits run provenance
+handling to complete run paths while retaining the condition and path checks.
+The pilot's long run ID does not occur in its copied prompt, input text, or
+Agent response, so this correction does not change the final model inputs or
+scores above.
+
 The interpreter failure has no bearing on the quality scores. The final
 rejudge integrity gate accepted every source result before judging, and a
 separate hash audit verified:
@@ -131,15 +139,16 @@ commit, registry hash, and Adapter entrypoint hash.
 
 ## Validation
 
-- 64 eval-platform unit tests passed.
+- 65 eval-platform unit tests passed.
 - 45 Presentation integration tests passed.
 - The full `tests/run_all.py` repository gate passed.
 - The production suite validates with 9 planned runs and the expected
   `presentation-precision-editing` activation on the ablation.
 - Strict Python compilation and `git diff --check` passed.
-- Regression tests cover condition-path leakage, contradictory and additional
-  manifest operations, uppercase SHA-256 values, and model `passed` flags that
-  conflict with deterministic vetoes.
+- Regression tests cover condition-path leakage, short run IDs in ordinary
+  review content, contradictory and additional manifest operations, uppercase
+  SHA-256 values, and model `passed` flags that conflict with deterministic
+  vetoes.
 
 ## Next Gate
 
