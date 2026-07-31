@@ -3,21 +3,6 @@
   "skill_path": "skills/document",
   "evals": [
     {
-      "id": "document-redline-review",
-      "name": "review-comments-redline-route",
-      "prompt": "Use $document to review tests/fixtures/artifact-skills/document/source/policy_draft.md as if it will become a DOCX with comments. Produce actionable comments, identify unclear claims, and state how tracked changes would be handled if a native DOCX were supplied.",
-      "files": [
-        "tests/fixtures/artifact-skills/document/source/policy_draft.md"
-      ],
-      "expected_skill": "document",
-      "assertions": [
-        "Takes a review/comment stance rather than rewriting everything blindly",
-        "Identifies unclear claims and reader risks",
-        "Explains native DOCX comments/tracked changes route only if DOCX is available",
-        "Runs or references Markdown/document structural checks"
-      ]
-    },
-    {
       "id": "document-negative-workbook",
       "name": "should-not-handle-workbook-model",
       "prompt": "Build an Excel model from tests/fixtures/artifact-skills/document/source/pricing_inputs.csv with assumptions, formulas, named input cells, and a validation sheet. The workbook should recalculate when assumptions change.",

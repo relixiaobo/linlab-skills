@@ -1,0 +1,155 @@
+{
+  "schema_version": "1.0",
+  "id": "review-remote-access-policy",
+  "title": "Review a remote-access policy draft with actionable comments",
+  "job": "review-document",
+  "tags": ["artifact", "document", "policy", "review", "routing", "source-fidelity"],
+  "risk_level": "medium",
+  "evaluation": {
+    "adapter": "document",
+    "config": {
+      "mode": "review",
+      "artifact": {
+        "path": "policy-review.md",
+        "format": "markdown",
+        "criterion": "comment-actionability"
+      },
+      "structure": {
+        "criterion": "comment-actionability",
+        "minimum_heading_count": 5,
+        "maximum_word_count": 1400
+      },
+      "concepts": {
+        "review-stance": [
+          {
+            "id": "comment-review-not-rewrite",
+            "term_groups": [["comment", "editorial review"], ["not a wholesale rewrite", "does not replace the draft", "preserve the draft"]]
+          }
+        ],
+        "issue-coverage": [
+          {
+            "id": "remote-access-scope",
+            "term_groups": [["whenever needed"], ["authorization", "approval"], ["scope", "hours", "duration"]]
+          },
+          {
+            "id": "security-controls",
+            "term_groups": [["make sure access is secure"], ["security controls", "MFA", "multi-factor authentication", "encryption"]]
+          },
+          {
+            "id": "customer-data-exception",
+            "term_groups": [["good reason"], ["customer data"], ["exception", "approval", "business justification"]]
+          },
+          {
+            "id": "contractor-personal-devices",
+            "term_groups": [["contractors"], ["personal devices"], ["approved", "approval"], ["device requirements", "device controls", "managed device"]]
+          },
+          {
+            "id": "immediate-effective-date",
+            "term_groups": [["immediately"], ["transition", "effective date", "implementation"]]
+          }
+        ],
+        "comment-actionability": [
+          {
+            "id": "anchored-actionable-comments",
+            "term_groups": [["source passage", "source text", "quoted passage"], ["risk"], ["decision question", "recommended revision", "proposed revision"]]
+          }
+        ],
+        "source-fidelity": [
+          {
+            "id": "recommendations-not-current-policy",
+            "term_groups": [["proposal", "proposed", "recommendation"], ["not current policy", "draft does not currently require", "not stated in the draft"]]
+          }
+        ],
+        "workflow-accuracy": [
+          {
+            "id": "markdown-limit",
+            "term_groups": [["Markdown"], ["native DOCX"], ["not applied", "cannot apply", "were not applied"]]
+          },
+          {
+            "id": "native-word-route",
+            "term_groups": [["comments"], ["tracked changes"], ["inspect", "verify", "review the resulting DOCX"]]
+          }
+        ]
+      },
+      "criterion_failure_tags": {
+        "review-stance": "task-understanding",
+        "issue-coverage": "coverage",
+        "comment-actionability": "process-compliance",
+        "source-fidelity": "factuality",
+        "workflow-accuracy": "verification"
+      }
+    }
+  },
+  "expected": {
+    "route": {
+      "acceptable_primary_skills": ["document"],
+      "forbidden_primary_skills": ["code-review", "presentation", "spreadsheet"]
+    },
+    "outcomes": [
+      {
+        "id": "correct-route",
+        "description": "Select document as the primary workflow without an explicit Skill invocation and treat the request as editorial review rather than code review or document creation.",
+        "weight": 0.1,
+        "critical": true,
+        "evidence_sources": ["route", "trace"]
+      },
+      {
+        "id": "review-stance",
+        "description": "Take a comment-oriented editorial review stance, preserve the supplied draft as the object under review, and avoid replacing it with an unrequested wholesale rewrite.",
+        "weight": 0.15,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "issue-coverage",
+        "description": "Identify the consequential ambiguity in remote-access scope, unspecified security controls, the customer-data exception, contractor personal-device approval, and immediate effect without implementation guidance.",
+        "weight": 0.25,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "comment-actionability",
+        "description": "Anchor each material comment to identifiable source text, explain the practical reader, security, or compliance risk, and provide a concrete decision question or proposed revision.",
+        "weight": 0.2,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "source-fidelity",
+        "description": "Quote or characterize the short draft accurately, distinguish recommendations from current policy, and avoid inventing existing controls, approvals, owners, or legal requirements.",
+        "weight": 0.15,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "workflow-accuracy",
+        "description": "Accurately state that the Markdown source cannot receive native Word comments or tracked changes, and explain a credible native-DOCX review, tracked-change, inspection, and handoff route without claiming it was performed.",
+        "weight": 0.15,
+        "critical": true,
+        "evidence_sources": ["artifact", "response", "trace"]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "policy-review",
+        "pattern": "policy-review.md",
+        "required": true,
+        "description": "Source-anchored editorial review with actionable policy comments"
+      }
+    ]
+  },
+  "failure_taxonomy": [
+    "route-error",
+    "task-understanding",
+    "coverage",
+    "factuality",
+    "missing-artifact",
+    "process-compliance",
+    "verification",
+    "efficiency"
+  ],
+  "metadata": {
+    "origin": "migrated from legacy document-redline-review",
+    "novelty": "synthetic remote-access policy draft"
+  }
+}

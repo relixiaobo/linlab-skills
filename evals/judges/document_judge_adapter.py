@@ -76,7 +76,13 @@ def judge_config() -> dict[str, Any]:
         raise DocumentJudgeError(f"invalid EVAL_JUDGE_CONFIG: {exc}") from exc
     if not isinstance(value, dict):
         raise DocumentJudgeError("EVAL_JUDGE_CONFIG must contain an object")
-    required = {"artifact", "structure", "concepts", "criterion_failure_tags"}
+    required = {
+        "mode",
+        "artifact",
+        "structure",
+        "concepts",
+        "criterion_failure_tags",
+    }
     missing = sorted(required - set(value))
     unknown = sorted(set(value) - required)
     if missing or unknown:
@@ -108,10 +114,31 @@ def validate_config(config: dict[str, Any], oracle: dict[str, Any]) -> None:
     outcome_ids = {item["id"] for item in oracle["expected"]["outcomes"]}
     allowed_tags = set(oracle.get("failure_taxonomy", []))
 
+    mode = config["mode"]
+    if mode not in {"create", "review"}:
+        raise DocumentJudgeError("mode must be create or review")
+    expected_job = f"{mode}-document"
+    if oracle.get("job") != expected_job:
+        raise DocumentJudgeError(
+            f"document mode {mode} requires oracle job {expected_job}"
+        )
+
     artifact = config["artifact"]
-    if not isinstance(artifact, dict) or set(artifact) != {"path", "criterion"}:
+    if not isinstance(artifact, dict) or set(artifact) != {
+        "path",
+        "format",
+        "criterion",
+    }:
         raise DocumentJudgeError("artifact config has an invalid shape")
-    require_string(artifact["path"], "artifact.path")
+    artifact_path_value = require_string(artifact["path"], "artifact.path")
+    artifact_suffix = Path(artifact_path_value).suffix.lower()
+    if artifact["format"] != "markdown" or artifact_suffix not in {
+        ".md",
+        ".markdown",
+    }:
+        raise DocumentJudgeError(
+            "document adapter currently requires a Markdown artifact"
+        )
     artifact_criterion = require_string(
         artifact["criterion"], "artifact.criterion"
     )
@@ -399,7 +426,7 @@ def persist_evidence(
         )
 
 
-def judge_prompt(oracle: dict[str, Any], artifact_relative: str) -> str:
+def judge_prompt(oracle: dict[str, Any], config: dict[str, Any]) -> str:
     rubric = "\n".join(
         f"- {item['id']} ({item['weight']:.2f}, critical={str(item['critical']).lower()}): "
         f"{item['description']}"
@@ -407,27 +434,37 @@ def judge_prompt(oracle: dict[str, Any], artifact_relative: str) -> str:
     )
     criterion_ids = [item["id"] for item in oracle["expected"]["outcomes"]]
     failure_tags = oracle.get("failure_taxonomy", [])
-    model_artifact = f"artifacts/{Path(artifact_relative).name}"
+    model_artifact = f"artifacts/{Path(config['artifact']['path']).name}"
+    if config["mode"] == "review":
+        mode_guidance = """Judge the artifact as an editorial review of the supplied
+source, not as a replacement document. Determine whether comments are anchored
+to identifiable source passages, expose consequential ambiguity or reader risk,
+and give actionable questions or proposed revisions without inventing current
+requirements. Verify that the work distinguishes completed review from
+hypothetical native DOCX comments and tracked changes."""
+        evidence_guidance = "source lines, review comments, proposed revisions"
+    else:
+        mode_guidance = """Judge the artifact as durable written communication for
+the purpose requested by the user, not as a template-compliance exercise. Check
+source fidelity, decision or reader usefulness, traceability, and delivery
+claims to the extent required by the rubric."""
+        evidence_guidance = "source lines, artifact sections, claims"
     return f"""Act as a blind document evaluator. You do not know which
 experimental condition produced the work. Review source/prompt.md,
 source/input/, agent-result.json, agent-response.md,
 agent-trace-summary.json, {model_artifact}, markdown-inspect.json, and
 artifact-audit.json.
 
-Judge the memo as durable written communication for a board decision, not as a
-template-compliance exercise. Check that the recommendation is prominent and
-actionable; every number, estimate, risk, and unknown remains faithful to the
-source; inferences are distinguished from facts; and the source map makes
-substantive claims traceable. Evaluate whether predicted reader questions expose
-real decision gaps rather than merely repeating headings. Confirm that Markdown
-is a usable source of truth and that any Word handoff claim is accurate. Treat
-artifact-audit.json term matches and misses as review hints, not proof that a
-concept is present or absent. Use markdown-inspect.json only for structural
-facts, then inspect the memo itself for semantic quality and contradictions.
+{mode_guidance}
+
+Treat artifact-audit.json term matches and misses as review hints, not proof
+that a concept is present or absent. Use markdown-inspect.json only for
+structural facts, then inspect the source and artifact for semantic quality and
+contradictions.
 
 Score every criterion from 0.0 to 1.0. Set passed=true only at 0.75 or higher
-with no blocking failure. Ground every score in concrete source lines, memo
-sections, claims, reader questions, or deterministic report fields.
+with no blocking failure. Ground every score in concrete {evidence_guidance},
+delivery statements, or deterministic report fields.
 
 Rubric:
 {rubric}
@@ -651,7 +688,7 @@ def apply_deterministic_overrides(
         cap_score(
             scores[artifact_criterion],
             0.0,
-            "the required board memo was not declared as an Agent artifact",
+            f"the required {artifact['path']} was not declared as an Agent artifact",
             "artifact-audit.json artifact.declared",
         )
         failure_tags.add("missing-artifact")
@@ -700,7 +737,7 @@ def missing_artifact_result(
                 "rationale": (
                     "The recorded primary Skill matches the expected route."
                     if value == 1.0
-                    else "The required board-memo artifact was not available."
+                    else "The required document artifact was not available."
                 ),
                 "evidence": [
                     "agent-result.json route"
@@ -715,7 +752,7 @@ def missing_artifact_result(
     return {
         "scores": scores,
         "failure_tags": tags,
-        "summary": "The required board-memo artifact was missing.",
+        "summary": "The required document artifact was missing.",
     }
 
 
@@ -810,7 +847,7 @@ def run_judge(args: argparse.Namespace) -> dict[str, Any]:
             )
             judgment = run_blind_model_judge(
                 options=options,
-                prompt=judge_prompt(oracle, relative),
+                prompt=judge_prompt(oracle, config),
                 workspace=workspace,
                 trace_root=trace_dir,
                 criterion_ids=[

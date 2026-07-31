@@ -68,6 +68,15 @@ def main() -> int:
                 "markdown-inspect.json",
             ]
         )
+    elif (workspace / "source/input/policy_draft.md").is_file():
+        artifact_evidence = "artifacts/policy-review.md"
+        required_workspace_files.extend(
+            [
+                "source/input/policy_draft.md",
+                "artifacts/policy-review.md",
+                "markdown-inspect.json",
+            ]
+        )
     else:
         raise RuntimeError("blind workspace has an unknown domain fixture")
     missing = [
