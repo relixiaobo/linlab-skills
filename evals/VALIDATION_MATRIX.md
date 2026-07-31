@@ -5,11 +5,12 @@ command is:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/python -m pip install \
-  -r evals/requirements.txt \
-  -r skills/data-analysis/requirements.txt
+.venv/bin/python -m pip install -r tests/requirements.txt
 .venv/bin/python tests/run_all.py
 ```
+
+The full gate also requires Node.js, FFmpeg/FFprobe, and Poppler tools on
+`PATH`.
 
 ## Coverage
 
