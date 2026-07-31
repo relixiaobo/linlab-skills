@@ -13,7 +13,7 @@ import sys
 import tempfile
 import time
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from jsonschema import Draft202012Validator
@@ -278,6 +278,102 @@ def build_asset_match_report(
     return {"configured": True, "required": required, "forbidden": forbidden}
 
 
+def normalized_manifest_path(value: Any) -> str | None:
+    if not isinstance(value, str) or not value:
+        return None
+    normalized = value.replace("\\", "/")
+    path = PurePosixPath(normalized)
+    if path.is_absolute() or ".." in path.parts:
+        return None
+    return path.as_posix().removeprefix("./")
+
+
+def edit_manifest_binding_errors(
+    manifest: dict[str, Any],
+    *,
+    expectations: dict[str, Any],
+    source_pptx: Path,
+    output_dir: Path,
+    judged_output_pptx: Path,
+) -> list[str]:
+    errors: list[str] = []
+    operations = manifest.get("operations")
+    if not isinstance(operations, list) or len(operations) != 1:
+        errors.append("edit manifest must contain exactly one operation")
+    operation = operations[0] if isinstance(operations, list) and operations else {}
+    if not isinstance(operation, dict):
+        operation = {}
+
+    operation_id = operation.get("id")
+    if operation.get("action") != "replace-text":
+        errors.append("edit operation action must be replace-text")
+    if operation.get("changeField") != "object-content":
+        errors.append("edit operation changeField must be object-content")
+    if operation.get("expectedBefore") != expectations["expected_before"]:
+        errors.append("edit operation expectedBefore does not match the requested target")
+    if operation.get("intendedAfter") != expectations["intended_after"]:
+        errors.append("edit operation intendedAfter does not match the requested value")
+
+    target = operation.get("target")
+    if not isinstance(target, dict):
+        target = {}
+    if target.get("slidePart") != expectations["target_part"]:
+        errors.append("edit operation target.slidePart does not match the judged target")
+    if target.get("textMatch") != expectations["expected_before"]:
+        errors.append("edit operation target.textMatch does not match the requested target")
+    if target.get("expectedMatchCount") != expectations["expected_match_count"]:
+        errors.append("edit operation target.expectedMatchCount is incorrect")
+    if target.get("matchPolicy") != "exactly-one":
+        errors.append("edit operation target.matchPolicy must be exactly-one")
+
+    source_artifact = manifest.get("sourceArtifact")
+    if not isinstance(source_artifact, dict):
+        source_artifact = {}
+    if normalized_manifest_path(source_artifact.get("path")) != expectations["source"]:
+        errors.append("sourceArtifact.path does not identify the judged source")
+    manifest_source_hash = source_artifact.get("sha256")
+    if not (
+        isinstance(manifest_source_hash, str)
+        and manifest_source_hash.casefold() == sha256_file(source_pptx).casefold()
+    ):
+        errors.append("sourceArtifact.sha256 does not match the judged source")
+
+    try:
+        output_relative = (
+            judged_output_pptx.resolve().relative_to(output_dir.resolve()).as_posix()
+        )
+    except ValueError as exc:
+        raise JudgeError("judged PPTX is outside the Agent output directory") from exc
+    accepted_output_paths = {
+        output_relative,
+        f"deliverables/{output_relative}",
+    }
+    if normalized_manifest_path(manifest.get("outputArtifact")) not in accepted_output_paths:
+        errors.append("outputArtifact does not identify the judged PPTX")
+
+    allowed_records = manifest.get("allowedPackageParts")
+    if not isinstance(allowed_records, list):
+        allowed_records = []
+    manifest_parts = sorted(
+        item.get("part")
+        for item in allowed_records
+        if isinstance(item, dict) and isinstance(item.get("part"), str)
+    )
+    if manifest_parts != sorted(expectations["allowed_package_parts"]):
+        errors.append("allowedPackageParts do not match the judged package scope")
+    references_match = bool(
+        isinstance(operation_id, str)
+        and allowed_records
+        and all(
+            isinstance(item, dict) and item.get("operationIds") == [operation_id]
+            for item in allowed_records
+        )
+    )
+    if not references_match:
+        errors.append("allowedPackageParts must reference only the intended operation")
+    return errors
+
+
 def build_precision_edit_report(
     *,
     oracle: dict[str, Any],
@@ -285,6 +381,7 @@ def build_precision_edit_report(
     output_dir: Path,
     edited_pptx: Path,
     evidence_dir: Path,
+    judged_output_pptx: Path | None = None,
 ) -> dict[str, Any]:
     metadata = oracle.get("metadata", {})
     expectations = (
@@ -501,38 +598,15 @@ def build_precision_edit_report(
         )
 
     if manifest_schema_valid:
-        operations = manifest.get("operations", [])
-        matching_operations = [
-            operation
-            for operation in operations
-            if isinstance(operation, dict)
-            and operation.get("expectedBefore") == expectations["expected_before"]
-            and operation.get("intendedAfter") == expectations["intended_after"]
-            and isinstance(operation.get("target"), dict)
-            and operation["target"].get("slidePart") == target_part
-            and operation["target"].get("expectedMatchCount")
-            == expected_match_count
-            and operation["target"].get("matchPolicy") == "exactly-one"
-        ]
-        manifest_allowed_parts = sorted(
-            item.get("part")
-            for item in manifest.get("allowedPackageParts", [])
-            if isinstance(item, dict) and isinstance(item.get("part"), str)
+        binding_errors = edit_manifest_binding_errors(
+            manifest,
+            expectations=expectations,
+            source_pptx=source_pptx,
+            output_dir=output_dir,
+            judged_output_pptx=judged_output_pptx or edited_pptx,
         )
-        source_artifact = manifest.get("sourceArtifact")
-        source_hash_matches = bool(
-            isinstance(source_artifact, dict)
-            and source_artifact.get("sha256") == sha256_file(source_pptx)
-        )
-        manifest_matches_expectations = bool(
-            len(matching_operations) == 1
-            and manifest_allowed_parts == sorted(allowed_parts)
-            and source_hash_matches
-        )
-        if not manifest_matches_expectations:
-            manifest_errors.append(
-                "edit manifest does not match the hidden source, target, operation, or package scope"
-            )
+        manifest_errors.extend(binding_errors)
+        manifest_matches_expectations = not binding_errors
     edit_manifest_passed = bool(
         not manifest_required
         or (
@@ -705,13 +779,19 @@ def score_index(judgment: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
 def cap_score(score: dict[str, Any], cap: float, rationale: str, evidence: str) -> None:
     current = score.get("value")
-    if not isinstance(current, (int, float)):
+    if not isinstance(current, (int, float)) or isinstance(current, bool):
         raise JudgeError(f"judge score is not numeric: {score.get('criterion_id')}")
-    if current > cap:
+    if float(current) > cap:
         score["value"] = cap
-        score["passed"] = False
-        score["rationale"] = f"{score.get('rationale', '')} Deterministic cap: {rationale}".strip()
-        score.setdefault("evidence", []).append(evidence)
+    score["passed"] = float(score["value"]) >= 0.75
+    score["rationale"] = (
+        f"{score.get('rationale', '')} Deterministic check: {rationale}".strip()
+    )
+    evidence_items = score.setdefault("evidence", [])
+    if not isinstance(evidence_items, list):
+        raise JudgeError(f"judge score evidence is not a list: {score.get('criterion_id')}")
+    if evidence not in evidence_items:
+        evidence_items.append(evidence)
 
 
 def slide_count_bounds(oracle: dict[str, Any]) -> tuple[int, int] | None:
@@ -968,6 +1048,111 @@ def apply_deterministic_overrides(
     return judgment
 
 
+def path_spellings(path: Path) -> set[str]:
+    spellings = {str(path), str(path.resolve())}
+    for value in list(spellings):
+        if value.startswith("/private/tmp/"):
+            spellings.add(value.removeprefix("/private"))
+        elif value.startswith("/tmp/"):
+            spellings.add(f"/private{value}")
+    return {value for value in spellings if value}
+
+
+def blind_redactions(
+    *,
+    env: dict[str, Path],
+    result: dict[str, Any],
+    evidence: dict[str, Any],
+) -> dict[str, str]:
+    result_file = env["EVAL_RESULT_FILE"]
+    run_dir = result_file.parent
+    run_root = result_file.parents[3] if len(result_file.parents) > 3 else run_dir
+    path_replacements = (
+        (env["EVAL_PAYLOAD_DIR"], "source"),
+        (env["EVAL_OUTPUT_DIR"], "agent-output"),
+        (Path(evidence["render_dir"]).parent, "judge-evidence"),
+        (run_dir, "run"),
+        (run_root, "run-root"),
+        (ROOT, "repository"),
+    )
+    redactions: dict[str, str] = {}
+    for path, replacement in path_replacements:
+        for spelling in path_spellings(path):
+            redactions[spelling] = replacement
+    run_id = result.get("run_id")
+    if isinstance(run_id, str) and run_id:
+        redactions[run_id] = "run-id"
+    condition_id = (result.get("condition") or {}).get("id")
+    if isinstance(condition_id, str) and condition_id and condition_id != "baseline":
+        redactions[condition_id] = "condition"
+    return redactions
+
+
+def sanitize_blind_value(value: Any, redactions: dict[str, str]) -> Any:
+    if isinstance(value, dict):
+        return {
+            key: sanitize_blind_value(item, redactions)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [sanitize_blind_value(item, redactions) for item in value]
+    if not isinstance(value, str):
+        return value
+    sanitized = value
+    for sensitive, replacement in sorted(
+        redactions.items(), key=lambda item: len(item[0]), reverse=True
+    ):
+        sanitized = sanitized.replace(sensitive, replacement)
+    return sanitized
+
+
+def blind_forbidden_markers(
+    *,
+    env: dict[str, Path],
+    result: dict[str, Any],
+) -> set[str]:
+    result_file = env["EVAL_RESULT_FILE"]
+    run_dir = result_file.parent
+    run_root = result_file.parents[3] if len(result_file.parents) > 3 else run_dir
+    markers = path_spellings(run_dir) | path_spellings(run_root)
+    run_id = result.get("run_id")
+    if isinstance(run_id, str) and run_id:
+        markers.add(run_id)
+    condition_id = (result.get("condition") or {}).get("id")
+    if isinstance(condition_id, str) and condition_id:
+        markers.update(
+            {
+                f"/{condition_id}/",
+                f"\\{condition_id}\\",
+                f'"{condition_id}"',
+            }
+        )
+        if condition_id != "baseline":
+            markers.add(condition_id)
+    return {marker for marker in markers if marker}
+
+
+def assert_blind_workspace_clean(
+    workspace: Path,
+    *,
+    forbidden_markers: set[str],
+) -> None:
+    encoded_markers = {
+        marker: marker.encode("utf-8") for marker in sorted(forbidden_markers)
+    }
+    for path in sorted(workspace.rglob("*")):
+        if not path.is_file() or path.is_symlink():
+            continue
+        content = path.read_bytes()
+        for marker, encoded in encoded_markers.items():
+            if encoded in content:
+                relative = path.relative_to(workspace).as_posix()
+                raise JudgeError(
+                    f"blind-review input leaked experimental provenance in {relative}: "
+                    f"{marker}"
+                )
+
+
 def prepare_model_workspace(
     *,
     workspace: Path,
@@ -977,22 +1162,33 @@ def prepare_model_workspace(
     asset_matches: dict[str, Any],
     precision_edit: dict[str, Any],
 ) -> list[Path]:
+    redactions = blind_redactions(env=env, result=result, evidence=evidence)
     source_dir = workspace / "source"
     source_dir.mkdir()
     payload = env["EVAL_PAYLOAD_DIR"]
     shutil.copy2(payload / "prompt.md", source_dir / "prompt.md")
     shutil.copytree(payload / "input", source_dir / "input")
     (workspace / "agent-result.json").write_text(
-        json.dumps(anonymized_result(result), indent=2) + "\n",
+        json.dumps(
+            sanitize_blind_value(anonymized_result(result), redactions), indent=2
+        )
+        + "\n",
         encoding="utf-8",
     )
     response = env["EVAL_OUTPUT_DIR"] / "response.md"
     (workspace / "agent-response.md").write_text(
-        response.read_text(encoding="utf-8") if response.is_file() else "",
+        sanitize_blind_value(
+            response.read_text(encoding="utf-8") if response.is_file() else "",
+            redactions,
+        ),
         encoding="utf-8",
     )
     (workspace / "agent-trace-summary.json").write_text(
-        json.dumps(trace_summary(env["EVAL_OUTPUT_DIR"]), indent=2) + "\n",
+        json.dumps(
+            sanitize_blind_value(trace_summary(env["EVAL_OUTPUT_DIR"]), redactions),
+            indent=2,
+        )
+        + "\n",
         encoding="utf-8",
     )
     for name, value in (
@@ -1002,7 +1198,10 @@ def prepare_model_workspace(
         ("asset-matches.json", asset_matches),
         ("precision-edit.json", precision_edit),
     ):
-        (workspace / name).write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+        (workspace / name).write_text(
+            json.dumps(sanitize_blind_value(value, redactions), indent=2) + "\n",
+            encoding="utf-8",
+        )
 
     render_dir = evidence["render_dir"]
     contact_sheets = sorted(render_dir.glob("contact-sheet.*"))
@@ -1011,6 +1210,10 @@ def prepare_model_workspace(
         path
         for path in (source_dir / "input").rglob("*")
         if path.is_file() and path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}
+    )
+    assert_blind_workspace_clean(
+        workspace,
+        forbidden_markers=blind_forbidden_markers(env=env, result=result),
     )
     return [*source_images, *contact_sheets, *slide_images]
 
@@ -1054,6 +1257,7 @@ def run_judge(args: argparse.Namespace) -> dict[str, Any]:
             output_dir=env["EVAL_OUTPUT_DIR"],
             edited_pptx=anonymous_pptx,
             evidence_dir=evidence_dir,
+            judged_output_pptx=pptx_files[0],
         )
         persist_deterministic_evidence(
             evidence,
