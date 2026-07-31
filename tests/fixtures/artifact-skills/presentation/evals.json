@@ -1,0 +1,127 @@
+{
+  "skill_name": "presentation",
+  "skill_path": "skills/presentation",
+  "evals": [
+    {
+      "id": "presentation-studio-new-deck",
+      "name": "content-specific-creative-deck",
+      "prompt": "Use $presentation to turn tests/fixtures/artifact-skills/presentation/source/quarterly_update.md into an exceptional, visually distinctive 9-11 slide investor presentation. This is a new deck for a 12-minute live founder update, not a template-fill exercise. Deliver an editable PPTX and keep every metric and caveat faithful to the source.",
+      "files": [
+        "tests/fixtures/artifact-skills/presentation/source/quarterly_update.md"
+      ],
+      "expected_skill": "presentation",
+      "assertions": [
+        "Routes the request through Studio for a new deck",
+        "Derives a content-specific visual concept from the activation-versus-early-retention narrative rather than selecting only a generic theme or layout preset",
+        "Automatically selects and adapts one strong visual direction from the content, audience, venue, evidence profile, and export constraints without forcing a three-option user-facing style exercise",
+        "Uses the theme library only as an internal design prior, records the selected or reference-led theme decision and content-specific adaptations, and escalates to user choice only for a genuine unresolved preference tradeoff",
+        "Builds a role-tagged prototype set scaled to the deck and covering its actual risk profile before expanding the full canonical HTML deck",
+        "Keeps all source metrics, dates, caveats, and asks accurate while authoring canonical HTML and compiling the requested editable PPTX",
+        "Reports actual native, SVG, and raster editability coverage instead of selecting a deck-level native or hybrid backend",
+        "Renders the selected prototypes and completed deck, performs a mandatory visual critique for hierarchy, readability, composition, overlap, cropping, and cross-slide coherence, and iterates on material issues"
+      ]
+    },
+    {
+      "id": "presentation-studio-full-restructure",
+      "name": "existing-deck-as-source-material",
+      "prompt": "Use $presentation to completely restructure an attached 14-slide annual strategy PPTX. The current story and design are weak, so you may reorder, merge, or split slides and replace the visual system. Treat the old deck as source material: preserve every factual claim, number, citation, customer quote, and required brand asset unless you explicitly flag a conflict. Deliver a substantially better, editable PPTX.",
+      "files": [
+        "tests/fixtures/artifact-skills/presentation/source/annual_strategy_source.pptx"
+      ],
+      "expected_skill": "presentation",
+      "assertions": [
+        "Routes a requested full restructure through Studio and treats the source PPTX as evidence rather than as the file being patched",
+        "Extracts and audits the existing deck into a traceable source map before changing the narrative",
+        "Treats page count, order, and layout as mutable while treating claims, numbers, citations, quotes, and required brand assets as source-fidelity constraints",
+        "Develops one content-derived visual direction, records why it fits the source and audience, renders it with real source content, and prototypes the actual risk profile before full production",
+        "Checks the rebuilt deck against the source map so no unsupported facts are introduced and no required source content disappears silently",
+        "Uses rendered visual review to evaluate the new narrative and design while using content/source comparison, not geometric one-to-one matching, to verify fidelity",
+        "Treats the old PPTX as source material and rewrites the new deck in canonical HTML before exporting PPTX"
+      ]
+    },
+    {
+      "id": "presentation-studio-constrained-redesign",
+      "name": "beautify-with-preservation-matrix",
+      "prompt": "Use $presentation to beautify an attached 18-slide sales deck one-to-one. Keep the exact slide count, slide order, wording, numbers, charts, speaker notes, theme/master, logos, aspect ratio, and which content appears on each slide. You may improve typography, spacing, alignment, color application, and object geometry, but do not rewrite or restructure the story. Return an editable PPTX.",
+      "files": [
+        "tests/fixtures/artifact-skills/presentation/source/sales_redesign_source.pptx"
+      ],
+      "expected_skill": "presentation",
+      "assertions": [
+        "Routes the request through Studio with a constrained preservation policy rather than through Surgeon",
+        "Creates a preservation matrix that marks slide count, order, wording, numbers, charts, notes, theme/master, logos, aspect ratio, and slide-level content assignment as fixed",
+        "Marks only typography, spacing, alignment, permitted color application, and object geometry as redesignable within the declared invariants",
+        "Selects one preservation-compatible visual direction from the available design freedom and does not import permissions from unconstrained Studio work",
+        "Maintains a one-to-one slide mapping in canonical HTML and does not merge, split, reorder, rewrite, or move content between slides",
+        "Compares before and after content, object presence, notes, and declared invariants in addition to rendering both versions for visual inspection",
+        "Reports exactly what changed, what was preserved, and any invariant that could not be verified instead of claiming success from appearance alone"
+      ]
+    },
+    {
+      "id": "presentation-surgeon-single-target",
+      "name": "single-target-pptx-edit",
+      "prompt": "Use $presentation to edit an attached board_deck.pptx. On slide 7, change only the subtitle text from 'Q3 pipeline' to 'Q4 pipeline'. Do not alter any other text, formatting, geometry, animation, speaker note, theme, relationship, slide order, or package metadata. Return the edited PPTX and evidence that only the requested target changed.",
+      "files": [
+        "tests/fixtures/artifact-skills/presentation/source/board_deck.pptx"
+      ],
+      "expected_skill": "presentation",
+      "assertions": [
+        "Routes the request through PPTX Surgeon and treats the input PPTX as the artifact of record",
+        "Runs a baseline technical gate before editing and records pre-existing warnings separately from edit regressions",
+        "Creates a structured edit manifest identifying slide 7, the target object or text run, expectedBefore, intendedAfter, exactly-one match count, a preserve-everything-except-listed-operations policy, verification scopes, and allowed package parts with reasons",
+        "Fails safely or requests disambiguation if the target is missing or non-unique instead of applying a broad text replacement",
+        "Uses a scoped OOXML or equivalently surgical edit that preserves untouched package parts and object properties",
+        "Runs a package-level diff and reports only the expected target slide part or semantic object change, with no unexplained package changes",
+        "Executes a target assertion that slide 7 contains exactly 'Q4 pipeline', the old value is gone at that target, and no other text or object changed",
+        "Runs the final technical gate against the baseline, requires technical_regression_passed, and does not confuse a non-manifest-aware compare result with verified edit scope"
+      ]
+    },
+    {
+      "id": "presentation-html-investor-update",
+      "name": "agent-maintainable-html-deck",
+      "prompt": "Use $presentation to turn tests/fixtures/artifact-skills/presentation/source/quarterly_update.md into a polished 6-slide browser-presentable deck for a live founder update. Deliver canonical HTML, include speaker notes for each slide, use a consistent visual system, and produce a final verification report. Do not create a marketing landing page.",
+      "files": [
+        "tests/fixtures/artifact-skills/presentation/source/quarterly_update.md"
+      ],
+      "expected_skill": "presentation",
+      "assertions": [
+        "Creates an HTML deck source artifact rather than only a prose outline",
+        "Treats deck.html as the canonical production source without inventing a deck-level backend choice",
+        "Uses 5-7 slides with clear slide purposes and concise live-talk density",
+        "Includes speaker notes or presenter notes for each slide",
+        "Uses the provided metrics and caveats without inventing new numbers",
+        "Runs the HTML inspection script or equivalent and reports any warnings/limitations",
+        "Does not trigger document, spreadsheet, or pdf as the primary skill"
+      ]
+    },
+    {
+      "id": "presentation-pdf-handout-boundary",
+      "name": "pdf-handout-from-deck-source",
+      "prompt": "Use $presentation to create a short reading/share deck from tests/fixtures/artifact-skills/presentation/source/product_brief.md and export or describe the PDF handout route. Keep the deck source editable for future agent revisions. The PDF is only the handout deliverable, not the source of truth.",
+      "files": [
+        "tests/fixtures/artifact-skills/presentation/source/product_brief.md"
+      ],
+      "expected_skill": "presentation",
+      "assertions": [
+        "Keeps a deck source of truth instead of treating PDF as the primary artifact",
+        "Plans a reading/share deck, not a long-form document",
+        "Uses PDF only as export/handout after deck source is stable",
+        "Includes deck verification steps before handoff"
+      ]
+    },
+    {
+      "id": "presentation-negative-report",
+      "name": "should-not-handle-long-report",
+      "prompt": "Create a 5-page written board memo from tests/fixtures/artifact-skills/presentation/source/quarterly_update.md. It should be a narrative document with headings and a source map, not slides.",
+      "files": [
+        "tests/fixtures/artifact-skills/presentation/source/quarterly_update.md"
+      ],
+      "expected_skill": "document",
+      "assertions": [
+        "Does not use presentation as the primary skill",
+        "Identifies the request as a document/memo artifact",
+        "Avoids slide-deck planning language as the main output"
+      ]
+    }
+  ]
+}

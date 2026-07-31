@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SignalDesk evaluation assets</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: #dfe3e6; color: #15191c; font-family: Arial, Helvetica, sans-serif; }
+    .asset { display: none; overflow: hidden; background: #f6f7f8; }
+    body[data-asset="command-center"] #command-center { display: grid; }
+    body[data-asset="mobile-oncall"] #mobile-oncall,
+    body[data-asset="northstar-dashboard"] #northstar-dashboard { display: block; }
+
+    .desktop { width: 1600px; height: 1000px; }
+    .app-shell { display: grid; grid-template-columns: 244px 1fr; grid-template-rows: 72px 1fr; }
+    .topbar { grid-column: 1 / -1; display: flex; align-items: center; gap: 28px; padding: 0 30px; color: #f8fafb; background: #12171a; }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: 22px; font-weight: 800; }
+    .brand-mark { width: 28px; height: 28px; background: #e63a32; border: 6px solid #ffffff; }
+    .environment { color: #aab4b9; font-size: 14px; }
+    .top-spacer { flex: 1; }
+    .live-pill { padding: 9px 14px; border: 1px solid #ef6b64; color: #ffaaa5; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+    .avatar { display: grid; place-items: center; width: 36px; height: 36px; background: #d9e2e6; color: #1c2529; font-size: 13px; font-weight: 800; }
+    .sidebar { padding: 26px 20px; background: #20272b; color: #d8e0e4; }
+    .side-label { margin: 18px 10px 10px; color: #829097; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    .nav-item { padding: 13px 14px; margin: 5px 0; font-size: 14px; }
+    .nav-item.active { background: #323c41; color: #ffffff; border-left: 4px solid #e63a32; }
+    .side-footer { margin-top: 410px; padding: 14px; border: 1px solid #435158; font-size: 12px; line-height: 1.5; }
+    .workspace { padding: 26px 30px 30px; background: #eef1f2; }
+    .crumb { color: #66737a; font-size: 12px; font-weight: 700; }
+    .incident-head { display: flex; align-items: flex-start; gap: 18px; margin-top: 14px; }
+    .sev { padding: 8px 11px; background: #e63a32; color: #ffffff; font-size: 13px; font-weight: 900; }
+    .incident-title h1 { margin: 0; font-size: 31px; letter-spacing: 0; }
+    .incident-title p { margin: 7px 0 0; color: #66737a; font-size: 14px; }
+    .head-actions { margin-left: auto; display: flex; gap: 10px; }
+    .button { padding: 11px 16px; border: 1px solid #a6b0b5; background: #ffffff; font-size: 13px; font-weight: 800; }
+    .button.primary { border-color: #15191c; background: #15191c; color: #ffffff; }
+    .status-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 24px 0 16px; }
+    .metric { padding: 17px; border: 1px solid #d1d7da; background: #ffffff; }
+    .metric span { display: block; color: #6f7b81; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    .metric strong { display: block; margin-top: 8px; font-size: 24px; }
+    .metric strong.bad { color: #d9362e; }
+    .metric strong.good { color: #14805e; }
+    .main-grid { display: grid; grid-template-columns: 1.35fr .9fr; gap: 16px; }
+    .panel { border: 1px solid #cfd6d9; background: #ffffff; }
+    .panel-head { display: flex; align-items: center; padding: 15px 17px; border-bottom: 1px solid #e0e5e7; }
+    .panel-head strong { font-size: 15px; }
+    .panel-head span { margin-left: auto; color: #728087; font-size: 12px; }
+    .service-map { position: relative; height: 310px; padding: 26px; background: #f9fafb; }
+    .service { position: absolute; padding: 13px 15px; border: 2px solid #8a969c; background: #ffffff; font-size: 13px; font-weight: 800; }
+    .service.api { left: 50px; top: 55px; border-color: #e63a32; }
+    .service.queue { left: 260px; top: 115px; }
+    .service.worker { right: 70px; top: 64px; }
+    .service.db { right: 210px; bottom: 55px; border-color: #e0a52d; }
+    .connector { position: absolute; height: 3px; background: #89959b; transform-origin: left center; }
+    .connector.c1 { left: 170px; top: 93px; width: 125px; transform: rotate(15deg); background: #e63a32; }
+    .connector.c2 { left: 375px; top: 139px; width: 130px; transform: rotate(-18deg); }
+    .connector.c3 { right: 175px; top: 140px; width: 100px; transform: rotate(62deg); background: #e0a52d; }
+    .impact { position: absolute; left: 46px; bottom: 36px; padding: 11px 14px; background: #fde9e7; color: #a5241e; font-size: 12px; font-weight: 800; }
+    .timeline { height: 310px; padding: 8px 18px; }
+    .event { display: grid; grid-template-columns: 72px 13px 1fr; gap: 10px; align-items: start; padding: 13px 0; border-bottom: 1px solid #e2e6e8; }
+    .event time { color: #66737a; font-size: 12px; font-weight: 700; }
+    .dot { width: 10px; height: 10px; margin-top: 3px; background: #e63a32; }
+    .event.good .dot { background: #15966b; }
+    .event strong { display: block; font-size: 13px; }
+    .event p { margin: 4px 0 0; color: #68757b; font-size: 12px; }
+    .bottom-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; margin-top: 16px; }
+    .responders, .runbook { padding: 16px 18px; }
+    .people { display: flex; gap: 10px; margin-top: 14px; }
+    .person { display: grid; place-items: center; width: 42px; height: 42px; background: #d9e2e6; font-size: 12px; font-weight: 900; }
+    .person.lead { background: #15191c; color: #ffffff; }
+    .runbook-row { display: flex; align-items: center; margin-top: 12px; padding: 12px; background: #f2f5f6; font-size: 13px; }
+    .check { margin-left: auto; color: #14805e; font-weight: 900; }
+
+    .mobile { width: 900px; height: 1600px; padding: 0; background: #eef1f2; }
+    .mobile-top { display: flex; align-items: center; padding: 30px 34px; background: #12171a; color: #ffffff; }
+    .mobile-top .brand { font-size: 28px; }
+    .mobile-body { padding: 34px; }
+    .mobile-kicker { color: #d9362e; font-size: 18px; font-weight: 900; text-transform: uppercase; }
+    .mobile h1 { margin: 14px 0 8px; font-size: 44px; line-height: 1.08; }
+    .mobile-sub { color: #657178; font-size: 21px; }
+    .mobile-card { margin-top: 28px; padding: 26px; border: 1px solid #cbd3d7; background: #ffffff; }
+    .mobile-card h2 { margin: 0; font-size: 24px; }
+    .mobile-status { display: flex; align-items: center; margin-top: 18px; }
+    .pulse { width: 14px; height: 14px; margin-right: 10px; background: #e63a32; }
+    .timer { margin-left: auto; font-size: 34px; font-weight: 900; }
+    .mobile-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+    .mobile-metric { padding: 20px; background: #f2f5f6; }
+    .mobile-metric span { display: block; color: #69757b; font-size: 15px; }
+    .mobile-metric strong { display: block; margin-top: 8px; font-size: 29px; }
+    .ack { width: 100%; margin-top: 28px; padding: 23px; border: 0; background: #15191c; color: #ffffff; font-size: 22px; font-weight: 900; }
+    .mobile-event { display: grid; grid-template-columns: 92px 14px 1fr; gap: 16px; padding: 20px 0; border-bottom: 1px solid #d7dde0; }
+    .mobile-event time { color: #68757b; font-size: 17px; }
+    .mobile-event .dot { margin-top: 4px; }
+    .mobile-event strong { font-size: 19px; }
+    .mobile-note { margin-top: 28px; padding: 22px; border-left: 6px solid #e0a52d; background: #fff5dd; font-size: 18px; line-height: 1.45; }
+
+    .wordmark { width: 1200px; height: 240px; display: none; align-items: center; justify-content: center; gap: 34px; background: #ffffff; }
+    body[data-asset="wordmark"] #wordmark { display: flex; }
+    .wordmark .brand-mark { width: 82px; height: 82px; border: 16px solid #15191c; background: #e63a32; }
+    .wordmark strong { font-size: 92px; letter-spacing: 0; }
+    .wordmark span { display: block; margin-top: 8px; color: #607078; font-size: 24px; }
+
+    .northstar { width: 1600px; height: 1000px; background: #f4f0e8; color: #2a2d31; }
+    .north-head { display: flex; align-items: center; height: 84px; padding: 0 34px; background: #173d58; color: #ffffff; }
+    .north-head strong { font-size: 26px; }
+    .north-head span { margin-left: auto; color: #b9d4e5; }
+    .north-body { padding: 32px; }
+    .north-body h1 { margin: 0; font-size: 34px; }
+    .north-body > p { color: #6d716f; }
+    .north-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin: 26px 0; }
+    .north-kpi { padding: 22px; border: 1px solid #d4c9b5; background: #ffffff; }
+    .north-kpi span { color: #81786a; font-size: 13px; text-transform: uppercase; }
+    .north-kpi strong { display: block; margin-top: 10px; color: #e4762d; font-size: 35px; }
+    .north-panels { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
+    .north-panel { height: 470px; padding: 24px; border: 1px solid #d4c9b5; background: #ffffff; }
+    .bars { display: flex; align-items: flex-end; gap: 18px; height: 330px; padding-top: 30px; }
+    .bar { flex: 1; background: #4c8eb5; }
+    .bar:nth-child(2n) { background: #e4762d; }
+    .donut { width: 250px; height: 250px; margin: 50px auto 20px; border: 56px solid #4c8eb5; border-right-color: #e4762d; border-radius: 50%; }
+    .demo { text-align: center; color: #9a3b20; font-weight: 900; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+  <main id="command-center" class="asset desktop app-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark"></span>SignalDesk</div>
+      <span class="environment">Production / US East</span>
+      <span class="top-spacer"></span>
+      <span class="live-pill">Incident active</span>
+      <span class="avatar">AK</span>
+    </header>
+    <aside class="sidebar">
+      <div class="side-label">Operations</div>
+      <div class="nav-item active">Command center</div>
+      <div class="nav-item">Services</div>
+      <div class="nav-item">On-call</div>
+      <div class="nav-item">Runbooks</div>
+      <div class="side-label">Reporting</div>
+      <div class="nav-item">Incident review</div>
+      <div class="nav-item">Reliability trends</div>
+      <div class="side-footer"><strong>Workspace health</strong><br>23 services monitored<br>All integrations connected</div>
+    </aside>
+    <section class="workspace">
+      <div class="crumb">Incidents / INC-2481</div>
+      <div class="incident-head">
+        <span class="sev">SEV-1</span>
+        <div class="incident-title"><h1>Checkout latency in US East</h1><p>Customer impact detected at 14:07 UTC</p></div>
+        <div class="head-actions"><button class="button">Share update</button><button class="button primary">Open runbook</button></div>
+      </div>
+      <div class="status-grid">
+        <div class="metric"><span>Status</span><strong class="bad">Investigating</strong></div>
+        <div class="metric"><span>Elapsed</span><strong>00:18:42</strong></div>
+        <div class="metric"><span>Impacted users</span><strong>4,281</strong></div>
+        <div class="metric"><span>Responders</span><strong class="good">7 active</strong></div>
+      </div>
+      <div class="main-grid">
+        <article class="panel"><div class="panel-head"><strong>Service impact map</strong><span>Live topology</span></div><div class="service-map">
+          <div class="connector c1"></div><div class="connector c2"></div><div class="connector c3"></div>
+          <div class="service api">Checkout API</div><div class="service queue">Orders queue</div><div class="service worker">Payment worker</div><div class="service db">Ledger DB</div>
+          <div class="impact">Elevated latency propagating from Checkout API</div>
+        </div></article>
+        <article class="panel"><div class="panel-head"><strong>Incident timeline</strong><span>UTC</span></div><div class="timeline">
+          <div class="event"><time>14:07</time><span class="dot"></span><div><strong>Latency threshold breached</strong><p>P95 exceeded 2.5 seconds.</p></div></div>
+          <div class="event"><time>14:11</time><span class="dot"></span><div><strong>Incident declared</strong><p>SEV-1 workflow started.</p></div></div>
+          <div class="event good"><time>14:16</time><span class="dot"></span><div><strong>Payment worker isolated</strong><p>Queue depth beginning to fall.</p></div></div>
+          <div class="event"><time>14:23</time><span class="dot"></span><div><strong>Mitigation in progress</strong><p>Traffic shifting to healthy pool.</p></div></div>
+        </div></article>
+      </div>
+      <div class="bottom-grid">
+        <article class="panel responders"><strong>Active responders</strong><div class="people"><span class="person lead">AK</span><span class="person">JM</span><span class="person">RS</span><span class="person">TL</span><span class="person">+3</span></div></article>
+        <article class="panel runbook"><strong>Runbook progress</strong><div class="runbook-row">Drain unhealthy worker pool <span class="check">Done</span></div></article>
+      </div>
+    </section>
+  </main>
+
+  <main id="mobile-oncall" class="asset mobile">
+    <header class="mobile-top"><div class="brand"><span class="brand-mark"></span>SignalDesk</div><span class="top-spacer"></span><span class="live-pill">On call</span></header>
+    <section class="mobile-body">
+      <div class="mobile-kicker">SEV-1 incident</div>
+      <h1>Checkout latency in US East</h1>
+      <div class="mobile-sub">Assigned to Platform On-call</div>
+      <article class="mobile-card">
+        <h2>Live incident status</h2>
+        <div class="mobile-status"><span class="pulse"></span><strong>Investigating</strong><span class="timer">00:18</span></div>
+        <div class="mobile-metrics"><div class="mobile-metric"><span>Impacted users</span><strong>4,281</strong></div><div class="mobile-metric"><span>Responders</span><strong>7</strong></div></div>
+        <button class="ack">Acknowledge incident</button>
+      </article>
+      <article class="mobile-card">
+        <h2>Recent activity</h2>
+        <div class="mobile-event"><time>14:23</time><span class="dot"></span><div><strong>Traffic shift started</strong></div></div>
+        <div class="mobile-event"><time>14:16</time><span class="dot"></span><div><strong>Payment worker isolated</strong></div></div>
+        <div class="mobile-event"><time>14:11</time><span class="dot"></span><div><strong>Incident declared</strong></div></div>
+      </article>
+      <div class="mobile-note"><strong>Next action</strong><br>Confirm queue depth remains below the recovery threshold for five minutes.</div>
+    </section>
+  </main>
+
+  <main id="wordmark" class="asset wordmark">
+    <span class="brand-mark"></span><div><strong>SignalDesk</strong><span>Incident response, in one operating view.</span></div>
+  </main>
+
+  <main id="northstar-dashboard" class="asset northstar">
+    <header class="north-head"><strong>Northstar Sales Analytics</strong><span>Demo workspace / FY25</span></header>
+    <section class="north-body">
+      <h1>Revenue performance dashboard</h1><p>Generic sales reporting sample. Not a SignalDesk product screen.</p>
+      <div class="north-kpis"><div class="north-kpi"><span>Pipeline</span><strong>$4.8M</strong></div><div class="north-kpi"><span>Bookings</span><strong>$1.3M</strong></div><div class="north-kpi"><span>Win rate</span><strong>28%</strong></div><div class="north-kpi"><span>Renewal</span><strong>91%</strong></div></div>
+      <div class="north-panels"><article class="north-panel"><strong>Quarterly bookings</strong><div class="bars"><div class="bar" style="height:42%"></div><div class="bar" style="height:55%"></div><div class="bar" style="height:68%"></div><div class="bar" style="height:63%"></div><div class="bar" style="height:82%"></div><div class="bar" style="height:76%"></div></div></article><article class="north-panel"><strong>Regional mix</strong><div class="donut"></div><div class="demo">Third-party demo asset</div></article></div>
+    </section>
+  </main>
+  <script>
+    const asset = new URLSearchParams(location.search).get('asset') || 'command-center';
+    document.body.dataset.asset = asset;
+  </script>
+</body>
+</html>

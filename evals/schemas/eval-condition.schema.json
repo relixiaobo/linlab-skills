@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://linlab.dev/schemas/eval-condition.schema.json",
+  "title": "Skill evaluation condition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "label", "kind", "skills"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "id": {"$ref": "#/$defs/slug"},
+    "label": {"type": "string", "minLength": 1},
+    "kind": {
+      "type": "string",
+      "enum": ["baseline", "skill-enabled", "ablation"]
+    },
+    "skills": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/skill"}
+    },
+    "executor_config": {"type": "object"},
+    "metadata": {"type": "object"}
+  },
+  "$defs": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "path"],
+      "properties": {
+        "name": {"$ref": "#/$defs/slug"},
+        "path": {"type": "string", "minLength": 1},
+        "revision": {"type": "string", "minLength": 1},
+        "ablations": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/ablation"}
+        }
+      }
+    },
+    "ablation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["op", "path", "behavior", "reason"],
+      "properties": {
+        "op": {"type": "string", "enum": ["remove", "replace"]},
+        "path": {"type": "string", "minLength": 1},
+        "behavior": {"$ref": "#/$defs/slug"},
+        "replacement": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"kind": {"const": "baseline"}}},
+      "then": {"properties": {"skills": {"maxItems": 0}}}
+    },
+    {
+      "if": {"properties": {"kind": {"enum": ["skill-enabled", "ablation"]}}},
+      "then": {"properties": {"skills": {"minItems": 1}}}
+    }
+  ]
+}

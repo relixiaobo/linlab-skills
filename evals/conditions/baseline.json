@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "id": "baseline",
+  "label": "Base agent without repository Skills",
+  "kind": "baseline",
+  "skills": [],
+  "executor_config": {
+    "skill_registry": "isolated",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "medium",
+    "network_access": true,
+    "adapter_timeout_seconds": 1800
+  }
+}

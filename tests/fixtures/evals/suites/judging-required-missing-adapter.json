@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "id": "judging-required-missing-adapter",
+  "title": "Required judging without a configured adapter",
+  "runs": [
+    {
+      "case": "tests/fixtures/evals/cases/tiny-case",
+      "conditions": [
+        "tests/fixtures/evals/conditions/baseline.json",
+        "tests/fixtures/evals/conditions/tiny-enabled.json"
+      ]
+    }
+  ],
+  "defaults": {
+    "repetitions": 1,
+    "timeout_seconds": 30
+  },
+  "judging": {
+    "required": true
+  },
+  "comparison": {
+    "control_condition": "baseline",
+    "metrics": ["score", "total_tokens", "duration_ms"]
+  }
+}

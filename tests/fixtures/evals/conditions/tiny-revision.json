@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "id": "tiny-revision",
+  "label": "Fixture Skill from a Git revision",
+  "kind": "skill-enabled",
+  "skills": [
+    {
+      "name": "tiny-skill",
+      "path": "tests/fixtures/evals/skill",
+      "revision": "HEAD"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "adapters": [
+    {
+      "id": "presentation",
+      "kind": "hybrid",
+      "protocol_version": "1.0",
+      "command": "python3 {repo}/evals/judges/presentation_judge_adapter.py",
+      "jobs": ["create-presentation"],
+      "description": "Deterministic PPTX inspection and rendering followed by blind visual review."
+    },
+    {
+      "id": "data-analysis",
+      "kind": "hybrid",
+      "protocol_version": "1.0",
+      "command": "python3 {repo}/evals/judges/data_analysis_judge_adapter.py",
+      "jobs": ["analyze-tabular-data"],
+      "description": "Deterministic metric and join verification followed by blind analysis review."
+    },
+    {
+      "id": "product-spec",
+      "kind": "hybrid",
+      "protocol_version": "1.0",
+      "command": "python3 {repo}/evals/judges/product_spec_judge_adapter.py",
+      "jobs": ["shape-product-decision"],
+      "description": "Deterministic product-spec readiness evidence followed by blind decision-quality review."
+    }
+  ]
+}

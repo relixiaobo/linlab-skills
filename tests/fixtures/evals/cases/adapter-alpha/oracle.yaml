@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "id": "adapter-alpha",
+  "title": "Route the first fixture case to its Judge Adapter",
+  "job": "fixture-alpha",
+  "tags": ["fixture"],
+  "risk_level": "low",
+  "evaluation": {
+    "adapter": "fixture-primary"
+  },
+  "expected": {
+    "route": {
+      "acceptable_primary_skills": ["tiny-skill"]
+    },
+    "outcomes": [
+      {
+        "id": "route-and-output",
+        "description": "Select the fixture Skill and produce the artifact.",
+        "weight": 1.0,
+        "critical": true,
+        "evidence_sources": ["route", "artifact"]
+      }
+    ],
+    "artifacts": [
+      {"id": "fixture-artifact", "pattern": "artifact.txt", "required": true}
+    ]
+  },
+  "failure_taxonomy": ["route-error", "missing-artifact"]
+}

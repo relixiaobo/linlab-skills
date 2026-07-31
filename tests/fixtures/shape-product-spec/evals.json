@@ -1,0 +1,76 @@
+{
+  "skill_name": "shape-product-spec",
+  "skill_path": "skills/shape-product-spec",
+  "evals": [
+    {
+      "id": "product-spec-from-messy-notes",
+      "name": "Create decision-ready product spec from scattered notes",
+      "prompt": "Use $shape-product-spec to turn tests/fixtures/shape-product-spec/source/merchant_addon_notes.md into a decision-ready and execution-ready product spec with evidence, decisions, clean-slate vs brownfield options, current constraints, flows, product rules, non-goals, acceptance criteria, execution context, and open questions.",
+      "expected_skill": "shape-product-spec",
+      "files": [
+        "tests/fixtures/shape-product-spec/source/merchant_addon_notes.md"
+      ],
+      "assertions": [
+        "Definition separates regional manager request flow from finance approval flow.",
+        "Definition preserves mobile and budget forecasting as out-of-scope.",
+        "Definition distinguishes the clean-slate approval model from the constrained v1 target.",
+        "Definition marks owner approval requirement as an open question rather than guessing silently.",
+        "Acceptance criteria use observable behavior rather than database fields."
+      ]
+    },
+    {
+      "id": "review-conflicting-product-doc",
+      "name": "Review contradictory existing product document",
+      "prompt": "Use $shape-product-spec to review tests/fixtures/shape-product-spec/source/conflicting_product_doc.md. Lead with blocking contradictions, unsupported assumptions, missing acceptance criteria, unclear objectives or constraints, prototype copy problems, and implementation-detail leakage.",
+      "expected_skill": "shape-product-spec",
+      "files": [
+        "tests/fixtures/shape-product-spec/source/conflicting_product_doc.md"
+      ],
+      "assertions": [
+        "Review flags mutually contradictory approver permissions.",
+        "Review flags payout creator self-approval contradiction.",
+        "Review flags unclear or mixed constraints when they affect the recommended path.",
+        "Review flags vague fast/secure/gracefully language.",
+        "Review separates product behavior issues from implementation details."
+      ]
+    },
+    {
+      "id": "story-map-from-research-snippets",
+      "name": "Create story map from research snippets",
+      "prompt": "Use $shape-product-spec to turn tests/fixtures/shape-product-spec/source/interview_snippets.md into a story map and MVP product spec for enterprise teammate invites, including backbone, MVP/R2/Future slices, assumptions, risks, and acceptance criteria.",
+      "expected_skill": "shape-product-spec",
+      "files": [
+        "tests/fixtures/shape-product-spec/source/interview_snippets.md"
+      ],
+      "assertions": [
+        "Output uses a user-journey backbone before implementation tasks.",
+        "Output separates MVP stories from R2 or Future stories.",
+        "Output preserves domain restriction and pending invite evidence.",
+        "Output marks admin cancel permission as an open question."
+      ]
+    },
+    {
+      "id": "prototype-behavior-product-spec",
+      "name": "Create prototype behavior product spec from rough flow",
+      "prompt": "Use $shape-product-spec to specify a prototype for an enterprise user inviting teammates with domain restrictions, pending invites, resend/cancel actions, empty state, permission denied state, and user-facing error copy.",
+      "expected_skill": "shape-product-spec",
+      "files": [],
+      "assertions": [
+        "Output includes screen inventory or equivalent prototype state map.",
+        "Output covers empty, disabled/permission denied, validation error, and success states.",
+        "Output keeps UI copy user-facing and separates developer notes.",
+        "Output includes acceptance criteria for interactions."
+      ]
+    },
+    {
+      "id": "should-not-trigger-generic-writing",
+      "name": "should-not trigger for generic writing",
+      "prompt": "Rewrite this company update email so it sounds warmer and shorter. Do not create a PRD, product spec, product definition, or requirements spec.",
+      "expected_skill": "none",
+      "files": [],
+      "assertions": [
+        "Task is generic writing, not product spec shaping."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,561 @@
+{
+  "ok": true,
+  "checks": [
+    {
+      "name": "quick_validate:code-review",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "/Users/lixiaobo/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+        "code-review"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "Skill is valid!\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "quick_validate:data-analysis",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "/Users/lixiaobo/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+        "data-analysis"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "Skill is valid!\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "quick_validate:document",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "/Users/lixiaobo/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+        "document"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "Skill is valid!\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "quick_validate:feed-processing",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "/Users/lixiaobo/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+        "feed-processing"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "Skill is valid!\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "quick_validate:pdf",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "/Users/lixiaobo/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+        "pdf"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "Skill is valid!\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "quick_validate:presentation",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "/Users/lixiaobo/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+        "presentation"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "Skill is valid!\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "quick_validate:shape-product-spec",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "/Users/lixiaobo/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+        "shape-product-spec"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "Skill is valid!\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "quick_validate:spreadsheet",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "/Users/lixiaobo/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+        "spreadsheet"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "Skill is valid!\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "quick_validate:video-studio",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "/Users/lixiaobo/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+        "video-studio"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "Skill is valid!\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "quick_validate:archive/research",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "/Users/lixiaobo/.codex/skills/.system/skill-creator/scripts/quick_validate.py",
+        "archive/research"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "Skill is valid!\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "eval-platform-unit",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/unit",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": "test_presentation_judge.PresentationJudgeTests.test_slide_count_and_missing_notes_cap_editability) ... ok\ntest_structured_slide_range_overrides_description_fallback (eval_platform.test_presentation_judge.PresentationJudgeTests.test_structured_slide_range_overrides_description_fallback) ... ok\ntest_transient_provider_failures_are_retryable (eval_platform.test_presentation_judge.PresentationJudgeTests.test_transient_provider_failures_are_retryable) ... ok\ntest_case_contract_accepts_complete_product_spec_evidence (eval_platform.test_product_spec_judge.ProductSpecJudgeTests.test_case_contract_accepts_complete_product_spec_evidence) ... ok\ntest_missing_artifact_result_preserves_deterministic_route_score (eval_platform.test_product_spec_judge.ProductSpecJudgeTests.test_missing_artifact_result_preserves_deterministic_route_score) ... ok\ntest_registry_resolves_product_spec_and_suite_requires_judging (eval_platform.test_product_spec_judge.ProductSpecJudgeTests.test_registry_resolves_product_spec_and_suite_requires_judging) ... ok\ntest_run_judge_exercises_full_blind_model_path (eval_platform.test_product_spec_judge.ProductSpecJudgeTests.test_run_judge_exercises_full_blind_model_path) ... ok\ntest_run_judge_skips_model_when_product_spec_is_missing (eval_platform.test_product_spec_judge.ProductSpecJudgeTests.test_run_judge_skips_model_when_product_spec_is_missing) ... ok\ntest_section_warnings_do_not_become_template_vetoes (eval_platform.test_product_spec_judge.ProductSpecJudgeTests.test_section_warnings_do_not_become_template_vetoes) ... ok\ntest_semantic_term_misses_do_not_cap_blind_model_scores (eval_platform.test_product_spec_judge.ProductSpecJudgeTests.test_semantic_term_misses_do_not_cap_blind_model_scores) ... ok\ntest_structural_minimums_still_cap_model_scores (eval_platform.test_product_spec_judge.ProductSpecJudgeTests.test_structural_minimums_still_cap_model_scores) ... ok\n\n----------------------------------------------------------------------\nRan 56 tests in 83.008s\n\nOK\n"
+    },
+    {
+      "name": "eval-suite-contract",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "evals/runners/evalctl.py",
+        "validate",
+        "--suite",
+        "evals/suites/representative-ab.json"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "{\n  \"ok\": true,\n  \"suite\": \"representative-ab\",\n  \"case_count\": 3,\n  \"planned_run_count\": 18,\n  \"repetitions_override\": null,\n  \"judging_required\": true,\n  \"judge_registry\": \"/Users/lixiaobo/Coding/linlab-skills/evals/judges/registry.json\",\n  \"judge_adapters\": {\n    \"create-investor-update\": \"presentation\",\n    \"analyze-order-revenue\": \"data-analysis\",\n    \"shape-merchant-addon-controls\": \"product-spec\"\n  },\n  \"intervention_activations\": {\n    \"create-investor-update\": {\n      \"declared_behaviors\": [],\n      \"condition_behaviors\": {}\n    },\n    \"analyze-order-revenue\": {\n      \"declared_behaviors\": [],\n      \"condition_behaviors\": {}\n    },\n    \"shape-merchant-addon-controls\": {\n      \"declared_behaviors\": [],\n      \"condition_behaviors\": {}\n    }\n  },\n  \"schemas\": [\n    \"eval-case.schema.json\",\n    \"eval-condition.schema.json\",\n    \"eval-evidence-manifest.schema.json\",\n    \"eval-judge-registry.schema.json\",\n    \"eval-judge-result.schema.json\",\n    \"eval-result.schema.json\",\n    \"eval-suite.schema.json\"\n  ]\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "eval-presentation-image-contract",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "evals/runners/evalctl.py",
+        "validate",
+        "--suite",
+        "evals/suites/presentation-image-smoke.json"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "{\n  \"ok\": true,\n  \"suite\": \"presentation-image-smoke\",\n  \"case_count\": 1,\n  \"planned_run_count\": 3,\n  \"repetitions_override\": null,\n  \"judging_required\": true,\n  \"judge_registry\": \"/Users/lixiaobo/Coding/linlab-skills/evals/judges/registry.json\",\n  \"judge_adapters\": {\n    \"create-investor-update\": \"presentation\"\n  },\n  \"intervention_activations\": {\n    \"create-investor-update\": {\n      \"declared_behaviors\": [],\n      \"condition_behaviors\": {}\n    }\n  },\n  \"schemas\": [\n    \"eval-case.schema.json\",\n    \"eval-condition.schema.json\",\n    \"eval-evidence-manifest.schema.json\",\n    \"eval-judge-registry.schema.json\",\n    \"eval-judge-result.schema.json\",\n    \"eval-result.schema.json\",\n    \"eval-suite.schema.json\"\n  ]\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "eval-presentation-image-assets-contract",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "evals/runners/evalctl.py",
+        "validate",
+        "--suite",
+        "evals/suites/presentation-image-assets-smoke.json"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "{\n  \"ok\": true,\n  \"suite\": \"presentation-image-assets-smoke\",\n  \"case_count\": 1,\n  \"planned_run_count\": 4,\n  \"repetitions_override\": null,\n  \"judging_required\": true,\n  \"judge_registry\": \"/Users/lixiaobo/Coding/linlab-skills/evals/judges/registry.json\",\n  \"judge_adapters\": {\n    \"create-incident-response-launch\": \"presentation\"\n  },\n  \"intervention_activations\": {\n    \"create-incident-response-launch\": {\n      \"declared_behaviors\": [\n        \"presentation-asset-handling\"\n      ],\n      \"condition_behaviors\": {\n        \"presentation-image-improved-no-visual-instructions\": [\n          \"presentation-asset-handling\"\n        ]\n      }\n    }\n  },\n  \"schemas\": [\n    \"eval-case.schema.json\",\n    \"eval-condition.schema.json\",\n    \"eval-evidence-manifest.schema.json\",\n    \"eval-judge-registry.schema.json\",\n    \"eval-judge-result.schema.json\",\n    \"eval-result.schema.json\",\n    \"eval-suite.schema.json\"\n  ]\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "code-review",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "evals/code-review/run_checks.py"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "{\n  \"ok\": true,\n  \"eval_file\": \"evals/code-review/evals.json\"\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "artifact-skills",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "evals/run_artifact_skill_checks.py"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "{\n  \"ok\": true,\n  \"eval_files\": [\n    \"evals/artifact-skills/presentation/evals.json\",\n    \"evals/artifact-skills/document/evals.json\",\n    \"evals/artifact-skills/spreadsheet/evals.json\",\n    \"evals/artifact-skills/pdf/evals.json\"\n  ]\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "presentation",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "tests/integration/presentation/run_checks.py"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": "on_and_layout_decision_rules_are_enforced) ... ok\ntest_final_pass_bypass_mutations_are_rejected (test_schema_fixtures.SchemaFixtureTests.test_final_pass_bypass_mutations_are_rejected) ... ok\ntest_canonical_speaker_notes_markup_is_consistent (test_skill_structure.PresentationSkillStructureTests.test_canonical_speaker_notes_markup_is_consistent) ... ok\ntest_cross_artifact_references_and_fragments_resolve (test_skill_structure.PresentationSkillStructureTests.test_cross_artifact_references_and_fragments_resolve) ... ok\ntest_final_report_is_final_only (test_skill_structure.PresentationSkillStructureTests.test_final_report_is_final_only) ... ok\ntest_reference_set_is_consolidated_and_links_resolve (test_skill_structure.PresentationSkillStructureTests.test_reference_set_is_consolidated_and_links_resolve) ... ok\ntest_removed_backend_state_is_absent (test_skill_structure.PresentationSkillStructureTests.test_removed_backend_state_is_absent) ... ok\ntest_route_bundles_match_deliverables_and_sources (test_skill_structure.PresentationSkillStructureTests.test_route_bundles_match_deliverables_and_sources) ... ok\ntest_schema_taxonomy_has_two_technical_sources (test_skill_structure.PresentationSkillStructureTests.test_schema_taxonomy_has_two_technical_sources) ... ok\ntest_studio_tool_template_and_catalogs_are_executable (test_skill_structure.PresentationSkillStructureTests.test_studio_tool_template_and_catalogs_are_executable) ... ok\ntest_catalogs_are_exposed_by_the_cli (test_studio_tool.StudioToolTests.test_catalogs_are_exposed_by_the_cli) ... ok\ntest_init_creates_a_self_consistent_project_and_static_checks_pass (test_studio_tool.StudioToolTests.test_init_creates_a_self_consistent_project_and_static_checks_pass) ... ok\ntest_init_refuses_to_overwrite_an_unrelated_nonempty_directory (test_studio_tool.StudioToolTests.test_init_refuses_to_overwrite_an_unrelated_nonempty_directory) ... ok\n\n----------------------------------------------------------------------\nRan 45 tests in 411.395s\n\nOK\n"
+    },
+    {
+      "name": "data-analysis",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "tests/integration/data-analysis/run_checks.py"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "triangulate \u2014 grain\n  pass  grain flags fan-out\n  pass  grain passes unique key\n  pass  grain surfaces NULL keys\ntriangulate \u2014 magnitude (regression: must catch a sign flip)\n  pass  magnitude flags sign flip\n  pass  magnitude flags orders-off\n  pass  magnitude passes close\ntriangulate \u2014 window (regression: must not crash on tz-aware dates)\n  pass  window survives tz-aware dates\n  pass  window flags out-of-range\ntriangulate \u2014 reconcile / coverage / parts\n  pass  reconcile passes right total\n  pass  reconcile flags wrong total\n  pass  reconcile rows agg = row count\n  pass  coverage flags missing population\n  pass  parts flags broken conservation\nbuild_report \u2014 trust badge integrity\n  pass  no badge when nothing verified\n  pass  badge when all verified\nvalidate_findings \u2014 rejects incomplete ledger\n  pass  validate_findings fails on empty fields\nrenderers \u2014 smoke\n  pass  render_chart produces SVG\n  pass  render_table produces HTML\n\n18 passed, 0 failed, 0 skipped\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "feed-processing",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "evals/feed-processing/run_checks.py"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "esponse\n  pass  feed_fetch reports response_too_large without body\nfeed discovery\n  pass  feed_discover finds alternate links\n  pass  feed_discover returns rss/atom/json\n  pass  feed_discover reports no alternate links\n  pass  feed_discover suggests common paths\nfeed parsing\n  pass  feed_parse handles RSS Atom JSON and malformed feed\n  pass  feed_parse item count\n  pass  feed_parse surfaces missing date warning\n  pass  feed_parse accepts feed_fetch output\n  pass  feed_parse preserves fetched response coverage\n  pass  feed_parse preserves fetched source identity\n  pass  feed_parse records fetch errors\nwindows and rules\n  pass  feed_window last 7 days\n  pass  feed_window selects recent items\n  pass  feed_window reports ambiguous dates\n  pass  feed_window preserves fetch/parse errors\n  pass  feed_window preserves coverage\n  pass  feed_window preserves errors\n  pass  feed_rules preserves window errors\n  pass  feed_rules preserves coverage\n  pass  feed_rules preserves errors\n  pass  feed_rules applies include/exclude\n  pass  feed_rules keeps selected items\nprofile\n  pass  feed_profile builds source profiles\n  pass  feed_profile aggregates per-source stats\n  pass  feed_profile tracks dates and duplicates\n  pass  feed_profile tracks missing and truncation counts\ndiff\n  pass  feed_diff classifies item changes\n  pass  feed_diff changed/new/duplicate/stale\nfull text and pack validation\n  pass  feed_parse summary fixture\n  pass  full_text_extract records attempt ledger\n  pass  full_text_extract selects static readability\n  pass  full_text_extract preserves upstream errors\n  pass  full_text_extract preserves coverage\n  pass  full_text_extract preserves errors\n  pass  feed_pack builds pack\n  pass  validate_feed_pack accepts valid pack\n  pass  validate_feed_pack ok\n  pass  feed_pack preserves upstream errors\n  pass  feed_pack keeps errored source coverage\n  pass  validate_feed_pack accepts pack with source errors\n  pass  validate_feed_pack rejects duplicates\n\n51 passed, 0 failed\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "shape-product-spec",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "tests/integration/shape-product-spec/run_checks.py"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "{\n  \"ok\": true,\n  \"fixture_dir\": \"tests/fixtures/shape-product-spec\"\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "video-studio",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "evals/video-studio/run_checks.py"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "{\n  \"ok\": true,\n  \"workspace\": \"video-studio-workspace/eval-smoke\",\n  \"errors\": []\n}\n",
+      "stderr_tail": ""
+    },
+    {
+      "name": "python-compile",
+      "cmd": [
+        "/Users/lixiaobo/Coding/linlab-skills/.venv/bin/python",
+        "-m",
+        "py_compile",
+        "evals/run_all_skill_checks.py",
+        "evals/run_artifact_skill_checks.py",
+        "evals/code-review/run_checks.py",
+        "evals/data-analysis/run_checks.py",
+        "evals/feed-processing/run_checks.py",
+        "evals/presentation/run_checks.py",
+        "evals/judges/common.py",
+        "evals/judges/data_analysis_judge_adapter.py",
+        "evals/judges/model_judge_runtime.py",
+        "evals/judges/presentation_judge_adapter.py",
+        "evals/judges/product_spec_judge_adapter.py",
+        "evals/runners/codex_exec_adapter.py",
+        "evals/runners/errors.py",
+        "evals/runners/eval_lib.py",
+        "evals/runners/evalctl.py",
+        "evals/runners/schema_validation.py",
+        "evals/shape-product-spec/run_checks.py",
+        "evals/video-studio/run_checks.py",
+        "tests/integration/data-analysis/run_checks.py",
+        "tests/integration/shape-product-spec/run_checks.py",
+        "tests/unit/eval_platform/test_codex_exec_adapter.py",
+        "tests/unit/eval_platform/test_data_analysis_judge.py",
+        "tests/unit/eval_platform/test_eval_runner.py",
+        "tests/unit/eval_platform/test_presentation_judge.py",
+        "tests/unit/eval_platform/test_product_spec_judge.py",
+        "tests/fixtures/evals/fake_agent.py",
+        "tests/fixtures/evals/fake_codex_judge.py",
+        "tests/fixtures/evals/fake_judge.py",
+        "tests/fixtures/evals/fake_mutating_judge.py",
+        "tests/fixtures/evals/fake_secondary_judge.py",
+        "document/scripts/docx_tool.py",
+        "presentation/scripts/pptx_tool.py",
+        "presentation/scripts/evidence_tool.py",
+        "presentation/scripts/render_slides.py",
+        "pdf/scripts/pdf_tool.py",
+        "shape-product-spec/scripts/spec_check.py",
+        "spreadsheet/scripts/table_tool.py",
+        "spreadsheet/scripts/workbook_tool.py",
+        "video-studio/scripts/build_publish_package.py",
+        "video-studio/scripts/captions_from_script.py",
+        "video-studio/scripts/composite_overlay.py",
+        "video-studio/scripts/doctor.py",
+        "video-studio/scripts/make_cover.py",
+        "video-studio/scripts/probe_media.py",
+        "video-studio/scripts/qa_video.py",
+        "video-studio/scripts/render_ffmpeg.py",
+        "video-studio/scripts/render_frames_to_video.py",
+        "video-studio/scripts/render_manim.py",
+        "video-studio/scripts/scene_timing.py",
+        "video-studio/scripts/validate_manifest.py",
+        "tests/integration/presentation/generate_pptx_fixtures.py",
+        "tests/integration/presentation/run_checks.py",
+        "tests/integration/presentation/test_eval_fixtures.py",
+        "tests/integration/presentation/test_evidence_tool.py",
+        "tests/integration/presentation/test_pptx_tool.py",
+        "tests/integration/presentation/test_render_and_html_tools.py",
+        "tests/integration/presentation/test_schema_fixtures.py",
+        "tests/integration/presentation/test_skill_structure.py",
+        "tests/integration/presentation/test_studio_tool.py"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:document/scripts/markdown_tool.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "document/scripts/markdown_tool.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:presentation/scripts/html_tool.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "presentation/scripts/html_tool.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:presentation/scripts/render_theme_previews.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "presentation/scripts/render_theme_previews.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:presentation/scripts/studio_tool.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "presentation/scripts/studio_tool.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:tests/fixtures/evals/presentation-image-assets/render_assets.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "tests/fixtures/evals/presentation-image-assets/render_assets.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:feed-processing/scripts/feed_diff.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "feed-processing/scripts/feed_diff.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:feed-processing/scripts/feed_discover.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "feed-processing/scripts/feed_discover.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:feed-processing/scripts/feed_fetch.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "feed-processing/scripts/feed_fetch.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:feed-processing/scripts/feed_pack.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "feed-processing/scripts/feed_pack.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:feed-processing/scripts/feed_parse.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "feed-processing/scripts/feed_parse.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:feed-processing/scripts/feed_profile.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "feed-processing/scripts/feed_profile.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:feed-processing/scripts/feed_rules.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "feed-processing/scripts/feed_rules.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:feed-processing/scripts/feed_window.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "feed-processing/scripts/feed_window.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:feed-processing/scripts/full_text_extract.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "feed-processing/scripts/full_text_extract.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:feed-processing/scripts/lib/feed_common.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "feed-processing/scripts/lib/feed_common.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:feed-processing/scripts/opml_tool.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "feed-processing/scripts/opml_tool.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:feed-processing/scripts/source_list.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "feed-processing/scripts/source_list.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:feed-processing/scripts/validate_feed_pack.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "feed-processing/scripts/validate_feed_pack.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "node-check:video-studio/scripts/capture_web_frames.mjs",
+      "cmd": [
+        "/opt/homebrew/bin/node",
+        "--check",
+        "video-studio/scripts/capture_web_frames.mjs"
+      ],
+      "exit": 0,
+      "ok": true,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    }
+  ]
+}

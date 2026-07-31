@@ -1,0 +1,20 @@
+{
+  "suite_name": "artifact-skills",
+  "skills": [
+    "presentation",
+    "document",
+    "spreadsheet",
+    "pdf"
+  ],
+  "eval_files": [
+    "tests/fixtures/artifact-skills/presentation/evals.json",
+    "tests/fixtures/artifact-skills/document/evals.json",
+    "tests/fixtures/artifact-skills/spreadsheet/evals.json",
+    "tests/fixtures/artifact-skills/pdf/evals.json"
+  ],
+  "method": {
+    "trigger_eval": "Run prompts in fresh sessions when possible. Record which skill should trigger and whether another skill would be a better primary route.",
+    "artifact_eval": "Inspect produced files with the skill's bundled scripts and compare outputs to assertions.",
+    "forward_test": "For independent validation, give only the skill path, prompt, and files from work/artifact-skills/forward-test-prompts.json to a fresh agent. Do not include expected_skill, assertions, or suspected fixes."
+  }
+}

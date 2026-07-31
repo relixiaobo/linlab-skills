@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://linlab.dev/schemas/eval-case.schema.json",
+  "title": "Skill evaluation case oracle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "title",
+    "job",
+    "tags",
+    "expected",
+    "failure_taxonomy"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "id": {"$ref": "#/$defs/slug"},
+    "title": {"type": "string", "minLength": 1},
+    "job": {"$ref": "#/$defs/slug"},
+    "tags": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/slug"},
+      "uniqueItems": true
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter"],
+      "properties": {
+        "adapter": {"$ref": "#/$defs/slug"},
+        "config": {"type": "object"}
+      }
+    },
+    "intervention_activations": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/interventionActivation"}
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["route", "outcomes"],
+      "properties": {
+        "route": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["acceptable_primary_skills"],
+          "properties": {
+            "acceptable_primary_skills": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}
+            },
+            "forbidden_primary_skills": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "outcomes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/outcome"}
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/artifactExpectation"}
+        }
+      }
+    },
+    "failure_taxonomy": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/failureTag"}
+    },
+    "metadata": {"type": "object"}
+  },
+  "$defs": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "weight", "critical", "evidence_sources"],
+      "properties": {
+        "id": {"$ref": "#/$defs/slug"},
+        "description": {"type": "string", "minLength": 1},
+        "weight": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "critical": {"type": "boolean"},
+        "evidence_sources": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["response", "artifact", "trace", "route", "usage"]
+          }
+        }
+      }
+    },
+    "interventionActivation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "behavior",
+        "description",
+        "trigger_files",
+        "observable_outcomes"
+      ],
+      "properties": {
+        "behavior": {"$ref": "#/$defs/slug"},
+        "description": {"type": "string", "minLength": 1},
+        "trigger_files": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "observable_outcomes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/slug"}
+        }
+      }
+    },
+    "artifactExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "pattern", "required"],
+      "properties": {
+        "id": {"$ref": "#/$defs/slug"},
+        "pattern": {"type": "string", "minLength": 1},
+        "required": {"type": "boolean"},
+        "description": {"type": "string"}
+      }
+    },
+    "failureTag": {
+      "$ref": "#/$defs/slug"
+    }
+  }
+}

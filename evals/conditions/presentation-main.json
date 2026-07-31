@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "id": "presentation-main",
+  "label": "Presentation Skill at main baseline",
+  "kind": "skill-enabled",
+  "skills": [
+    {
+      "name": "presentation",
+      "path": "presentation",
+      "revision": "92ac3e14332a31a4905946add5e40a276ff22afc"
+    }
+  ],
+  "executor_config": {
+    "skill_registry": "isolated",
+    "routing": "natural",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "medium",
+    "network_access": true,
+    "adapter_timeout_seconds": 1800
+  }
+}

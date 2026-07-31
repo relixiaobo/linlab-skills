@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "id": "tiny-unactivated",
+  "label": "Fixture Skill with an unactivated ablation",
+  "kind": "ablation",
+  "skills": [
+    {
+      "name": "tiny-skill",
+      "path": "tests/fixtures/evals/skill",
+      "ablations": [
+        {
+          "op": "replace",
+          "path": "references/detail.md",
+          "behavior": "tiny-unactivated-guidance",
+          "replacement": "tests/fixtures/evals/overlay/detail.md",
+          "reason": "Prove that suites reject an ablation the case cannot activate."
+        }
+      ]
+    }
+  ]
+}

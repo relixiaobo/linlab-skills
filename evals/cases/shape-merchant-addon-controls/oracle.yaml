@@ -1,0 +1,178 @@
+{
+  "schema_version": "1.0",
+  "id": "shape-merchant-addon-controls",
+  "title": "Shape messy merchant add-on notes into an executable product spec",
+  "job": "shape-product-decision",
+  "tags": ["product-spec", "routing", "requirements"],
+  "risk_level": "medium",
+  "evaluation": {
+    "adapter": "product-spec",
+    "config": {
+      "artifact": {
+        "path": "product-spec.md",
+        "criterion": "testable-acceptance"
+      },
+      "structure": {
+        "criterion": "testable-acceptance",
+        "stable_id_minimums": {"FR": 2},
+        "acceptance_criteria_minimum": 4
+      },
+      "concepts": {
+        "evidence-fidelity": [
+          {
+            "id": "source-roles",
+            "term_groups": [["workspace owner"], ["finance admin"], ["regional manager"]]
+          },
+          {
+            "id": "request-entry-points",
+            "term_groups": [["add-ons page", "addons page"], ["locked feature upsell"]]
+          },
+          {
+            "id": "role-actions",
+            "term_groups": [["regional manager"], ["request"], ["finance admin"], ["approve"], ["reject"]]
+          },
+          {
+            "id": "owner-current-behavior",
+            "term_groups": [["workspace owner"], ["immediate"], ["visible to finance", "finance-visible", "finance can see"]]
+          },
+          {
+            "id": "audit-coverage",
+            "term_groups": [["audit"], ["requester", "requested"], ["approver", "approved"], ["rejection", "rejected"], ["enabled", "enablement"]]
+          },
+          {
+            "id": "source-success-signal",
+            "term_groups": [["surprise invoice", "invoice escalation", "not surprised", "surprised by"], ["before the next invoice", "before next invoice", "before invoicing"]]
+          }
+        ],
+        "target-options": [
+          {
+            "id": "clean-slate-direction",
+            "term_groups": [["clean-slate", "ideal"], ["unified approval", "every paid add-on", "all paid add-on"]]
+          },
+          {
+            "id": "constrained-first-release",
+            "term_groups": [["selected target", "constrained target", "brownfield"], ["v1", "first release"], ["owner immediate", "owner enablement"]]
+          },
+          {
+            "id": "explicit-tradeoff",
+            "term_groups": [["tradeoff", "compromise", "temporary inconsistency"]]
+          }
+        ],
+        "flows-and-states": [
+          {
+            "id": "request-flow",
+            "term_groups": [["regional manager"], ["request approval", "request an add-on"], ["pending review", "pending"]]
+          },
+          {
+            "id": "finance-decision-flow",
+            "term_groups": [["finance admin"], ["approve"], ["reject"], ["enabled", "locked"]]
+          },
+          {
+            "id": "owner-audit-flow",
+            "term_groups": [["workspace owner"], ["immediate"], ["audit"]]
+          },
+          {
+            "id": "failure-recovery",
+            "term_groups": [["error", "fails", "failure"], ["retry", "recovery", "refresh"]]
+          },
+          {
+            "id": "empty-state",
+            "term_groups": [["empty state", "no pending request", "no requests"]]
+          }
+        ],
+        "scope-and-open-policy": [
+          {
+            "id": "mobile-non-goal",
+            "term_groups": [["mobile"], ["out of scope", "not building", "excluded", "deferred"]]
+          },
+          {
+            "id": "forecasting-non-goal",
+            "term_groups": [["budget forecasting"], ["out of scope", "not building", "not part", "excluded", "deferred"]]
+          },
+          {
+            "id": "owner-policy-open",
+            "term_groups": [["owner"], ["approval"], ["open question", "unresolved", "decision needed"]]
+          }
+        ]
+      },
+      "criterion_failure_tags": {
+        "evidence-fidelity": "factuality",
+        "target-options": "task-understanding",
+        "flows-and-states": "task-understanding",
+        "scope-and-open-policy": "process-compliance",
+        "testable-acceptance": "process-compliance"
+      }
+    }
+  },
+  "expected": {
+    "route": {
+      "acceptable_primary_skills": ["shape-product-spec"],
+      "forbidden_primary_skills": ["document", "code-review"]
+    },
+    "outcomes": [
+      {
+        "id": "correct-route",
+        "description": "Select shape-product-spec as the primary workflow without an explicit Skill invocation.",
+        "weight": 0.1,
+        "critical": true,
+        "evidence_sources": ["route", "trace"]
+      },
+      {
+        "id": "evidence-fidelity",
+        "description": "Preserve the roles, two request entry points, audit requirement, success signal, and current owner behavior from the notes.",
+        "weight": 0.18,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "target-options",
+        "description": "Distinguish an ideal approval policy from the constrained first release and make tradeoffs explicit.",
+        "weight": 0.18,
+        "critical": false,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "flows-and-states",
+        "description": "Cover request, approve, reject, immediate owner enablement, audit visibility, and relevant empty, pending, denied, and error states.",
+        "weight": 0.2,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "scope-and-open-policy",
+        "description": "Keep mobile and budget forecasting out of v1 and leave owner approval as an explicit unresolved policy question.",
+        "weight": 0.16,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "testable-acceptance",
+        "description": "Use stable requirements and observable acceptance criteria rather than database fields or vague quality language.",
+        "weight": 0.18,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "product-spec",
+        "pattern": "*.md",
+        "required": true,
+        "description": "Decision-ready product specification"
+      }
+    ]
+  },
+  "failure_taxonomy": [
+    "route-error",
+    "task-understanding",
+    "factuality",
+    "missing-artifact",
+    "process-compliance",
+    "verification",
+    "efficiency"
+  ],
+  "metadata": {
+    "origin": "migrated from legacy shape-product-spec fixtures",
+    "novelty": "synthetic enterprise merchant notes"
+  }
+}

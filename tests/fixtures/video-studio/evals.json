@@ -1,0 +1,53 @@
+{
+  "skill_name": "video-studio",
+  "skill_path": "skills/video-studio",
+  "evals": [
+    {
+      "id": "video-local-edit-trim-subs",
+      "name": "local-edit-trim-subs",
+      "prompt": "Take tests/fixtures/video-studio/media/source_clip.mp4 and make a 5-second clip from the start. Burn in the subtitles from tests/fixtures/video-studio/media/captions.srt, and make sure the audio does not cut off abruptly at the end. Give me the final mp4.",
+      "files": [
+        "tests/fixtures/video-studio/media/source_clip.mp4",
+        "tests/fixtures/video-studio/media/captions.srt"
+      ],
+      "assertions": [
+        "Produces a final mp4 approximately 5 seconds long",
+        "Final video retains a 1280x720 video stream and an audio stream",
+        "Subtitles from captions.srt are burned in or attached as a caption track",
+        "Applies an audio fade near the cut boundary",
+        "Creates and validates a render manifest",
+        "Runs QA on the final video"
+      ]
+    },
+    {
+      "id": "video-web-to-video",
+      "name": "web-to-video",
+      "prompt": "Turn tests/fixtures/video-studio/media/dashboard.html into a vertical short video, 1080x1920, about 6 seconds, suitable for posting as a Reel. Capture it with a headless browser, not screen recording.",
+      "files": [
+        "tests/fixtures/video-studio/media/dashboard.html"
+      ],
+      "assertions": [
+        "Produces a final video at 1080x1920",
+        "Final video duration is approximately 6 seconds",
+        "Uses Playwright or headless Chromium capture, not screen recording",
+        "Creates and validates a render manifest",
+        "Runs QA on the output"
+      ]
+    },
+    {
+      "id": "video-platform-package-douyin",
+      "name": "platform-package-douyin",
+      "prompt": "Make a Douyin short-form package from tests/fixtures/video-studio/media/source_clip.mp4. It should be vertical 9:16, under 10 seconds, with a cover image and the title '产品上线'. Give me a handoff package ready to publish, but do not upload anything anywhere.",
+      "files": [
+        "tests/fixtures/video-studio/media/source_clip.mp4"
+      ],
+      "assertions": [
+        "Produces a vertical 1080x1920 final video under 10 seconds long",
+        "Generates a cover image",
+        "Builds a publish or handoff package and does not upload",
+        "Respects platform safe zones",
+        "Creates/validates a render manifest and runs QA"
+      ]
+    }
+  ]
+}

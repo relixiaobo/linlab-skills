@@ -1,0 +1,6 @@
+# Dependencies for the deterministic repository validation gate.
+-r ../evals/requirements.txt
+-r ../skills/data-analysis/requirements.txt
+
+Pillow>=10,<13
+pypdf>=5,<7
