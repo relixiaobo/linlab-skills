@@ -12,6 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 SUITE = ROOT / "tests" / "fixtures" / "artifact-skills" / "suite.json"
+PYTHON = sys.executable
 
 
 def run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
@@ -55,7 +56,7 @@ def check_eval_file(path: Path) -> list[str]:
 
 def ensure_fixtures() -> list[str]:
     errors: list[str] = []
-    pdf_gen = run(["python3", "tests/fixtures/artifact-skills/pdf/make_sample_pdfs.py"])
+    pdf_gen = run([PYTHON, "tests/fixtures/artifact-skills/pdf/make_sample_pdfs.py"])
     if pdf_gen.returncode != 0:
         errors.append(f"pdf sample generation failed: {pdf_gen.stderr.strip()}")
     return errors
@@ -75,10 +76,10 @@ def smoke_checks() -> list[str]:
 
     commands = [
         ["node", "skills/document/scripts/markdown_tool.mjs", "inspect", "tests/fixtures/artifact-skills/document/source/board_notes.md", "--out", "work/artifact-skills/document-md-report.json"],
-        ["python3", "skills/document/scripts/docx_tool.py", "inspect", str(docx), "--out", "work/artifact-skills/document-docx-report.json"],
-        ["python3", "skills/spreadsheet/scripts/table_tool.py", "inspect", "tests/fixtures/artifact-skills/spreadsheet/source/messy_export.csv", "--out", "work/artifact-skills/spreadsheet-csv-report.json"],
-        ["python3", "skills/spreadsheet/scripts/workbook_tool.py", "inspect", str(xlsx), "--out", "work/artifact-skills/spreadsheet-xlsx-report.json"],
-        ["python3", "skills/pdf/scripts/pdf_tool.py", "inspect", "tests/fixtures/artifact-skills/pdf/source/one_page.pdf", "--out", "work/artifact-skills/pdf-inspect-report.json"],
+        [PYTHON, "skills/document/scripts/docx_tool.py", "inspect", str(docx), "--out", "work/artifact-skills/document-docx-report.json"],
+        [PYTHON, "skills/spreadsheet/scripts/table_tool.py", "inspect", "tests/fixtures/artifact-skills/spreadsheet/source/messy_export.csv", "--out", "work/artifact-skills/spreadsheet-csv-report.json"],
+        [PYTHON, "skills/spreadsheet/scripts/workbook_tool.py", "inspect", str(xlsx), "--out", "work/artifact-skills/spreadsheet-xlsx-report.json"],
+        [PYTHON, "skills/pdf/scripts/pdf_tool.py", "inspect", "tests/fixtures/artifact-skills/pdf/source/one_page.pdf", "--out", "work/artifact-skills/pdf-inspect-report.json"],
     ]
     html = workspace / "presentation-smoke.html"
     html.parent.mkdir(parents=True, exist_ok=True)
@@ -87,10 +88,10 @@ def smoke_checks() -> list[str]:
         encoding="utf-8",
     )
     commands.append(["node", "skills/presentation/scripts/html_tool.mjs", "inspect", str(html), "--out", "work/artifact-skills/presentation-html-report.json"])
-    commands.append(["python3", "skills/presentation/scripts/pptx_tool.py", "inspect", str(pptx), "--out", "work/artifact-skills/presentation-pptx-report.json"])
+    commands.append([PYTHON, "skills/presentation/scripts/pptx_tool.py", "inspect", str(pptx), "--out", "work/artifact-skills/presentation-pptx-report.json"])
     render_dir = workspace / "presentation-render-smoke"
     commands.append([
-        "python3",
+        PYTHON,
         "skills/presentation/scripts/render_slides.py",
         "tests/fixtures/artifact-skills/pdf/source/one_page.pdf",
         "--out-dir",
@@ -147,7 +148,7 @@ def smoke_checks() -> list[str]:
 
     baseline_gate_path = workspace / "presentation-baseline-gate.json"
     baseline_gate = run([
-        "python3",
+        PYTHON,
         "skills/presentation/scripts/pptx_tool.py",
         "gate",
         str(pptx),
@@ -177,7 +178,7 @@ def smoke_checks() -> list[str]:
     clean_baseline_path.write_text(json.dumps(clean_baseline) + "\n", encoding="utf-8")
     new_regression_gate_path = workspace / "presentation-new-regression-gate.json"
     new_regression_gate = run([
-        "python3",
+        PYTHON,
         "skills/presentation/scripts/pptx_tool.py",
         "gate",
         str(pptx),
@@ -229,7 +230,7 @@ def smoke_checks() -> list[str]:
     after_issue_path.write_text(json.dumps(after_issue_report) + "\n", encoding="utf-8")
     same_issue_path.write_text(json.dumps(same_issue_report) + "\n", encoding="utf-8")
     compare = run([
-        "python3",
+        PYTHON,
         "skills/presentation/scripts/pptx_tool.py",
         "compare",
         str(before_issue_path),
@@ -245,7 +246,7 @@ def smoke_checks() -> list[str]:
             errors.append("presentation compare did not report the replacement issue fingerprint")
 
     same_issue_compare = run([
-        "python3",
+        PYTHON,
         "skills/presentation/scripts/pptx_tool.py",
         "compare",
         str(before_issue_path),
@@ -260,7 +261,7 @@ def smoke_checks() -> list[str]:
     semantic_after_path = workspace / "presentation-semantic-after.json"
     create_minimal_pptx(semantic_after_pptx, headline="Edited slide headline")
     semantic_inspect = run([
-        "python3",
+        PYTHON,
         "skills/presentation/scripts/pptx_tool.py",
         "inspect",
         str(semantic_after_pptx),
@@ -275,7 +276,7 @@ def smoke_checks() -> list[str]:
         )
     else:
         semantic_compare = run([
-            "python3",
+            PYTHON,
             "skills/presentation/scripts/pptx_tool.py",
             "compare",
             str(pptx_report_path),

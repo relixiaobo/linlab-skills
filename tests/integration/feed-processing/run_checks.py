@@ -30,12 +30,6 @@ def run(args: list[str], *, timeout: int = 60) -> subprocess.CompletedProcess[st
     return subprocess.run([NODE, *args], cwd=ROOT, capture_output=True, text=True, timeout=timeout, check=False)
 
 
-def run_timed(args: list[str], *, timeout: int = 60) -> tuple[subprocess.CompletedProcess[str], float]:
-    start = time.monotonic()
-    proc = run(args, timeout=timeout)
-    return proc, time.monotonic() - start
-
-
 def load(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -56,6 +50,10 @@ def require_run(name: str, args: list[str]) -> subprocess.CompletedProcess[str]:
 
 
 class FeedFixtureHandler(BaseHTTPRequestHandler):
+    active_requests = 0
+    max_active_requests = 0
+    counter_lock = threading.Lock()
+
     def log_message(self, format: str, *args: Any) -> None:
         return
 
@@ -69,13 +67,23 @@ class FeedFixtureHandler(BaseHTTPRequestHandler):
             self.wfile.write(body)
             return
 
-        time.sleep(0.1)
-        body = b"""<?xml version="1.0"?><rss version="2.0"><channel><title>Local Feed</title><link>http://127.0.0.1/</link><item><title>Local Item</title><link>http://127.0.0.1/item</link><guid>local-item</guid><pubDate>Tue, 07 Jul 2026 00:00:00 GMT</pubDate></item></channel></rss>"""
-        self.send_response(200)
-        self.send_header("content-type", "application/rss+xml")
-        self.send_header("content-length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+        with self.counter_lock:
+            type(self).active_requests += 1
+            type(self).max_active_requests = max(
+                type(self).max_active_requests,
+                type(self).active_requests,
+            )
+        try:
+            time.sleep(0.1)
+            body = b"""<?xml version="1.0"?><rss version="2.0"><channel><title>Local Feed</title><link>http://127.0.0.1/</link><item><title>Local Item</title><link>http://127.0.0.1/item</link><guid>local-item</guid><pubDate>Tue, 07 Jul 2026 00:00:00 GMT</pubDate></item></channel></rss>"""
+            self.send_response(200)
+            self.send_header("content-type", "application/rss+xml")
+            self.send_header("content-length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        finally:
+            with self.counter_lock:
+                type(self).active_requests -= 1
 
 
 def main() -> int:
@@ -110,14 +118,22 @@ def main() -> int:
             ]
         }, indent=2), encoding="utf-8")
         delayed_out = WORK / "delayed-fetch.json"
-        delayed_proc, elapsed = run_timed([
+        with FeedFixtureHandler.counter_lock:
+            FeedFixtureHandler.active_requests = 0
+            FeedFixtureHandler.max_active_requests = 0
+        delayed_proc = run([
             str(SCRIPTS / "feed_fetch.mjs"),
             "--sources", str(delayed_sources),
             "--concurrency", "8",
             "--timeoutMs", "2000",
             "--out", str(delayed_out),
         ])
-        check("feed_fetch fetches with bounded concurrency", delayed_proc.returncode == 0 and elapsed < 1.0, f"elapsed={elapsed:.2f}s {(delayed_proc.stdout + delayed_proc.stderr).strip()[:300]}")
+        peak_concurrency = FeedFixtureHandler.max_active_requests
+        check(
+            "feed_fetch fetches with bounded concurrency",
+            delayed_proc.returncode == 0 and 1 < peak_concurrency <= 8,
+            f"peak={peak_concurrency} {(delayed_proc.stdout + delayed_proc.stderr).strip()[:300]}",
+        )
         delayed = load(delayed_out)
         check("feed_fetch preserves concurrent coverage", delayed["coverage"]["requested"] == 16 and delayed["coverage"]["fetched"] == 16, json.dumps(delayed["coverage"]))
 

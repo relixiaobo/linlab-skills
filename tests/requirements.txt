@@ -3,3 +3,4 @@
 -r ../skills/data-analysis/requirements.txt
 
 Pillow>=10,<13
+pypdf>=5,<7
