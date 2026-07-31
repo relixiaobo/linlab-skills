@@ -108,6 +108,19 @@ Validate the representative paired suite and all common schemas:
   --suite evals/suites/representative-ab.json
 ```
 
+Validate the baseline/current/ablation precision-edit experiment:
+
+```sh
+.venv/bin/python evals/runners/evalctl.py validate \
+  --suite evals/suites/presentation-precision-edit-ab.json
+```
+
+This experiment migrates the former forced-trigger PPTX Surgeon fixture into a
+natural user request. Its presentation Judge Adapter compares the source and
+edited packages, asserts the exact text target, normalizes the target XML to
+prove a minimum patch, validates the structured edit manifest, compares
+semantic snapshots, and gates the result against the source baseline.
+
 Materialize all payloads without invoking an Agent:
 
 ```sh

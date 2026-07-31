@@ -6,7 +6,7 @@
       "kind": "hybrid",
       "protocol_version": "1.0",
       "command": "python3 {repo}/evals/judges/presentation_judge_adapter.py",
-      "jobs": ["create-presentation"],
+      "jobs": ["create-presentation", "edit-presentation"],
       "description": "Deterministic PPTX inspection and rendering followed by blind visual review."
     },
     {

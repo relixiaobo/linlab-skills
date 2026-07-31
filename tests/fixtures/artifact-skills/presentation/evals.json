@@ -58,25 +58,6 @@
       ]
     },
     {
-      "id": "presentation-surgeon-single-target",
-      "name": "single-target-pptx-edit",
-      "prompt": "Use $presentation to edit an attached board_deck.pptx. On slide 7, change only the subtitle text from 'Q3 pipeline' to 'Q4 pipeline'. Do not alter any other text, formatting, geometry, animation, speaker note, theme, relationship, slide order, or package metadata. Return the edited PPTX and evidence that only the requested target changed.",
-      "files": [
-        "tests/fixtures/artifact-skills/presentation/source/board_deck.pptx"
-      ],
-      "expected_skill": "presentation",
-      "assertions": [
-        "Routes the request through PPTX Surgeon and treats the input PPTX as the artifact of record",
-        "Runs a baseline technical gate before editing and records pre-existing warnings separately from edit regressions",
-        "Creates a structured edit manifest identifying slide 7, the target object or text run, expectedBefore, intendedAfter, exactly-one match count, a preserve-everything-except-listed-operations policy, verification scopes, and allowed package parts with reasons",
-        "Fails safely or requests disambiguation if the target is missing or non-unique instead of applying a broad text replacement",
-        "Uses a scoped OOXML or equivalently surgical edit that preserves untouched package parts and object properties",
-        "Runs a package-level diff and reports only the expected target slide part or semantic object change, with no unexplained package changes",
-        "Executes a target assertion that slide 7 contains exactly 'Q4 pipeline', the old value is gone at that target, and no other text or object changed",
-        "Runs the final technical gate against the baseline, requires technical_regression_passed, and does not confuse a non-manifest-aware compare result with verified edit scope"
-      ]
-    },
-    {
       "id": "presentation-html-investor-update",
       "name": "agent-maintainable-html-deck",
       "prompt": "Use $presentation to turn tests/fixtures/artifact-skills/presentation/source/quarterly_update.md into a polished 6-slide browser-presentable deck for a live founder update. Deliver canonical HTML, include speaker notes for each slide, use a consistent visual system, and produce a final verification report. Do not create a marketing landing page.",

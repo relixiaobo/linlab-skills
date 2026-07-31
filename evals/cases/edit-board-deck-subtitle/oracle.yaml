@@ -1,0 +1,124 @@
+{
+  "schema_version": "1.0",
+  "id": "edit-board-deck-subtitle",
+  "title": "Make one package-preserving board deck edit",
+  "job": "edit-presentation",
+  "tags": ["artifact", "package-integrity", "precision-editing", "routing"],
+  "risk_level": "high",
+  "evaluation": {
+    "adapter": "presentation",
+    "config": {
+      "slide_count": {
+        "minimum": 10,
+        "maximum": 10
+      }
+    }
+  },
+  "intervention_activations": [
+    {
+      "behavior": "presentation-precision-editing",
+      "description": "The source PPTX contains one exact text target while every other package part and presentation property must remain unchanged.",
+      "trigger_files": [
+        "input/board_deck.pptx"
+      ],
+      "observable_outcomes": [
+        "exact-target",
+        "package-scope",
+        "semantic-preservation",
+        "verification-evidence"
+      ]
+    }
+  ],
+  "expected": {
+    "route": {
+      "acceptable_primary_skills": ["presentation"],
+      "forbidden_primary_skills": ["document", "pdf", "spreadsheet"]
+    },
+    "outcomes": [
+      {
+        "id": "correct-route",
+        "description": "Select presentation as the primary workflow without an explicit Skill invocation and use a precision-edit route rather than rebuilding the deck.",
+        "weight": 0.1,
+        "critical": true,
+        "evidence_sources": ["route", "trace"]
+      },
+      {
+        "id": "exact-target",
+        "description": "Change the unique slide 7 target from Q3 pipeline to Q4 pipeline exactly once, leaving no old value at that target.",
+        "weight": 0.25,
+        "critical": true,
+        "evidence_sources": ["artifact", "trace"]
+      },
+      {
+        "id": "package-scope",
+        "description": "Change only ppt/slides/slide7.xml and introduce no unexplained OPC package-part changes.",
+        "weight": 0.25,
+        "critical": true,
+        "evidence_sources": ["artifact", "trace"]
+      },
+      {
+        "id": "semantic-preservation",
+        "description": "Preserve all non-target text, formatting, geometry, animation, notes, media, links, theme, relationships, slide state, order, and metadata.",
+        "weight": 0.2,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "verification-evidence",
+        "description": "Provide a schema-valid structured edit manifest plus baseline-aware inspection, target assertions, semantic comparison, package diff, and final gate evidence instead of relying on a visual claim alone.",
+        "weight": 0.1,
+        "critical": true,
+        "evidence_sources": ["artifact", "trace", "response"]
+      },
+      {
+        "id": "editable-deliverable",
+        "description": "Return one valid editable 10-slide PPTX that retains all 10 speaker notes and passes the final technical gate.",
+        "weight": 0.1,
+        "critical": true,
+        "evidence_sources": ["artifact", "response"]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "edited-pptx",
+        "pattern": "*.pptx",
+        "required": true,
+        "description": "Package-preserving edited board deck"
+      },
+      {
+        "id": "edit-manifest",
+        "pattern": "*edit*manifest*.json",
+        "required": true,
+        "description": "Structured Surgeon edit contract and verification scope"
+      }
+    ]
+  },
+  "failure_taxonomy": [
+    "route-error",
+    "target-mismatch",
+    "scope-violation",
+    "semantic-regression",
+    "missing-artifact",
+    "artifact-integrity",
+    "verification",
+    "efficiency"
+  ],
+  "metadata": {
+    "origin": "migrated from presentation-surgeon-single-target",
+    "novelty": "private deterministic board deck fixture",
+    "presentation_edit_expectations": {
+      "source": "input/board_deck.pptx",
+      "target_part": "ppt/slides/slide7.xml",
+      "expected_before": "Q3 pipeline",
+      "intended_after": "Q4 pipeline",
+      "expected_match_count": 1,
+      "allowed_package_parts": [
+        "ppt/slides/slide7.xml"
+      ],
+      "expected_changed_slides": [
+        "part:ppt/slides/slide7.xml"
+      ],
+      "edit_manifest_required": true
+    }
+  }
+}
