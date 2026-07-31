@@ -157,7 +157,7 @@ review directly:
   --suite evals/suites/presentation-image-smoke.json \
   --results-dir /tmp/linlab-skill-eval-results \
   --run-id presentation-image-smoke-001 \
-  --agent-command 'python3 {repo}/evals/runners/codex_exec_adapter.py'
+  --agent-command '{python} {repo}/evals/runners/codex_exec_adapter.py'
 ```
 
 Rejudge intact artifacts without invoking the Agent again:
@@ -178,16 +178,18 @@ longer match their recorded hashes:
   --source-run /tmp/linlab-skill-eval-results/presentation-image-smoke-001 \
   --results-dir /tmp/linlab-skill-eval-results \
   --run-id presentation-image-smoke-001-recovery \
-  --agent-command 'python3 {repo}/evals/runners/codex_exec_adapter.py'
+  --agent-command '{python} {repo}/evals/runners/codex_exec_adapter.py'
 ```
 
 `resume` never mutates the source run. Each target result records whether it
 reused executor output or reran the executor, plus the source result hash.
 
-Agent commands may use `{repo}`, `{run}`, `{payload}`, `{prompt}`, `{input}`,
-`{skills}`, `{output}`, `{manifest}`, and `{agent_result}`. Judge commands may
-also use `{result}`, `{oracle}`, and `{judge_result}`. The runner rejects hidden
-oracle placeholders in an Agent command.
+Agent commands may use `{python}`, `{repo}`, `{run}`, `{payload}`, `{prompt}`,
+`{input}`, `{skills}`, `{output}`, `{manifest}`, and `{agent_result}`. `{python}`
+is the interpreter running `evalctl.py`, so commands inherit its environment and
+installed dependencies. Judge commands may also use `{result}`, `{oracle}`, and
+`{judge_result}`. The runner rejects hidden oracle placeholders in an Agent
+command.
 
 ## Executor Protocol
 
