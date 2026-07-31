@@ -493,6 +493,68 @@ class PresentationJudgeTests(unittest.TestCase):
             ):
                 self.assertNotIn(forbidden.encode(), workspace_bytes)
 
+    def test_blind_workspace_preserves_common_short_run_id_text(self) -> None:
+        with TemporaryDirectory(prefix="blind_workspace_short_run_id_") as temp:
+            root = Path(temp)
+            run_dir = root / "test" / "case" / "baseline" / "rep-01"
+            payload = run_dir / "payload"
+            output = run_dir / "output"
+            (payload / "input").mkdir(parents=True)
+            output.mkdir()
+            prompt = "Please test the presentation.\n"
+            request = "Use this test input.\n"
+            response = "I tested the presentation.\n"
+            (payload / "prompt.md").write_text(prompt, encoding="utf-8")
+            (payload / "input" / "request.txt").write_text(
+                request, encoding="utf-8"
+            )
+            (output / "response.md").write_text(response, encoding="utf-8")
+            render_dir = root / "judge-evidence" / "render"
+            render_dir.mkdir(parents=True)
+            workspace = root / "blind-review"
+            workspace.mkdir()
+
+            images = prepare_model_workspace(
+                workspace=workspace,
+                env={
+                    "EVAL_RESULT_FILE": run_dir / "result.json",
+                    "EVAL_PAYLOAD_DIR": payload,
+                    "EVAL_OUTPUT_DIR": output,
+                },
+                result={
+                    "run_id": "test",
+                    "condition": {"id": "baseline"},
+                    "status": "completed",
+                    "route": {"primary_skill": "presentation"},
+                    "artifacts": [],
+                    "executor": {"model": "fixture"},
+                },
+                evidence={
+                    "inspect": {},
+                    "gate": {},
+                    "render_manifest": {},
+                    "render_dir": render_dir,
+                },
+                asset_matches={"configured": False},
+                precision_edit={"configured": False},
+            )
+
+            self.assertEqual(images, [])
+            self.assertEqual(
+                (workspace / "source" / "prompt.md").read_text(encoding="utf-8"),
+                prompt,
+            )
+            self.assertEqual(
+                (workspace / "source" / "input" / "request.txt").read_text(
+                    encoding="utf-8"
+                ),
+                request,
+            )
+            self.assertEqual(
+                (workspace / "agent-response.md").read_text(encoding="utf-8"),
+                response,
+            )
+
     def test_blind_workspace_rejects_unsanitized_condition_markers(self) -> None:
         with TemporaryDirectory(prefix="blind_workspace_leak_") as temp:
             root = Path(temp)

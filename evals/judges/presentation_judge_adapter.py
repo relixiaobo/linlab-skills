@@ -1079,9 +1079,6 @@ def blind_redactions(
     for path, replacement in path_replacements:
         for spelling in path_spellings(path):
             redactions[spelling] = replacement
-    run_id = result.get("run_id")
-    if isinstance(run_id, str) and run_id:
-        redactions[run_id] = "run-id"
     condition_id = (result.get("condition") or {}).get("id")
     if isinstance(condition_id, str) and condition_id and condition_id != "baseline":
         redactions[condition_id] = "condition"
@@ -1115,9 +1112,6 @@ def blind_forbidden_markers(
     run_dir = result_file.parent
     run_root = result_file.parents[3] if len(result_file.parents) > 3 else run_dir
     markers = path_spellings(run_dir) | path_spellings(run_root)
-    run_id = result.get("run_id")
-    if isinstance(run_id, str) and run_id:
-        markers.add(run_id)
     condition_id = (result.get("condition") or {}).get("id")
     if isinstance(condition_id, str) and condition_id:
         markers.update(
