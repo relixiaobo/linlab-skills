@@ -75,7 +75,7 @@ def smoke_checks() -> list[str]:
     create_minimal_xlsx(xlsx)
 
     commands = [
-        ["node", "skills/document/scripts/markdown_tool.mjs", "inspect", "tests/fixtures/artifact-skills/document/source/board_notes.md", "--out", "work/artifact-skills/document-md-report.json"],
+        ["node", "skills/document/scripts/markdown_tool.mjs", "inspect", "evals/cases/create-enterprise-pilot-board-memo/input/board_notes.md", "--out", "work/artifact-skills/document-md-report.json"],
         [PYTHON, "skills/document/scripts/docx_tool.py", "inspect", str(docx), "--out", "work/artifact-skills/document-docx-report.json"],
         [PYTHON, "skills/spreadsheet/scripts/table_tool.py", "inspect", "tests/fixtures/artifact-skills/spreadsheet/source/messy_export.csv", "--out", "work/artifact-skills/spreadsheet-csv-report.json"],
         [PYTHON, "skills/spreadsheet/scripts/workbook_tool.py", "inspect", str(xlsx), "--out", "work/artifact-skills/spreadsheet-xlsx-report.json"],

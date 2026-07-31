@@ -1,0 +1,156 @@
+{
+  "schema_version": "1.0",
+  "id": "create-enterprise-pilot-board-memo",
+  "title": "Turn enterprise pilot notes into a board decision memo",
+  "job": "create-document",
+  "tags": ["artifact", "document", "memo", "routing", "source-fidelity"],
+  "risk_level": "medium",
+  "evaluation": {
+    "adapter": "document",
+    "config": {
+      "artifact": {
+        "path": "board-memo.md",
+        "criterion": "source-traceability"
+      },
+      "structure": {
+        "criterion": "reader-readiness",
+        "minimum_heading_count": 5,
+        "maximum_word_count": 1200
+      },
+      "concepts": {
+        "decision-recommendation": [
+          {
+            "id": "decision-frame",
+            "term_groups": [["approve"], ["capped pilot", "capped six-month pilot", "capped six month pilot"], ["six-month", "six month"]]
+          },
+          {
+            "id": "guardrails",
+            "term_groups": [["three enterprise design partners", "three design partners"], ["90 days", "90-day"], ["exit review"]]
+          }
+        ],
+        "evidence-fidelity": [
+          {
+            "id": "demand-evidence",
+            "term_groups": [["18"], ["self-serve"], ["7", "seven"], ["SSO"], ["audit logs"]]
+          },
+          {
+            "id": "engineering-estimates",
+            "term_groups": [["6 engineer-weeks", "six engineer-weeks"], ["3 engineer-weeks", "three engineer-weeks"], ["2 engineer-weeks", "two engineer-weeks"]]
+          },
+          {
+            "id": "budget-impact",
+            "term_groups": [["$48k", "$48,000", "48k", "48,000"], ["compliance review"]]
+          }
+        ],
+        "risk-and-unknowns": [
+          {
+            "id": "self-serve-tradeoff",
+            "term_groups": [["delay"], ["self-serve onboarding"]]
+          },
+          {
+            "id": "commercial-question",
+            "term_groups": [["willing to pay", "pay during the pilot"]]
+          },
+          {
+            "id": "audit-export-question",
+            "term_groups": [["minimum audit log export", "audit log export"]]
+          },
+          {
+            "id": "legal-question",
+            "term_groups": [["legal"], ["SOC 2", "SOC2"], ["before pilots begin", "before the pilot"]]
+          }
+        ],
+        "source-traceability": [
+          {
+            "id": "source-map",
+            "term_groups": [["source map", "source-map"], ["board_notes.md", "board notes"]]
+          }
+        ],
+        "reader-readiness": [
+          {
+            "id": "reader-questions",
+            "term_groups": [["reader questions", "board questions", "questions the board"], ["willing to pay", "pay during the pilot"], ["audit log export"], ["SOC 2", "SOC2"]]
+          }
+        ]
+      },
+      "criterion_failure_tags": {
+        "decision-recommendation": "task-understanding",
+        "evidence-fidelity": "factuality",
+        "risk-and-unknowns": "factuality",
+        "source-traceability": "verification",
+        "reader-readiness": "process-compliance"
+      }
+    }
+  },
+  "expected": {
+    "route": {
+      "acceptable_primary_skills": ["document"],
+      "forbidden_primary_skills": ["presentation", "shape-product-spec", "spreadsheet"]
+    },
+    "outcomes": [
+      {
+        "id": "correct-route",
+        "description": "Select document as the primary workflow without an explicit Skill invocation and produce a board memo rather than slides or a product specification.",
+        "weight": 0.1,
+        "critical": true,
+        "evidence_sources": ["route", "trace"]
+      },
+      {
+        "id": "decision-recommendation",
+        "description": "Lead with an actionable recommendation to approve a capped six-month pilot with three enterprise design partners and a hard 90-day exit review, and make the requested board decision explicit.",
+        "weight": 0.2,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "evidence-fidelity",
+        "description": "Preserve all demand counts, engineering estimates, the $48k compliance-review impact, and the distinction between sourced facts and analysis without inventing facts.",
+        "weight": 0.25,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "risk-and-unknowns",
+        "description": "Surface the self-serve onboarding tradeoff and keep willingness to pay, minimum audit export, and the legal SOC 2 dependency as unresolved questions rather than fabricated conclusions.",
+        "weight": 0.15,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "source-traceability",
+        "description": "Provide a usable source map tying substantive memo claims to the supplied board notes and keep Markdown as the editable source while accurately describing the Word handoff route.",
+        "weight": 0.15,
+        "critical": true,
+        "evidence_sources": ["artifact", "response", "trace"]
+      },
+      {
+        "id": "reader-readiness",
+        "description": "Use a concise, skimmable memo structure and predict realistic board questions, distinguishing answered questions from information still required.",
+        "weight": 0.15,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "board-memo",
+        "pattern": "board-memo.md",
+        "required": true,
+        "description": "Source-first enterprise pilot board decision memo"
+      }
+    ]
+  },
+  "failure_taxonomy": [
+    "route-error",
+    "task-understanding",
+    "factuality",
+    "missing-artifact",
+    "process-compliance",
+    "verification",
+    "efficiency"
+  ],
+  "metadata": {
+    "origin": "migrated from legacy document-board-memo",
+    "novelty": "synthetic enterprise pilot board notes"
+  }
+}

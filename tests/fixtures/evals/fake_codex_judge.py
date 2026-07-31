@@ -41,6 +41,7 @@ def main() -> int:
         "artifact-audit.json",
     ]
     if (workspace / "source/input/orders.csv").is_file():
+        artifact_evidence = "artifacts/analysis.md"
         required_workspace_files.extend(
             [
                 "source/input/orders.csv",
@@ -50,11 +51,21 @@ def main() -> int:
             ]
         )
     elif (workspace / "source/input/merchant_addon_notes.md").is_file():
+        artifact_evidence = "artifacts/product-spec.md"
         required_workspace_files.extend(
             [
                 "source/input/merchant_addon_notes.md",
                 "artifacts/product-spec.md",
                 "spec-check.json",
+            ]
+        )
+    elif (workspace / "source/input/board_notes.md").is_file():
+        artifact_evidence = "artifacts/board-memo.md"
+        required_workspace_files.extend(
+            [
+                "source/input/board_notes.md",
+                "artifacts/board-memo.md",
+                "markdown-inspect.json",
             ]
         )
     else:
@@ -83,7 +94,7 @@ def main() -> int:
                         "value": 0.9,
                         "passed": True,
                         "rationale": "Fixture blind review passed.",
-                        "evidence": ["artifacts/analysis.md"],
+                        "evidence": [artifact_evidence],
                     }
                     for criterion_id in criterion_ids
                 ],
