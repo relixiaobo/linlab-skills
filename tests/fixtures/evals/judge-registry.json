@@ -5,14 +5,14 @@
       "id": "fixture-primary",
       "kind": "deterministic",
       "protocol_version": "1.0",
-      "command": "python3 {repo}/tests/fixtures/evals/fake_judge.py",
+      "command": "{python} {repo}/tests/fixtures/evals/fake_judge.py",
       "jobs": ["fixture-alpha"]
     },
     {
       "id": "fixture-secondary",
       "kind": "deterministic",
       "protocol_version": "1.0",
-      "command": "python3 {repo}/tests/fixtures/evals/fake_secondary_judge.py",
+      "command": "{python} {repo}/tests/fixtures/evals/fake_secondary_judge.py",
       "jobs": ["fixture-beta"],
       "config": {
         "score": 0.8

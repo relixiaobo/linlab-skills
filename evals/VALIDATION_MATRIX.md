@@ -20,7 +20,7 @@ The full gate also requires Node.js, FFmpeg/FFprobe, and Poppler tools on
 | `data-analysis` | `skill-packages:data-analysis` | `py_compile` | `.venv/bin/python tests/integration/data-analysis/run_checks.py` runs deterministic verification, report, chart, and table checks | Requires `skills/data-analysis/requirements.txt` for full `18 passed, 0 failed, 0 skipped`; the production Judge Adapter recomputes metric truth, grain, and fan-out for `analyze-order-revenue` before blind review. |
 | `document` | `skill-packages:document` | `py_compile` + `node --check` | `tests/integration/artifact-skills/run_checks.py` inspects Markdown and DOCX-style tool surfaces | Does not render DOCX visually; use host document tools for visual QA on real documents. |
 | `pdf` | `skill-packages:pdf` | `py_compile` | `tests/integration/artifact-skills/run_checks.py` generates/inspects sample PDFs and runs PDF smoke checks | Merge/split/rotate need `pypdf`; OCR/redaction need external engines and task-specific tests. |
-| `presentation` | `skill-packages:presentation` | `py_compile` + `node --check` | `tests/integration/presentation/run_checks.py` covers schemas, catalogs, Studio tooling, PPTX/HTML/render regressions, and complex PPTX fixtures | Paired `create-investor-update` evaluation covers natural routing, factual fidelity, visual quality, artifacts, and cost; `create-incident-response-launch` adds required and forbidden official assets, aspect/crop integrity, UI legibility, and rendered image review. |
+| `presentation` | `skill-packages:presentation` | `py_compile` + `node --check` | `tests/integration/presentation/run_checks.py` covers schemas, catalogs, Studio tooling, PPTX/HTML/render regressions, and complex PPTX fixtures | Paired `create-investor-update` evaluation covers natural routing, factual fidelity, visual quality, artifacts, and cost; `create-incident-response-launch` adds controlled asset handling; `edit-board-deck-subtitle` adds a structured edit manifest, exact-target, package-scope, semantic-preservation, and baseline-gate evidence for precision edits. |
 | `feed-processing` | `skill-packages:feed-processing` | `node --check` | `tests/integration/feed-processing/run_checks.py` runs offline source-list, discovery, parse, window, diff, full-text, and pack-validation checks | Does not verify live publisher behavior or third-party article extraction engines; use forward-testing for real feeds. |
 | `shape-product-spec` | `skill-packages:shape-product-spec` | `py_compile` | `tests/integration/shape-product-spec/run_checks.py` validates `spec_check.py` on good/bad artifacts, including constraint/option/tradeoff coverage | The production Judge Adapter checks Case-defined source fidelity, options, flow/state coverage, scope, stable IDs, and acceptance criteria before blind product judgment. |
 | `spreadsheet` | `skill-packages:spreadsheet` | `py_compile` | `tests/integration/artifact-skills/run_checks.py` inspects CSV/XLSX-style tool surfaces | Formula recalculation needs LibreOffice/Excel/Sheets for full calculation verification. |
@@ -53,6 +53,12 @@ The full gate also requires Node.js, FFmpeg/FFprobe, and Poppler tools on
   evals/suites/presentation-current-image-assets-ab.json` validates the current
   baseline/Skill/asset-guidance ablation experiment with 3 repetitions and
   required judging.
+- `.venv/bin/python evals/runners/evalctl.py validate --suite
+  evals/suites/presentation-precision-edit-ab.json` validates the natural-route
+  baseline/Skill/precision-guidance ablation experiment. The Judge Adapter
+  requires a schema-valid edit manifest, the unique target replacement, one
+  allowed changed package part, exact normalized XML equivalence, semantic
+  preservation, and a baseline-aware final gate.
 - Generated workspaces live under the ignored `work/` directory.
 - `tests/run_all.py` uses the current Python interpreter for every Python gate,
   discovers every checked-in suite and Python/Node script, and treats Node as a

@@ -21,11 +21,8 @@ EXPECTED = {
         "tests/fixtures/artifact-skills/presentation/source/sales_redesign_source.pptx",
         18,
     ),
-    "presentation-surgeon-single-target": (
-        "tests/fixtures/artifact-skills/presentation/source/board_deck.pptx",
-        10,
-    ),
 }
+PRECISION_SOURCE = REPO / "evals/cases/edit-board-deck-subtitle/input/board_deck.pptx"
 
 
 class PresentationEvalFixtureTests(unittest.TestCase):
@@ -69,7 +66,7 @@ class PresentationEvalFixtureTests(unittest.TestCase):
                         self.assertIn("preserve-me", custom)
 
     def test_precision_fixture_has_one_exact_target(self) -> None:
-        source = REPO / EXPECTED["presentation-surgeon-single-target"][0]
+        source = PRECISION_SOURCE
         with zipfile.ZipFile(source) as package:
             matches = []
             for name in package.namelist():
@@ -81,7 +78,7 @@ class PresentationEvalFixtureTests(unittest.TestCase):
             self.assertEqual(matches, ["ppt/slides/slide7.xml"])
 
     def test_precision_route_forward_edit_proves_target_and_scope(self) -> None:
-        before = REPO / EXPECTED["presentation-surgeon-single-target"][0]
+        before = PRECISION_SOURCE
         with tempfile.TemporaryDirectory() as temporary:
             temporary = Path(temporary)
             after = temporary / "board_deck_q4.pptx"

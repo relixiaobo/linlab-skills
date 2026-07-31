@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 OUTPUT = ROOT / "tests" / "fixtures" / "artifact-skills" / "presentation" / "source"
+PRECISION_OUTPUT = ROOT / "evals" / "cases" / "edit-board-deck-subtitle" / "input"
 
 P_NS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 A_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
@@ -331,7 +332,7 @@ def write_fixture(path: Path, title: str, slide_count: int, kind: str) -> None:
 def main() -> None:
     write_fixture(OUTPUT / "annual_strategy_source.pptx", "Annual Strategy Source", 14, "strategy")
     write_fixture(OUTPUT / "sales_redesign_source.pptx", "Sales Redesign Source", 18, "sales")
-    write_fixture(OUTPUT / "board_deck.pptx", "Board Deck", 10, "board")
+    write_fixture(PRECISION_OUTPUT / "board_deck.pptx", "Board Deck", 10, "board")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "id": "presentation-no-precision-edit-guidance",
+  "label": "Presentation Skill with precision-edit guidance ablated",
+  "kind": "ablation",
+  "skills": [
+    {
+      "name": "presentation",
+      "path": "skills/presentation",
+      "ablations": [
+        {
+          "op": "replace",
+          "path": "SKILL.md",
+          "behavior": "presentation-precision-editing",
+          "replacement": "evals/conditions/overlays/presentation-minimal-edit.md",
+          "reason": "Measure the incremental value of exact targeting, minimum OOXML patching, baseline-aware gates, and package-scope verification."
+        }
+      ]
+    }
+  ],
+  "executor_config": {
+    "skill_registry": "isolated",
+    "routing": "natural",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "medium",
+    "network_access": true,
+    "adapter_timeout_seconds": 1800
+  }
+}

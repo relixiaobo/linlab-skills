@@ -108,6 +108,19 @@ Validate the representative paired suite and all common schemas:
   --suite evals/suites/representative-ab.json
 ```
 
+Validate the baseline/current/ablation precision-edit experiment:
+
+```sh
+.venv/bin/python evals/runners/evalctl.py validate \
+  --suite evals/suites/presentation-precision-edit-ab.json
+```
+
+This experiment migrates the former forced-trigger PPTX Surgeon fixture into a
+natural user request. Its presentation Judge Adapter compares the source and
+edited packages, asserts the exact text target, normalizes the target XML to
+prove a minimum patch, validates the structured edit manifest, compares
+semantic snapshots, and gates the result against the source baseline.
+
 Materialize all payloads without invoking an Agent:
 
 ```sh
@@ -144,7 +157,7 @@ review directly:
   --suite evals/suites/presentation-image-smoke.json \
   --results-dir /tmp/linlab-skill-eval-results \
   --run-id presentation-image-smoke-001 \
-  --agent-command 'python3 {repo}/evals/runners/codex_exec_adapter.py'
+  --agent-command '{python} {repo}/evals/runners/codex_exec_adapter.py'
 ```
 
 Rejudge intact artifacts without invoking the Agent again:
@@ -165,16 +178,18 @@ longer match their recorded hashes:
   --source-run /tmp/linlab-skill-eval-results/presentation-image-smoke-001 \
   --results-dir /tmp/linlab-skill-eval-results \
   --run-id presentation-image-smoke-001-recovery \
-  --agent-command 'python3 {repo}/evals/runners/codex_exec_adapter.py'
+  --agent-command '{python} {repo}/evals/runners/codex_exec_adapter.py'
 ```
 
 `resume` never mutates the source run. Each target result records whether it
 reused executor output or reran the executor, plus the source result hash.
 
-Agent commands may use `{repo}`, `{run}`, `{payload}`, `{prompt}`, `{input}`,
-`{skills}`, `{output}`, `{manifest}`, and `{agent_result}`. Judge commands may
-also use `{result}`, `{oracle}`, and `{judge_result}`. The runner rejects hidden
-oracle placeholders in an Agent command.
+Agent commands may use `{python}`, `{repo}`, `{run}`, `{payload}`, `{prompt}`,
+`{input}`, `{skills}`, `{output}`, `{manifest}`, and `{agent_result}`. `{python}`
+is the interpreter running `evalctl.py`, so commands inherit its environment and
+installed dependencies. Judge commands may also use `{result}`, `{oracle}`, and
+`{judge_result}`. The runner rejects hidden oracle placeholders in an Agent
+command.
 
 ## Executor Protocol
 

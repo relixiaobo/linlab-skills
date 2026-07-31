@@ -446,7 +446,7 @@ class EvalRunnerTests(unittest.TestCase):
 
     def test_registry_routes_each_case_to_its_declared_judge_adapter(self) -> None:
         with tempfile.TemporaryDirectory(prefix="eval_adapter_routing_") as temp:
-            agent = f"{sys.executable} {{repo}}/tests/fixtures/evals/fake_agent.py"
+            agent = "{python} {repo}/tests/fixtures/evals/fake_agent.py"
             result = self.run_evalctl(
                 "run",
                 "--suite",
@@ -473,6 +473,8 @@ class EvalRunnerTests(unittest.TestCase):
                 )
             )
             self.assertEqual(alpha["judge"]["adapter_id"], "fixture-primary")
+            self.assertEqual(alpha["executor"]["command"][0], sys.executable)
+            self.assertEqual(alpha["judge"]["command"][0], sys.executable)
             self.assertEqual(alpha["judging"]["overall_score"], 1.0)
             self.assertEqual(beta["judge"]["adapter_id"], "fixture-secondary")
             self.assertEqual(beta["judging"]["overall_score"], 0.8)

@@ -54,6 +54,7 @@ AGENT_RESULT_NAME = "agent-result.json"
 JUDGE_RESULT_NAME = "judge-result.json"
 DEFAULT_JUDGE_REGISTRY = "evals/judges/registry.json"
 AGENT_PLACEHOLDERS = {
+    "python",
     "repo",
     "run",
     "payload",
@@ -657,6 +658,7 @@ def materialize_one(
         },
     )
     values = {
+        "python": sys.executable,
         "repo": str(ROOT),
         "run": str(run_dir),
         "payload": str(payload),
@@ -677,6 +679,7 @@ def existing_values(case: Any, run_dir: Path) -> dict[str, str]:
     payload = run_dir / "payload"
     output = run_dir / "output"
     return {
+        "python": sys.executable,
         "repo": str(ROOT),
         "run": str(run_dir),
         "payload": str(payload),
