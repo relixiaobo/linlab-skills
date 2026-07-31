@@ -148,6 +148,21 @@ failure tags. It evaluates source anchoring, ambiguity coverage, actionable
 comments, source fidelity, and accurate Markdown-versus-native-DOCX workflow
 claims without treating term or layout hints as deterministic failures.
 
+Validate the single-repetition baseline/current Spreadsheet pricing-model
+migration:
+
+```sh
+.venv/bin/python evals/runners/evalctl.py validate \
+  --suite evals/suites/spreadsheet-pricing-model-ab.json
+```
+
+This suite migrates the former forced-trigger pricing-model fixture into a
+natural XLSX request. Its Spreadsheet Judge Adapter independently checks source
+row fidelity, required visible sheets, live formula coverage, the configured
+workbook-level name, formula-based checks, package integrity, and external-link
+risks before blind workbook review. A missing spreadsheet calculation engine is
+recorded as a Judge limitation rather than an artifact failure.
+
 Materialize all payloads without invoking an Agent:
 
 ```sh
@@ -340,6 +355,15 @@ the adapter does not encode a single reference answer or reward template length.
 Missing stable IDs, acceptance counts, artifacts, or a clean structural check
 can deterministically cap the affected criterion. Free-form term matches and
 misses are review hints, because phrase absence is not reliable semantic absence.
+
+The spreadsheet judge inspects the XLSX package, extracts cells, formulas,
+defined names, and sheet visibility, independently computes source truth from
+Case-configured arithmetic, and audits the required formula model before blind
+review. The binary workbook is never copied into the blind-review workspace;
+the model receives sanitized structured evidence instead. Deterministic caps
+cover route, artifact declaration, package integrity, source-row fidelity,
+required sheets, live formulas, configured names, and formula-based checks.
+Formula semantics and workbook usability remain blind-review judgments.
 
 Image-sensitive cases may declare
 `metadata.presentation_asset_expectations` in the hidden oracle. The
