@@ -24,6 +24,14 @@
       "command": "{python} {repo}/evals/judges/product_spec_judge_adapter.py",
       "jobs": ["shape-product-decision"],
       "description": "Deterministic product-spec readiness evidence followed by blind decision-quality review."
+    },
+    {
+      "id": "document",
+      "kind": "hybrid",
+      "protocol_version": "1.0",
+      "command": "{python} {repo}/evals/judges/document_judge_adapter.py",
+      "jobs": ["create-document", "review-document"],
+      "description": "Deterministic document structure and source-coverage evidence followed by blind reader-quality review."
     }
   ]
 }

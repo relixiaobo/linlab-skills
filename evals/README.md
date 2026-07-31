@@ -121,6 +121,19 @@ edited packages, asserts the exact text target, normalizes the target XML to
 prove a minimum patch, validates the structured edit manifest, compares
 semantic snapshots, and gates the result against the source baseline.
 
+Validate the single-repetition baseline/current Document board-memo migration:
+
+```sh
+.venv/bin/python evals/runners/evalctl.py validate \
+  --suite evals/suites/document-board-memo-ab.json
+```
+
+This suite migrates the former forced-trigger board-memo fixture into a natural
+request. Its Document Judge Adapter inspects the Markdown artifact, audits
+Case-defined source concepts and structural evidence, performs blind
+reader-quality review, and then applies deterministic vetoes only to routing,
+artifact, broken-reference, and placeholder failures.
+
 Materialize all payloads without invoking an Agent:
 
 ```sh
