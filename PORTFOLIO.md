@@ -47,10 +47,11 @@ The artifact skills (`presentation`, `document`, `spreadsheet`, and `pdf`) still
 have legacy shared trigger and smoke definitions in
 `tests/fixtures/artifact-skills/suite.json` and
 `tests/integration/artifact-skills/run_checks.py`.
-The former `presentation-surgeon-single-target` and `document-board-memo`
-behavior cases have moved to the Skill-independent
-`evals/cases/edit-board-deck-subtitle` and
-`evals/cases/create-enterprise-pilot-board-memo` experiments; their deterministic
+The former `presentation-surgeon-single-target`, `document-board-memo`, and
+`document-redline-review` behavior cases have moved to the Skill-independent
+`evals/cases/edit-board-deck-subtitle`,
+`evals/cases/create-enterprise-pilot-board-memo`, and
+`evals/cases/review-remote-access-policy` experiments; their deterministic
 fixture checks remain under `tests/`. Migrate the remaining Agent behavior
 coverage into user-job cases under `evals/cases/`; keep deterministic file and
 tool checks under `tests/`.

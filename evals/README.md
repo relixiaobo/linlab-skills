@@ -134,6 +134,20 @@ Case-defined source concepts and structural evidence, performs blind
 reader-quality review, and then applies deterministic vetoes only to routing,
 artifact, broken-reference, and placeholder failures.
 
+Validate the single-repetition baseline/current Document policy-review migration:
+
+```sh
+.venv/bin/python evals/runners/evalctl.py validate \
+  --suite evals/suites/document-redline-review-ab.json
+```
+
+This suite migrates the former forced-trigger redline-review fixture into a
+natural editorial-review request. The same Document Judge Adapter selects its
+review protocol from Case-defined `mode`, artifact, rubric, concept hints, and
+failure tags. It evaluates source anchoring, ambiguity coverage, actionable
+comments, source fidelity, and accurate Markdown-versus-native-DOCX workflow
+claims without treating term or layout hints as deterministic failures.
+
 Materialize all payloads without invoking an Agent:
 
 ```sh

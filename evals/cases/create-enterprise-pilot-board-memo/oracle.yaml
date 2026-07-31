@@ -8,8 +8,10 @@
   "evaluation": {
     "adapter": "document",
     "config": {
+      "mode": "create",
       "artifact": {
         "path": "board-memo.md",
+        "format": "markdown",
         "criterion": "source-traceability"
       },
       "structure": {
