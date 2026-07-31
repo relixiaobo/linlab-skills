@@ -20,12 +20,12 @@ broader keep/change/retire decision about the guidance.
   `/tmp/linlab-skill-eval-results/presentation-precision-edit-pilot-20260731-05`
 - Agent execution commit: `c78da95f848530ba245b261c40e676501853e0fe`,
   clean for all three conditions
-- Final Judge commit: `fc45be8e305c0d70848b8813901f8517df8af358`,
+- Final Judge commit: `fd1b402608e90436e0a35b0209df9860e4d6a9c9`,
   clean for all three conditions
 - Judge registry SHA-256:
   `5a5b6b3da5634ebeec7403d2fe9450dfcfec2b20fc717e8a73bc7182899df4f4`
 - Presentation Judge Adapter SHA-256:
-  `2c3f2aca7de8186db0e1dac81c3814ba0777207f22f53e765fee39ad1a8b50ec`
+  `44f451f94f063794845b91889d82c4dd87bf8e2bb6f0f5376ed1e94cccbab2f7`
 
 The task changes the unique slide 7 subtitle from `Q3 pipeline` to
 `Q4 pipeline`. Every other text value, object property, note, relationship,
@@ -48,7 +48,7 @@ test.
 
 | Condition | Overall | Task | Critical pass | Critical failures |
 | --- | ---: | ---: | --- | --- |
-| `baseline` | 0.7950 | 0.8833 | No | `correct-route`, `verification-evidence` |
+| `baseline` | 0.8000 | 0.8889 | No | `correct-route`, `verification-evidence` |
 | `presentation-enabled` | 1.0000 | 1.0000 | Yes | None |
 | `presentation-no-precision-edit-guidance` | 0.9000 | 0.8889 | No | `verification-evidence` |
 
@@ -79,14 +79,14 @@ to the artifact criteria.
 
 | Condition | Agent tokens | Agent duration | Judge model tokens | Judge duration |
 | --- | ---: | ---: | ---: | ---: |
-| `baseline` | 336,677 | 5.28 min | 171,381 | 1.83 min |
-| `presentation-enabled` | 898,006 | 7.88 min | 293,007 | 3.36 min |
-| `presentation-no-precision-edit-guidance` | 606,641 | 9.22 min | 269,827 | 1.83 min |
+| `baseline` | 336,677 | 5.28 min | 237,499 | 1.91 min |
+| `presentation-enabled` | 898,006 | 7.88 min | 228,359 | 1.55 min |
+| `presentation-no-precision-edit-guidance` | 606,641 | 9.22 min | 233,817 | 1.84 min |
 
 Against the ablation, the full Skill gained 0.1000 overall and 0.1111 Task
 score, used 291,365 more Agent tokens, and finished the Agent phase 1.34 minutes
-faster in this sample. The Judge used 23,180 more model tokens and 1.53 more
-minutes for the fuller evidence set. The provider reported no USD estimates.
+faster in this sample. The Judge used 5,458 fewer model tokens and finished
+0.29 minutes faster. The provider reported no USD estimates.
 These single-sample cost differences must not be generalized.
 
 ## Recovery And Integrity
@@ -96,7 +96,27 @@ All three Agent executions succeeded, but each Judge exited immediately because
 system `python3` lacked `jsonschema`. Commit `fc45be8` added the `{python}`
 placeholder, mapped it to the interpreter running `evalctl.py`, and changed all
 production adapters to use it. Final `rejudge` then reused the intact Agent
-artifacts and completed all three conditions with `.venv/bin/python`.
+artifacts and completed the first successful batch with `.venv/bin/python`.
+
+An external review then found that the first successful blind-review batch was
+not actually blind: nested path fields in `precision-edit.json` exposed the
+condition directory. Those scores are superseded and are not reported above.
+Commit `fd1b402` recursively redacts run, condition, repository, Agent-output,
+and Judge-evidence paths in the temporary model workspace and rejects the
+review whenever condition IDs, run IDs, or run-root paths remain. It also:
+
+- recomputes `passed` after every deterministic cap and always appends the
+  deterministic rationale and evidence;
+- requires exactly one manifest operation and binds its action, change field,
+  text target, source path and hash, output path, package parts, and operation
+  references to the artifacts actually judged;
+- compares schema-valid SHA-256 values case-insensitively.
+
+The final reporting authority is the clean post-review rejudge at `fd1b402`.
+Live inspection of all three temporary blind workspaces found no condition or
+run-root marker. Generated tool-report file paths were relative under `source/`
+or `judge-evidence/`; a recursive query for absolute strings in each
+`precision-edit.json` returned an empty set.
 
 The interpreter failure has no bearing on the quality scores. The final
 rejudge integrity gate accepted every source result before judging, and a
@@ -111,12 +131,15 @@ commit, registry hash, and Adapter entrypoint hash.
 
 ## Validation
 
-- 60 eval-platform unit tests passed.
+- 64 eval-platform unit tests passed.
 - 45 Presentation integration tests passed.
 - The full `tests/run_all.py` repository gate passed.
 - The production suite validates with 9 planned runs and the expected
   `presentation-precision-editing` activation on the ablation.
 - Strict Python compilation and `git diff --check` passed.
+- Regression tests cover condition-path leakage, contradictory and additional
+  manifest operations, uppercase SHA-256 values, and model `passed` flags that
+  conflict with deterministic vetoes.
 
 ## Next Gate
 
