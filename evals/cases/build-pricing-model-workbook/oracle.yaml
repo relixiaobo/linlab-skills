@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "id": "build-pricing-model-workbook",
+  "title": "Build a formula-driven pricing model workbook",
+  "job": "create-spreadsheet",
+  "tags": ["artifact", "formula-model", "pricing", "routing", "source-fidelity", "spreadsheet"],
+  "risk_level": "medium",
+  "evaluation": {
+    "adapter": "spreadsheet",
+    "config": {
+      "artifact": {
+        "path": "pricing-model.xlsx",
+        "criterion": "workbook-architecture"
+      },
+      "source": {
+        "path": "input/pricing_inputs.csv",
+        "sheet": "Inputs",
+        "key_column": "plan",
+        "columns": [
+          {"id": "plan", "headers": ["plan"], "type": "string"},
+          {"id": "base_price", "headers": ["base_price", "base price"], "type": "decimal"},
+          {"id": "seats", "headers": ["seats"], "type": "decimal"},
+          {"id": "discount", "headers": ["discount", "discount rate"], "type": "decimal"},
+          {"id": "setup_fee", "headers": ["setup_fee", "setup fee"], "type": "decimal"}
+        ],
+        "criterion": "source-fidelity"
+      },
+      "calculations": {
+        "sheet": "Calculations",
+        "constants": {"annual_months": "12"},
+        "outputs": [
+          {
+            "id": "gross-monthly-revenue",
+            "headers": ["gross monthly revenue", "gross monthly"],
+            "expression": "base_price * seats"
+          },
+          {
+            "id": "discount-amount",
+            "headers": ["discount amount"],
+            "expression": "base_price * seats * discount"
+          },
+          {
+            "id": "net-monthly-revenue",
+            "headers": ["net monthly revenue", "net monthly"],
+            "expression": "base_price * seats * (1 - discount)"
+          },
+          {
+            "id": "first-year-total",
+            "headers": ["first-year total", "first year total", "year one total"],
+            "expression": "base_price * seats * (1 - discount) * annual_months + setup_fee"
+          }
+        ],
+        "criterion": "live-formula-model"
+      },
+      "workbook": {
+        "required_sheets": ["README", "Inputs", "Calculations", "Outputs", "Checks"],
+        "required_defined_names": [
+          {"name": "AnnualMonths", "value": "12"}
+        ],
+        "checks_sheet": "Checks",
+        "minimum_check_formula_count": 1,
+        "architecture_criterion": "workbook-architecture",
+        "input_criterion": "input-usability",
+        "verification_criterion": "qa-and-verification"
+      },
+      "criterion_failure_tags": {
+        "source-fidelity": "factuality",
+        "live-formula-model": "formula-integrity",
+        "workbook-architecture": "workbook-integrity",
+        "input-usability": "process-compliance",
+        "qa-and-verification": "verification"
+      }
+    }
+  },
+  "expected": {
+    "route": {
+      "acceptable_primary_skills": ["spreadsheet"],
+      "forbidden_primary_skills": ["data-analysis", "document", "presentation"]
+    },
+    "outcomes": [
+      {
+        "id": "correct-route",
+        "description": "Select spreadsheet as the primary workflow without an explicit Skill invocation and deliver a calculable XLSX model rather than a Markdown table or narrative report.",
+        "weight": 0.1,
+        "critical": true,
+        "evidence_sources": ["route", "trace"]
+      },
+      {
+        "id": "source-fidelity",
+        "description": "Preserve all three plans and every source value for base price, seats, discount, and setup fee in a clearly labeled Inputs table without silent type or precision changes.",
+        "weight": 0.2,
+        "critical": true,
+        "evidence_sources": ["artifact", "trace"]
+      },
+      {
+        "id": "live-formula-model",
+        "description": "Use live, non-literal spreadsheet formulas for every plan's gross monthly revenue, discount amount, net monthly revenue, and first-year total according to the requested arithmetic.",
+        "weight": 0.25,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "workbook-architecture",
+        "description": "Provide a valid, declared XLSX with visible README, Inputs, Calculations, Outputs, and Checks worksheets whose roles make the model understandable and maintainable.",
+        "weight": 0.15,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "input-usability",
+        "description": "Expose assumptions and stable inputs clearly, including a workbook-level AnnualMonths name set to 12, with units and editable-versus-calculated areas understandable to a future user.",
+        "weight": 0.1,
+        "critical": true,
+        "evidence_sources": ["artifact"]
+      },
+      {
+        "id": "qa-and-verification",
+        "description": "Include meaningful formula-based checks, avoid formula errors and unintended external links, and accurately report whether a real spreadsheet engine recalculated the workbook plus any remaining calculation limitations.",
+        "weight": 0.2,
+        "critical": true,
+        "evidence_sources": ["artifact", "response", "trace"]
+      }
+    ],
+    "artifacts": [
+      {
+        "id": "pricing-model",
+        "pattern": "pricing-model.xlsx",
+        "required": true,
+        "description": "Formula-driven Excel pricing model"
+      }
+    ]
+  },
+  "failure_taxonomy": [
+    "route-error",
+    "task-understanding",
+    "factuality",
+    "formula-integrity",
+    "missing-artifact",
+    "process-compliance",
+    "verification",
+    "workbook-integrity",
+    "efficiency"
+  ],
+  "metadata": {
+    "origin": "migrated from legacy spreadsheet-pricing-model",
+    "novelty": "synthetic three-plan pricing input table"
+  }
+}

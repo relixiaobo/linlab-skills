@@ -3,22 +3,6 @@
   "skill_path": "skills/spreadsheet",
   "evals": [
     {
-      "id": "spreadsheet-pricing-model",
-      "name": "formula-workbook-model",
-      "prompt": "Use $spreadsheet to build a source-first XLSX pricing model from tests/fixtures/artifact-skills/spreadsheet/source/pricing_inputs.csv. Include assumptions, formulas rather than hardcoded calculated outputs, named ranges or stable input cells, a validation/QA sheet, and a verification report. State any formula recalculation limitation.",
-      "files": [
-        "tests/fixtures/artifact-skills/spreadsheet/source/pricing_inputs.csv"
-      ],
-      "expected_skill": "spreadsheet",
-      "assertions": [
-        "Creates or plans a workbook artifact, not just a Markdown table",
-        "Keeps calculations as spreadsheet formulas",
-        "Separates assumptions, source data, calculation, output, and validation areas",
-        "Inspects CSV input and preserves leading-zero or type risks when relevant",
-        "Runs workbook/table verification or states recalculation limitations"
-      ]
-    },
-    {
       "id": "spreadsheet-csv-cleaning",
       "name": "tabular-exchange-cleaning",
       "prompt": "Use $spreadsheet to clean tests/fixtures/artifact-skills/spreadsheet/source/messy_export.csv into a safe CSV for import into another system. Preserve account IDs exactly, flag formula-injection-like cells, and produce a short QA report. Do not make a DOCX report.",
