@@ -21,7 +21,12 @@ MAIN_NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 REL_DOC_NS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
 FORMULA_ERROR_RE = re.compile(r"#(?:REF!|DIV/0!|VALUE!|NAME\?|N/A|NUM!|NULL!)", re.I)
 VOLATILE_RE = re.compile(r"\b(?:NOW|TODAY|RAND|RANDBETWEEN|OFFSET|INDIRECT|INFO)\s*\(", re.I)
-EXTERNAL_LINK_RE = re.compile(r"\[[^\]]+\]")
+# External workbook references qualify a sheet/name with a workbook in brackets.
+# Brackets alone also occur in ordinary table references, e.g. Inputs[price].
+EXTERNAL_LINK_RE = re.compile(
+    r"(?:'(?:[^']|'')*\[[^\[\]]+\](?:[^']|'')*'|"
+    r"\[[^\[\]]+\][^\s'!+*/^&=<>(),;:\[\]-]*)!"
+)
 
 
 def read_xml(zf: zipfile.ZipFile, name: str) -> Optional[ET.Element]:
@@ -324,7 +329,7 @@ def inspect_sheet(zf: zipfile.ZipFile, names: set[str], sheet_name: str, state: 
             report["formula_error_count"] += 1
         if VOLATILE_RE.search(formula_text):
             report["volatile_formula_count"] += 1
-        if EXTERNAL_LINK_RE.search(formula_text):
+        if EXTERNAL_LINK_RE.search(re.sub(r'"(?:[^"]|"")*"', "", formula_text)):
             report["external_formula_reference_count"] += 1
         if len(report["formula_samples"]) < 12:
             report["formula_samples"].append(formula_text[:160])

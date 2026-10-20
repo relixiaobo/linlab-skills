@@ -364,6 +364,10 @@ the model receives sanitized structured evidence instead. Deterministic caps
 cover route, artifact declaration, package integrity, source-row fidelity,
 required sheets, live formulas, configured names, and formula-based checks.
 Formula semantics and workbook usability remain blind-review judgments.
+The blind evidence includes the complete extracted cell map, including README,
+Outputs, and Checks content. Table layouts, formula-derived labels, and computed
+names that static inspection cannot resolve are marked inconclusive and left to
+blind review rather than triggering deterministic score caps.
 
 Image-sensitive cases may declare
 `metadata.presentation_asset_expectations` in the hidden oracle. The

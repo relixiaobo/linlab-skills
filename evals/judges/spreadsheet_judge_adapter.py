@@ -882,6 +882,12 @@ def comparable_decimal(value: str) -> Decimal | None:
         return None
 
 
+def combined_verdict(verdicts: list[bool | None]) -> bool | None:
+    if not verdicts or False in verdicts:
+        return False
+    return None if None in verdicts else True
+
+
 def audit_source_table(
     config: dict[str, Any], source_truth: dict[str, Any], facts: dict[str, Any]
 ) -> dict[str, Any]:
@@ -905,10 +911,15 @@ def audit_source_table(
             "header_row": None,
             "headers": {},
             "rows": [],
-            "passed": False,
+            "passed": None,
+            "limitation": "table_layout_requires_review",
         }
     rows = cells_by_row(sheet)
     key_column = source_config["key_column"]
+    has_formula_keys = any(
+        cells.get(headers[key_column], {}).get("formula")
+        for number, cells in rows.items() if number > header_row
+    )
     audited_rows: list[dict[str, Any]] = []
     column_config = {item["id"]: item for item in source_config["columns"]}
     for expected in source_truth["rows"]:
@@ -930,7 +941,9 @@ def audit_source_table(
                 cell = row_cells.get(column_number_value, {})
                 actual = str(cell.get("value", ""))
                 expected_value = expected[column_id]
-                if column_config[column_id]["type"] == "decimal":
+                if cell.get("formula"):
+                    passed = None
+                elif column_config[column_id]["type"] == "decimal":
                     parsed = comparable_decimal(actual)
                     passed = parsed is not None and parsed == Decimal(expected_value)
                 else:
@@ -941,15 +954,16 @@ def audit_source_table(
                     "actual": actual,
                     "passed": passed,
                 }
+            verdict = combined_verdict([item["passed"] for item in comparisons.values()])
         else:
             row_number = None
+            verdict = None if has_formula_keys else False
         audited_rows.append(
             {
                 "key": expected_key,
                 "row": row_number,
                 "comparisons": comparisons,
-                "passed": bool(comparisons)
-                and all(item["passed"] for item in comparisons.values()),
+                "passed": verdict,
             }
         )
     return {
@@ -958,7 +972,7 @@ def audit_source_table(
         "header_row": header_row,
         "headers": headers,
         "rows": audited_rows,
-        "passed": bool(audited_rows) and all(row["passed"] for row in audited_rows),
+        "passed": combined_verdict([row["passed"] for row in audited_rows]),
     }
 
 
@@ -992,9 +1006,14 @@ def audit_calculation_table(
             "header_row": None,
             "headers": {},
             "rows": [],
-            "passed": False,
+            "passed": None,
+            "limitation": "table_layout_requires_review",
         }
     rows = cells_by_row(sheet)
+    has_formula_keys = any(
+        cells.get(headers[key_column], {}).get("formula")
+        for number, cells in rows.items() if number > header_row
+    )
     audited_rows: list[dict[str, Any]] = []
     for expected in source_truth["rows"]:
         expected_key = expected[key_column]
@@ -1032,15 +1051,16 @@ def audit_calculation_table(
                     "expression": output["expression"],
                     "live_formula": live_formula,
                 }
+            verdict = all(item["live_formula"] for item in outputs.values())
         else:
             row_number = None
+            verdict = None if has_formula_keys else False
         audited_rows.append(
             {
                 "key": expected_key,
                 "row": row_number,
                 "outputs": outputs,
-                "passed": bool(outputs)
-                and all(item["live_formula"] for item in outputs.values()),
+                "passed": verdict,
             }
         )
     return {
@@ -1049,7 +1069,7 @@ def audit_calculation_table(
         "header_row": header_row,
         "headers": headers,
         "rows": audited_rows,
-        "passed": bool(audited_rows) and all(row["passed"] for row in audited_rows),
+        "passed": combined_verdict([row["passed"] for row in audited_rows]),
     }
 
 
@@ -1134,7 +1154,7 @@ def build_workbook_audit(
                 "scope": found.get("scope") if found else None,
                 "refers_to": found.get("refers_to") if found else None,
                 "actual_value": actual_value,
-                "passed": bool(
+                "passed": None if found is not None and actual_value is None else bool(
                     found
                     and found.get("scope") == "workbook"
                     and comparable_decimal(actual_value or "")
@@ -1180,6 +1200,7 @@ def build_workbook_audit(
             "sha256": hashlib.sha256(workbook_path.read_bytes()).hexdigest(),
         },
         "package_integrity": package_integrity,
+        "workbook_facts": facts,
         "architecture": {
             "required_sheets": required_sheets,
             "passed": all(
@@ -1190,7 +1211,7 @@ def build_workbook_audit(
         "calculation_table": audit_calculation_table(config, source_truth, facts),
         "defined_names": {
             "requirements": defined_names,
-            "passed": all(item["passed"] for item in defined_names),
+            "passed": combined_verdict([item["passed"] for item in defined_names]),
         },
         "checks": {
             "sheet": workbook_config["checks_sheet"],
@@ -1275,7 +1296,11 @@ agent-trace-summary.json, source-inspect.json, source-truth.json,
 workbook-inspect.json, workbook-audit.json, and recalc-report.json.
 
 Treat source-truth.json as evaluator-computed arithmetic ground truth and
-workbook-audit.json as the extracted cell/formula map. Check whether formulas
+workbook-audit.json workbook_facts as the complete extracted cell/formula map.
+The table and defined-name audits use passed=null when static inspection cannot
+decide (for example, unfamiliar headers or formula-derived labels or names).
+Assess those cases from the full cell map; an inconclusive audit is not a failure.
+Check whether formulas
 implement the requested equations rather than merely existing. Cached formula
 values do not prove recalculation. If recalc-report.json says ran=false, judge
 whether the delivery response states that limitation honestly; do not infer an
@@ -1524,7 +1549,7 @@ def apply_deterministic_overrides(
         failure_tags.add(tag_map[architecture_criterion])
 
     source_criterion = config["source"]["criterion"]
-    if not workbook_audit["source_table"]["passed"]:
+    if workbook_audit["source_table"]["passed"] is False:
         cap_score(
             scores[source_criterion],
             0.25,
@@ -1534,7 +1559,7 @@ def apply_deterministic_overrides(
         failure_tags.add(tag_map[source_criterion])
 
     formula_criterion = config["calculations"]["criterion"]
-    if not workbook_audit["calculation_table"]["passed"]:
+    if workbook_audit["calculation_table"]["passed"] is False:
         cap_score(
             scores[formula_criterion],
             0.25,
@@ -1552,7 +1577,7 @@ def apply_deterministic_overrides(
         failure_tags.add(tag_map[formula_criterion])
 
     input_criterion = config["workbook"]["input_criterion"]
-    if not workbook_audit["defined_names"]["passed"]:
+    if workbook_audit["defined_names"]["passed"] is False:
         cap_score(
             scores[input_criterion],
             0.5,

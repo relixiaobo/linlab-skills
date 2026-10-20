@@ -494,6 +494,91 @@ class SpreadsheetJudgeTests(unittest.TestCase):
                     self.assertEqual(follower["formula_master_cell"], "B2")
                     self.assertEqual(follower["formula_range"], "B2:B4")
 
+    def test_table_mapping_limits_do_not_veto_valid_formula_models(self) -> None:
+        original = calculation_sheet_xml()
+        linked_labels = original
+        for index, values in enumerate(CACHED_RESULTS, start=2):
+            linked_labels = linked_labels.replace(
+                inline_cell(f"A{index}", values[0]),
+                formula_cell(f"A{index}", f"Inputs!A{index}", ""),
+            )
+        variants = {
+            "linked-labels-without-caches": (linked_labels, None, 0.9),
+            "header-with-units": (
+                original.replace("Gross Monthly Revenue", "Gross Monthly Revenue (USD)"),
+                None, 0.9,
+            ),
+            "missing-plan": (
+                original.replace(inline_cell("A2", "Starter"), ""), False, 0.25,
+            ),
+            "hardcoded-output": (
+                original.replace(
+                    formula_cell("B2", "Inputs!B2*Inputs!C2", "1225"),
+                    number_cell("B2", "1225"),
+                ), False, 0.25,
+            ),
+        }
+        with tempfile.TemporaryDirectory(prefix="spreadsheet_mapping_") as temp:
+            root = Path(temp)
+            evidence, base_audit = build_audit(root)
+            for name, (xml, expected_verdict, expected_score) in variants.items():
+                with self.subTest(name=name):
+                    replace_zip_entry(evidence["workbook_path"], "xl/worksheets/sheet3.xml", xml)
+                    audit = copy.deepcopy(base_audit)
+                    audit["calculation_table"] = audit_calculation_table(
+                        config(), evidence["truth"], extract_workbook_facts(evidence["workbook_path"])
+                    )
+                    self.assertIs(audit["calculation_table"]["passed"], expected_verdict)
+                    output = apply_deterministic_overrides(
+                        judgment(), oracle=oracle(), config=config(), result=result(), workbook_audit=audit,
+                    )
+                    scores = {item["criterion_id"]: item for item in output["scores"]}
+                    self.assertEqual(scores["live-formula-model"]["value"], expected_score)
+
+    def test_computed_name_is_left_to_blind_review(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="spreadsheet_computed_name_") as temp:
+            root = Path(temp)
+            evidence, _ = build_audit(root)
+            workbook = evidence["workbook_path"]
+            with zipfile.ZipFile(workbook) as zf:
+                xml = zf.read("xl/workbook.xml").decode()
+            replace_zip_entry(workbook, "xl/workbook.xml", xml.replace("README!$B$2", "6*2"))
+            audit = build_workbook_audit(
+                config(), result(), workbook, evidence["inspect_report"], evidence["recalc_report"],
+                extract_workbook_facts(workbook), evidence["truth"],
+            )
+            self.assertIsNone(audit["defined_names"]["passed"])
+            output = apply_deterministic_overrides(
+                judgment(), oracle=oracle(), config=config(), result=result(), workbook_audit=audit,
+            )
+            scores = {item["criterion_id"]: item for item in output["scores"]}
+            self.assertEqual(scores["input-usability"]["value"], 0.9)
+
+    def test_table_references_are_not_external_workbook_links(self) -> None:
+        formulas = {
+            "SUM(InputsTable[base_price])": 0,
+            "SUM(InputsTable[[#Data],[base_price]])+Inputs!B2": 0,
+            'IF(A1="[1]Sheet1!A1",1,0)': 0,
+            "[1]Sheet1!A1": 1,
+            "'[prices.xlsx]Price List'!A1": 1,
+            "'[prices.xlsx]Owner''s Prices'!A1": 1,
+            "[1]!AnnualMonths": 1,
+        }
+        with tempfile.TemporaryDirectory(prefix="spreadsheet_links_") as temp:
+            root = Path(temp)
+            evidence, _ = build_audit(root)
+            for formula, count in formulas.items():
+                with self.subTest(formula=formula):
+                    xml = calculation_sheet_xml().replace("Inputs!B2*Inputs!C2", formula)
+                    replace_zip_entry(evidence["workbook_path"], "xl/worksheets/sheet3.xml", xml)
+                    report = run_workbook_inspect(evidence["workbook_path"], "pricing-model.xlsx", root / "evidence")
+                    self.assertEqual(report["external_formula_reference_count"], count)
+                    audit = build_workbook_audit(
+                        config(), result(), evidence["workbook_path"], report, evidence["recalc_report"],
+                        extract_workbook_facts(evidence["workbook_path"]), evidence["truth"],
+                    )
+                    self.assertEqual(audit["package_integrity"]["formula_safety_passed"], count == 0)
+
     def test_workbook_scope_name_wins_over_same_named_local_scope(self) -> None:
         with tempfile.TemporaryDirectory(prefix="spreadsheet_defined_name_") as temp:
             root = Path(temp)
@@ -722,6 +807,15 @@ class SpreadsheetJudgeTests(unittest.TestCase):
             self.assertNotIn(b"spreadsheet-enabled", workspace_bytes)
             self.assertNotIn(str(run_dir).encode(), workspace_bytes)
             self.assertIn(b"agent-output/pricing-model.xlsx", workspace_bytes)
+            blind_audit = json.loads((workspace / "workbook-audit.json").read_text())
+            sheets = {sheet["name"]: sheet for sheet in blind_audit["workbook_facts"]["sheets"]}
+            cells = {
+                name: {cell["ref"]: cell for cell in sheet["cells"]}
+                for name, sheet in sheets.items()
+            }
+            self.assertEqual(cells["README"]["A1"]["value"], "Pricing Model")
+            self.assertEqual(cells["Checks"]["A2"]["value"], "Source row count")
+            self.assertEqual(cells["Outputs"]["B2"]["formula"], "Calculations!E2")
 
     def test_run_judge_persists_evidence_without_model_when_missing(self) -> None:
         with tempfile.TemporaryDirectory(prefix="spreadsheet_missing_") as temp:
