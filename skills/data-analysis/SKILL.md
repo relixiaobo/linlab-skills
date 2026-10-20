@@ -1,7 +1,6 @@
 ---
 name: data-analysis
-description: >-
-  Use when the user already has data — a file (CSV, Excel, Parquet, JSON) or a read-only database — and wants to understand or analyze it, not build software around it. Trigger whenever they want to make sense of a dataset: profiling a messy table to see what's in it, how clean it is, and which columns are actually usable; investigating why a metric moved (revenue, churn, conversion, signups); reconciling numbers that disagree across sources; comparing channels, segments, or cohorts to find what's driving a result; checking or debugging an A/B test, including segment reversals like Simpson's paradox; running SQL or statistical analysis; producing charts, reports, or written findings. Do NOT use for training or deploying ML models, building ETL or data pipelines, web scraping, creating dashboard UI components, database administration (users, grants), or teaching statistics concepts.
+description: Analyze an existing dataset or read-only database to answer a data question. Do not use for building pipelines, application code, or a workbook whose formulas/layout are the deliverable.
 metadata:
   author: sider.ai
   version: "0.1.0"

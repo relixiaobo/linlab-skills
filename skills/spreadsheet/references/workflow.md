@@ -8,15 +8,17 @@
 3. Extract source data, assumptions, units, date/currency conventions, sheet
    roles, formulas, named ranges, validation, protected ranges, and risks.
 4. Choose workbook archetype, sheet roles, and output route.
-5. Create a workbook plan before building or editing.
-6. Build or edit from the plan.
-7. Verify structure, formulas, validation, links, protection, source coverage,
-   and format-specific risks.
+5. Plan new models or structural edits at the level needed to keep formulas and
+   dependencies correct; small cell or formula edits need no separate plan.
+6. Build or edit in the selected workbook workflow.
+7. Verify the affected formulas, dependents, workbook features, and preservation
+   requirements. Broaden the checks for a new model or structural edit.
 8. Fix concrete issues and recheck.
 
 ## Workbook Plan Schema
 
 When emitting JSON, follow `assets/schemas/workbook-plan.schema.json`.
+The schema is optional; use it when a durable plan serves the task.
 
 Capture:
 

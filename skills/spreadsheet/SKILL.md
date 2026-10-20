@@ -1,6 +1,6 @@
 ---
 name: spreadsheet
-description: Create, edit, inspect, validate, or package spreadsheet workbooks and calculable tabular models, including Excel/XLSX, CSV-based workbook sources, Google Sheets-targeted models, formulas, named ranges, data validation, tables, pivots, charts, imports, exports, workbook QA, and spreadsheet-driven templates. Use when the spreadsheet itself is the durable artifact or calculation model, not when a table is merely embedded in a document or slide.
+description: Create, edit, or inspect durable spreadsheet workbooks and formula models. Use as the local-file workflow when no selected host spreadsheet workflow owns delivery; data-analysis owns dataset questions.
 metadata:
   author: lin
   version: "0.1.0"
@@ -34,6 +34,10 @@ or reporting the exact missing dependency and install command.
 
 ## Route
 
+If a selected host spreadsheet Skill owns authoring or delivery, use its engine
+and verification contract. Consult this skill only for missing workbook-domain
+guidance; do not start a second builder or duplicate its validation pipeline.
+
 1. Identify the job: create workbook, edit workbook, inspect/audit, fix formulas,
    clean/import data, build a template, generate XLSX from source data, export
    CSV, compare workbooks, or package for handoff.
@@ -53,8 +57,10 @@ or reporting the exact missing dependency and install command.
    `python3 {baseDir}/scripts/workbook_tool.py inspect path/to/file.xlsx --out report.json`
    when useful. For CSV/TSV inputs, use
    `python3 {baseDir}/scripts/table_tool.py inspect path/to/file.csv --out report.json`.
-5. Create a workbook plan before building or editing. If emitting JSON, keep it
-   compatible with `{baseDir}/assets/schemas/workbook-plan.schema.json`.
+5. Plan new models or structural changes at the level needed to keep formulas
+   and dependencies correct. A small cell/formula edit needs no separate plan.
+   If emitting JSON, keep it compatible with
+   `{baseDir}/assets/schemas/workbook-plan.schema.json`.
 6. Choose the output route:
    - Use XLSX when formulas, formatting, tables, charts, validation, multiple
      sheets, protection, or Excel/Sheets handoff matter.
@@ -77,11 +83,11 @@ or reporting the exact missing dependency and install command.
      LibreOffice, Google Sheets, or host spreadsheet automation. Use a formula
      evaluator only when its function coverage matches the workbook. Otherwise
      inspect formulas and state calculation limits.
-8. Verify before delivering. At minimum check sheet structure, row/column
-   bounds, formulas, named ranges, data validation, tables, external links,
-   hidden/protected sheets, blank/error hotspots, source data coverage, and
-   open/render limits. For workbooks with formulas, recalculate with a real
-   spreadsheet engine when available and scan for formula errors.
+8. Verify the changed behavior and preservation requirements before delivering.
+   Inspect affected formulas/dependents, structure, data coverage, and required
+   workbook features; broaden checks for a new model or structural edit. For
+   formula changes, recalculate with a real engine when available and inspect
+   affected results/errors. Do not repeat a full workbook audit after each edit.
 
 ## References
 

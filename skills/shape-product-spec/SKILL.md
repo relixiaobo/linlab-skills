@@ -1,6 +1,6 @@
 ---
 name: shape-product-spec
-description: Shape product ideas, feature requests, business rules, or product changes into decision-ready and execution-ready product specs before agents execute them. Use when a user wants an agent or team to build, change, evaluate, or review a product capability but the goal, users, constraints, tradeoffs, flows, business rules, scope, or acceptance criteria are too ambiguous to execute safely; covers PRDs, product briefs, discovery synthesis, story maps, user flows, acceptance criteria, prototype behavior specs, clean-slate vs brownfield option framing, contradiction audits, and implementation handoff specs. Do not use for generic writing, pure market research with no product decision, pure visual design, pure implementation architecture, or file-format work where the format operation is the primary task.
+description: Resolve material product ambiguity or create/review a requested product spec. Do not add a specification phase to an already clear implementation request.
 metadata:
   author: lin
   version: "0.1.0"
@@ -50,6 +50,13 @@ tool that preserves the spec review contract, or reporting the exact missing
 dependency and install command.
 
 ## Route
+
+Scale this route and its references to the unresolved decision. A bounded change
+may need only a goal, scope, and observable acceptance in a short paragraph.
+Preserve approved decisions; do not reopen them without new conflicting evidence.
+Prefer the existing product owner and a complete user flow. Add lifecycle states,
+coordination, fallback modes, configuration, or traceability only for a concrete
+requirement or failure. Do not turn the checklist below into required sections.
 
 1. Identify the real job:
    - define a fuzzy idea
@@ -112,7 +119,7 @@ dependency and install command.
    choice materially changes scope, user experience, compliance, acceptance
    criteria, validation cost, or implementation cost. Prefer at most 3 questions;
    use 5 only for high-stakes or highly ambiguous work.
-8. Use stable IDs when the artifact may feed downstream work: `OBJ-1`, `CON-1`,
+8. Use stable IDs when cross-references or multiple downstream consumers need them: `OBJ-1`, `CON-1`,
    `OPT-1`, `TRD-1`, `EVD-1`, `DEC-1`, `ASM-1`, `FLOW-1`, `STORY-1`, `FR-1`,
    `NFR-1`, `BR-1`, `AC-1`, `SCREEN-1`, `OQ-1`. Preserve IDs when editing an
    existing artifact.
@@ -127,7 +134,8 @@ dependency and install command.
    - The mainline user flow has a trigger, entry state, visible states, user
      decisions, validations, result, and failure recovery.
    - Every functional requirement or story has testable acceptance criteria.
-   - Any task handoff maps back to stable requirement, flow, or story IDs.
+   - Task handoff points to the relevant acceptance criteria; use stable IDs
+     when the artifact needs cross-references.
    - Contradictions, stale historical notes, and duplicate concepts are removed
      or marked non-authoritative.
 
