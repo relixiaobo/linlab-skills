@@ -4,7 +4,7 @@ Personal Codex skills maintained by Linlab.
 
 ## Skills
 
-- `code-review` - high-signal PR, branch, and local-diff review with confidence scoring and git-history context.
+- `code-review` - evidence-based PR, diff, and implementation review across the affected behavior and relevant existing code.
 - `data-analysis` - trustworthy analysis of files, tables, metrics, experiments, and trends.
 - `document` - source-first professional documents, DOCX/Word workflows, comments, redlines, and reader tests.
 - `pdf` - PDF-native inspection, extraction, page operations, rendering, OCR/form/redaction guidance, and QA.

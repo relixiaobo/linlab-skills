@@ -4,7 +4,7 @@
   "evals": [
     {
       "id": "local-diff-secret-logging",
-      "name": "local diff catches introduced secret logging",
+      "name": "request handling catches introduced and inherited secret exposure",
       "prompt": "Use $code-review to review the local diff represented by tests/fixtures/code-review/fixtures/security-diff/before.py and after.py. Lead with findings only if there is a high-confidence bug or rule violation.",
       "files": [
         "tests/fixtures/code-review/fixtures/security-diff/AGENTS.md",
@@ -17,14 +17,106 @@
           "file": "tests/fixtures/code-review/fixtures/security-diff/after.py",
           "line": 7,
           "severity": "High",
-          "minimum_confidence": 80,
-          "why": "The change logs headers that include the Authorization value, violating the fixture AGENTS.md rule and exposing request credentials."
+          "why": "The change logs headers that include the Authorization value, violating the fixture AGENTS.md rule and exposing request credentials.",
+          "anchor": "logger.info(\"proxy request received\", extra={\"headers\": headers})",
+          "relationship": "introduced"
+        },
+        {
+          "id": "authorization-header-returned",
+          "file": "tests/fixtures/code-review/fixtures/security-diff/after.py",
+          "line": 8,
+          "anchor": "return {\"ok\": True, \"headers\": headers}",
+          "relationship": "inherited",
+          "why": "The same request handler returns Authorization in its response, which the applicable AGENTS.md also forbids. This existing output violation remains on the reviewed path; distinguish it from the new logging exposure."
         }
       ],
       "should_not_report": [
         "style-only complaints",
-        "pre-existing build_headers behavior",
+        "building Authorization headers for internal use as a defect in itself",
         "generic missing tests without a concrete failure mode"
+      ],
+      "change": {
+        "before": "tests/fixtures/code-review/fixtures/security-diff/before.py",
+        "after": "tests/fixtures/code-review/fixtures/security-diff/after.py"
+      }
+    },
+    {
+      "id": "execution-navigation",
+      "name": "navigation change covers the existing state owner",
+      "prompt": "Use $code-review to review the before.py to after.py change in tests/fixtures/code-review/fixtures/execution-navigation against CONTRACT.md. The other files are existing implementation context. Return findings; do not modify files.",
+      "files": [
+        "tests/fixtures/code-review/fixtures/execution-navigation/CONTRACT.md",
+        "tests/fixtures/code-review/fixtures/execution-navigation/before.py",
+        "tests/fixtures/code-review/fixtures/execution-navigation/after.py",
+        "tests/fixtures/code-review/fixtures/execution-navigation/state.py",
+        "tests/fixtures/code-review/fixtures/execution-navigation/host.py"
+      ],
+      "change": {
+        "before": "tests/fixtures/code-review/fixtures/execution-navigation/before.py",
+        "after": "tests/fixtures/code-review/fixtures/execution-navigation/after.py"
+      },
+      "expected_findings": [
+        {
+          "id": "retained-record-loses-source",
+          "file": "tests/fixtures/code-review/fixtures/execution-navigation/state.py",
+          "line": 16,
+          "anchor": "self.sources = sources",
+          "relationship": "inherited",
+          "why": "Refresh retains older runs but replaces their source map; navigating a retained record fails. Reconcile both maps consistently while preserving retained records."
+        },
+        {
+          "id": "metadata-loaded-twice",
+          "file": "tests/fixtures/code-review/fixtures/execution-navigation/after.py",
+          "line": 7,
+          "anchor": "await host.load_metadata(source[\"thread_id\"])",
+          "relationship": "introduced",
+          "why": "open_record discards a metadata read immediately before navigate reads the same metadata again. Remove the extra call rather than add caching or coordination."
+        }
+      ],
+      "should_not_report": [
+        "removing host authorization or stale-revision protection",
+        "new retry or caching frameworks",
+        "the source-map defect as introduced by this patch",
+        "the duplicate read as multiple separate findings"
+      ]
+    },
+    {
+      "id": "file-opening-copy",
+      "name": "copy-only change stops without speculative cleanup",
+      "prompt": "Use $code-review to review the before.py to after.py change in tests/fixtures/code-review/fixtures/file-opening. CONTRACT.md and host.py provide the implementation context. Return findings; do not modify files.",
+      "files": [
+        "tests/fixtures/code-review/fixtures/file-opening/CONTRACT.md",
+        "tests/fixtures/code-review/fixtures/file-opening/before.py",
+        "tests/fixtures/code-review/fixtures/file-opening/after.py",
+        "tests/fixtures/code-review/fixtures/file-opening/host.py"
+      ],
+      "change": {
+        "before": "tests/fixtures/code-review/fixtures/file-opening/before.py",
+        "after": "tests/fixtures/code-review/fixtures/file-opening/after.py"
+      },
+      "expected_findings": [],
+      "should_not_report": [
+        "removing the host validation because the renderer validates",
+        "adding per-file grants or a catalog",
+        "generic test or hardening requests",
+        "a new abstraction for the duplicated path predicate"
+      ]
+    },
+    {
+      "id": "file-opening-implementation",
+      "name": "implementation review retains required boundary checks",
+      "prompt": "Use $code-review to review the local-file-opening implementation in tests/fixtures/code-review/fixtures/file-opening/after.py and host.py against CONTRACT.md. Review the current implementation; no change baseline is requested. Return findings; do not modify files.",
+      "files": [
+        "tests/fixtures/code-review/fixtures/file-opening/CONTRACT.md",
+        "tests/fixtures/code-review/fixtures/file-opening/after.py",
+        "tests/fixtures/code-review/fixtures/file-opening/host.py"
+      ],
+      "expected_findings": [],
+      "should_not_report": [
+        "requiring a PR or diff to review the named implementation",
+        "removing the host validation because the renderer validates",
+        "adding per-file grants or a catalog",
+        "OS permission errors as an implementation defect"
       ]
     }
   ]

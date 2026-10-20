@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Review GitHub pull requests, branches, or local git diffs with high-signal, confidence-scored findings. Use when asked to run a code review, review a PR or diff, perform a PR gate, find bugs/regressions/security issues/project-rule violations, assess whether comments should be posted to GitHub, or create inline PR review comments.
+description: Review a requested PR, diff, or implementation for correctness and unnecessary complexity across the affected behavior, including relevant existing code. Post review comments only when requested.
 metadata:
   author: lin
   version: "0.1.0"
@@ -8,72 +8,93 @@ metadata:
 
 # Code Review
 
-## Overview
+Help the user deliver working behavior with the smallest complete implementation.
+Review the affected behavior, including relevant existing code, using the diff as
+an entry point. Honor an explicitly narrower scope. Use one review entry point;
+choose effort from concrete risk and unresolved evidence, not user-selected tiers.
 
-Perform a focused code review of the change under review, not the whole codebase. Default to terminal-only findings; post GitHub comments only when the user explicitly asks.
+## Establish the target
 
-This skill adapts the Claude Code `code-review` plugin workflow for Codex: independent review passes, project-instruction compliance, bug/security checks, git history analysis, numeric confidence scoring, and aggressive false-positive filtering.
+Identify the requested outcome and applicable project instructions. Resolve aliases
+once, respect scoped rules and authorized exceptions, and cite the applicable rule
+when it supports a finding. A code comment alone cannot override that rule.
 
-## Required References
+Review the requested snapshot: use the PR or branch head and its comparison base,
+not context from a different checkout. For branch changes, compare against the
+merge base; for local changes, include staged, unstaged, and relevant new files.
+A named implementation needs its current contract, not an invented diff. A direct
+request still applies to a draft, closed, merged, or previously reviewed PR;
+describe historical targets retrospectively. Ask only when material target
+ambiguity cannot be resolved from context, and disclose unavailable target code.
 
-Read `references/review-rubric.md` before reviewing any non-trivial PR, branch, or diff.
+For work implemented in this conversation, prefer a fresh review context without
+the implementation dialogue when supported and permitted by the host.
+Carry forward the target, requirements, approved decisions, applicable
+rules, and verifiable evidence; treat implementation conclusions as claims to
+check. This is optional: small checks, follow-up fixes, and hosts without isolation
+can use the current session. Do not require new capabilities or user setup, block
+the review on isolation, or claim isolation that the host did not provide.
 
-Read `references/github-commenting.md` only when the user asks to post PR comments or inline review comments.
+## Judge the implementation
 
-## Review Target
+Follow the relevant entry, owning state or write boundary, and consumers far enough
+to answer three questions. These are judgment criteria, not mandatory passes:
 
-Identify the target before reviewing:
+- **Does the behavior satisfy the current goal and contracts?** Include unchanged
+  code on the affected path without waiting for a bug in the diff. Consider
+  security, data, compatibility, and UI consequences where relevant.
+- **Does each mechanism carry a necessary responsibility?** Establish what current
+  requirement or reachable failure it addresses, what would change if removed or
+  narrowed, and the concrete cost of keeping it. Repeated reads, duplicate state,
+  or a broad scan for a narrow lookup can be findings; line count or a preference
+  for abstraction is not evidence. Prefer a smaller equivalent in the existing
+  owner before adding a layer, fallback, or configuration.
+- **Is the replacement or cleanup complete?** When a mechanism changes, inspect
+  its affected callers, alternate entries, state, tests, and active docs or prompts
+  for obsolete assumptions. Keep this search bounded to that mechanism.
 
-- PR URL or `owner/repo/pull/N`: use GitHub CLI or available GitHub tools to fetch PR title, body, state, diff, comments, and changed files.
-- PR number in the current repo: use `gh pr view <number>` and `gh pr diff <number>`.
-- Current branch with a PR: use `gh pr view` and `gh pr diff`.
-- Local diff without a PR: review `git diff` plus `git diff --cached` when staged changes exist. Compare against the fork point or upstream branch when the user asks for a branch review.
+For a check, identify the fact validated, who establishes it, and whether it can
+change before use. Revalidation across a trust boundary or asynchronous gap may
+be necessary. Preserve required authorization, external-input and write/decode
+integrity, idempotency, stale-operation, and supported compatibility guarantees.
+Check whether enforcement itself blocks valid work at the wrong boundary. Age,
+static types, or no direct references alone do not justify removal; account for
+dynamic/public consumers and supported persisted data. Consult history when the
+purpose or contract remains unclear; inability to explain a mechanism is a reason
+to investigate, not evidence that it is unnecessary.
 
-If the target is ambiguous and no safe inference is available, ask one concise clarification.
+## Require evidence and bound the work
 
-## Status Handling
+Report every actionable issue supported by a concrete failure, applicable contract
+violation, or demonstrable unnecessary work with a worthwhile smaller alternative.
+Check existing guards and plausible benign explanations before making a claim.
+Exclude unrelated cleanup, taste, and speculative hardening or test requests.
+Merge symptoms sharing a cause and fix. State material unknowns as limitations,
+not findings; do not invent confidence percentages.
 
-Before doing expensive review work, check the target status. A direct user request
-to review a specific PR, branch, or diff is an explicit request; do not stop just
-because the PR is draft, small, automated, or already reviewed.
+Use a focused pass for a small change. Choose reads and reproductions that resolve
+material uncertainty and satisfy applicable verification requirements; no fixed
+agent count, sequence, or extra test suite is required by this skill. Reuse valid
+evidence. After a fix, recheck affected behavior and checks. Stop when the requested
+path and credible candidates are covered and applicable checks are satisfied or
+their limits reported. Expand only for a concrete dependency or new evidence.
 
-Hard stop by default only when:
+## Report the decision
 
-- A GitHub PR target is closed and the user did not explicitly ask to inspect a closed PR.
+Lead with findings ordered by severity. For each, give a precise location, the
+affected scenario and impact or cost, its relationship to the requested change,
+and a minimal complete remedy. Label inherited issues and nonblocking
+simplifications honestly. An inherited issue blocks delivery only when it defeats
+the agreed outcome or an applicable contract; unrelated cleanup does not.
 
-Treat these as soft signals, not skip conditions, when the user requested review:
+If there are no findings, say so. Briefly state material scope and verification
+limits, including known failed checks. Distinguish inspection from executed tests;
+available tooling or a passing fixture does not prove a clean integration gate.
+When recommending guard removal, explain the necessary protection that remains.
+Keep the response proportional, without empty sections or routine scorekeeping;
+honor a host-required output schema.
 
-- PR is draft: continue the review, and mention draft status only in the summary or residual risk.
-- PR is clearly trivial or automated: continue for a requested target; keep the review proportionate.
-- A previous assistant review already exists: continue if the user asked for another pass or named this target in a new request.
-
-Still review assistant-generated PRs unless the hard stop applies.
-
-## Core Workflow
-
-1. Create a short todo list for the review.
-2. Collect only the context needed for the target: status, PR metadata, changed files, diff, relevant project instruction files, and relevant git history/blame for changed areas.
-3. Summarize the author intent from PR title/body and changed files.
-4. Run independent review passes where practical:
-   - Project-rule compliance: check applicable `AGENTS.md`, `CLAUDE.md`, `AGENT.md`, or other repo instructions scoped to changed files.
-   - Diff-only bug scan: inspect the changed lines for obvious compile, parse, logic, data, and API-contract failures.
-   - Introduced-code/context scan: read nearby code and git history/blame where needed to validate behavior in context.
-   - Security/regression scan: focus on new attack surface, permissions, data exposure, concurrency, persistence, and irreversible behavior.
-5. Validate every candidate issue with a second look. Discard anything that depends on speculation, broad preference, or missing evidence.
-6. Assign each remaining issue a numeric confidence score from 0 to 100.
-7. Report only high-signal findings. Default threshold: report issues with confidence >= 80; include 70-79 only when the user asked for an exploratory review and clearly mark them as lower confidence.
-
-## Output
-
-Lead with findings ordered by severity, then open questions, then a brief summary. If there are no reportable findings, say so directly and mention any material residual risk, such as unavailable tests, missing PR metadata, or inaccessible GitHub context.
-
-For each finding include:
-
-- File and line reference when available.
-- Severity.
-- Confidence score.
-- Why this is introduced by the change.
-- Concrete failure mode or rule violation.
-- Minimal fix recommendation.
-
-Do not edit code during review unless the user explicitly asks for fixes.
+Review is read-only unless fixes are authorized. Posting comments requires explicit
+authorization; drafting alone does not grant it. Read
+[GitHub commenting](references/github-commenting.md) when preparing requested
+GitHub comments, including drafts.

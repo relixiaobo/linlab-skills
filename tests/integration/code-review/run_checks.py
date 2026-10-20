@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 """Static regression gate for code-review eval fixtures.
 
-This does not grade a model's review output. It guarantees the review scenarios
-are usable: fixture files exist, expected finding anchors resolve to real lines,
-and the before/after diff actually introduces the behavior the eval asks a
-reviewer to catch.
+This does not grade a model's review output. It checks that fixture files exist,
+comparison snapshots differ, and expected findings resolve to their source lines.
+Behavioral evaluation must run the prompts without exposing expected findings.
 """
 
 from __future__ import annotations
 
-import difflib
 import json
 import sys
 from pathlib import Path
@@ -51,24 +49,17 @@ def main() -> int:
             if not (ROOT / rel).exists():
                 errors.append(f"{eval_id}: missing fixture {rel}")
 
-        after_files = [Path(rel) for rel in item.get("files", []) if rel.endswith("after.py")]
-        before_files = [Path(rel) for rel in item.get("files", []) if rel.endswith("before.py")]
-        if len(after_files) != 1 or len(before_files) != 1:
-            errors.append(f"{eval_id}: expected one before.py and one after.py fixture")
-            continue
-        before = ROOT / before_files[0]
-        after = ROOT / after_files[0]
-        diff = "\n".join(difflib.unified_diff(
-            before.read_text(encoding="utf-8").splitlines(),
-            after.read_text(encoding="utf-8").splitlines(),
-            fromfile=str(before_files[0]),
-            tofile=str(after_files[0]),
-            lineterm="",
-        ))
-        if 'extra={"headers": headers}' not in diff:
-            errors.append(f"{eval_id}: diff does not introduce header logging")
-        if "Authorization" not in after.read_text(encoding="utf-8"):
-            errors.append(f"{eval_id}: after fixture does not contain Authorization data")
+        change = item.get("change")
+        before_lines = []
+        if change:
+            before = ROOT / change["before"]
+            after = ROOT / change["after"]
+            if not before.is_file() or not after.is_file():
+                errors.append(f"{eval_id}: missing comparison snapshot")
+                continue
+            before_lines = before.read_text(encoding="utf-8").splitlines()
+            if before_lines == after.read_text(encoding="utf-8").splitlines():
+                errors.append(f"{eval_id}: comparison snapshots are identical")
 
         for finding in item.get("expected_findings", []):
             rel_file = finding.get("file")
@@ -81,15 +72,17 @@ def main() -> int:
             except Exception as exc:
                 errors.append(f"{eval_id}: {exc}")
                 continue
-            if "logger.info" not in line or "headers" not in line:
-                errors.append(f"{eval_id}: expected finding line is not the introduced logging call")
-            if int(finding.get("minimum_confidence", 0)) < 80:
-                errors.append(f"{eval_id}: expected finding confidence threshold must be >= 80")
+            anchor = finding.get("anchor")
+            if not anchor or anchor != line.strip():
+                errors.append(f"{eval_id}: expected finding anchor does not match {rel_file}:{line_no}")
+            if change and finding.get("relationship") == "introduced":
+                if rel_file != change["after"] or anchor in [value.strip() for value in before_lines]:
+                    errors.append(f"{eval_id}: introduced finding is not new in the after snapshot")
 
     if errors:
         print(json.dumps({"ok": False, "errors": errors}, indent=2))
         return 1
-    print(json.dumps({"ok": True, "eval_file": str(EVALS.relative_to(ROOT))}, indent=2))
+    print(json.dumps({"ok": True, "eval_file": str(EVALS.relative_to(ROOT)), "cases": len(evals)}, indent=2))
     return 0
 
 
