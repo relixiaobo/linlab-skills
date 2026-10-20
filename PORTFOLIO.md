@@ -20,7 +20,7 @@ retiring skills.
 
 | Skill | Status | Source of truth | Primary object | Verification / quality bar | Notes |
 | --- | --- | --- | --- | --- | --- |
-| `code-review` | active | Git diff, PR, branch, review comments | Review findings | Bug/regression/security findings with line-grounded evidence and confidence | Clear domain-specific workflow; keep separate. |
+| `code-review` | active | Git diff, PR, implementation, review comments | Review findings | Correctness and simplification findings with concrete evidence and impact | Clear domain-specific workflow; keep separate. |
 | `data-analysis` | active | Raw data, metric definitions, SQL/Python, findings ledger | Trustworthy findings | Profile data, define metric/grain/window, verify key numbers, triangulate specification | Evidence layer for later reports, decks, and workbooks. |
 | `document` | active | Markdown/structured source or native DOCX when required | Reading/review artifact | Source fidelity, section structure, DOCX semantics, comments/redlines, reader questions | Optimized for agent-maintained documents and Word review workflows. |
 | `pdf` | active | Native PDF, page renders, extracted evidence, or editable source that exports PDF | Fixed-layout PDF artifact | Page count/boxes, render checks, text/OCR extraction, forms, annotations, links, redaction, encryption, and output re-inspection | Optimized for PDF-native operations and final-layout QA, not drafting source documents/slides/sheets. |
