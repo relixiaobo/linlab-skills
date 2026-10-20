@@ -116,16 +116,18 @@ preserves which evaluator actually produced the observation and its cost.
 
 ## Current Coverage
 
-`presentation`, `data-analysis`, `product-spec`, and `document` are production
-hybrid adapters. Presentation persists PPTX inspection, render, and asset evidence;
-data-analysis recomputes metric truth and join fan-out; product-spec runs the
-portable readiness inspector and audits Case-defined facts, options, flows,
-scope, stable IDs, and acceptance criteria; document selects Case-defined create
-or review guidance, runs the portable Markdown inspector, and audits Case-defined
-concept and structure hints. All apply high-precision deterministic vetoes after
+`presentation`, `data-analysis`, `product-spec`, `document`, and `spreadsheet`
+are production hybrid adapters. Presentation persists PPTX inspection, render,
+and asset evidence; data-analysis recomputes metric truth and join fan-out;
+product-spec runs the portable readiness inspector and audits Case-defined
+facts, options, flows, scope, stable IDs, and acceptance criteria; document
+selects Case-defined create or review guidance, runs the portable Markdown
+inspector, and audits Case-defined concept and structure hints; spreadsheet
+inspects XLSX structure, source fidelity, formulas, names, checks, links, and
+recalculation evidence. All apply high-precision deterministic vetoes after
 blind review while leaving free-form semantics to the blind evaluator. The
-representative suite resolves the first three adapters, while the board-memo and
-policy-review suites resolve Document independently. Code-review and other
-artifact adapters remain explicit migration work. Suites must explicitly choose
-whether judging is required; only optional suites may contain cases without
-`evaluation.adapter`.
+representative suite resolves the first three adapters; the board-memo,
+policy-review, and pricing-model suites resolve their domain adapters
+independently. Code-review and PDF adapters remain explicit migration work.
+Suites must explicitly choose whether judging is required; only optional suites
+may contain cases without `evaluation.adapter`.

@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "id": "spreadsheet-enabled",
+  "label": "Spreadsheet Skill enabled",
+  "kind": "skill-enabled",
+  "skills": [
+    {
+      "name": "spreadsheet",
+      "path": "skills/spreadsheet"
+    }
+  ],
+  "executor_config": {
+    "skill_registry": "isolated",
+    "routing": "natural",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "medium",
+    "network_access": true,
+    "adapter_timeout_seconds": 1800
+  }
+}

@@ -38,7 +38,6 @@ def main() -> int:
         "agent-result.json",
         "agent-response.md",
         "agent-trace-summary.json",
-        "artifact-audit.json",
     ]
     if (workspace / "source/input/orders.csv").is_file():
         artifact_evidence = "artifacts/analysis.md"
@@ -48,6 +47,7 @@ def main() -> int:
                 "artifacts/analysis.md",
                 "artifacts/findings.tsv",
                 "source-truth.json",
+                "artifact-audit.json",
             ]
         )
     elif (workspace / "source/input/merchant_addon_notes.md").is_file():
@@ -57,6 +57,7 @@ def main() -> int:
                 "source/input/merchant_addon_notes.md",
                 "artifacts/product-spec.md",
                 "spec-check.json",
+                "artifact-audit.json",
             ]
         )
     elif (workspace / "source/input/board_notes.md").is_file():
@@ -66,6 +67,7 @@ def main() -> int:
                 "source/input/board_notes.md",
                 "artifacts/board-memo.md",
                 "markdown-inspect.json",
+                "artifact-audit.json",
             ]
         )
     elif (workspace / "source/input/policy_draft.md").is_file():
@@ -75,6 +77,19 @@ def main() -> int:
                 "source/input/policy_draft.md",
                 "artifacts/policy-review.md",
                 "markdown-inspect.json",
+                "artifact-audit.json",
+            ]
+        )
+    elif (workspace / "source/input/pricing_inputs.csv").is_file():
+        artifact_evidence = "workbook-audit.json"
+        required_workspace_files.extend(
+            [
+                "source/input/pricing_inputs.csv",
+                "source-inspect.json",
+                "source-truth.json",
+                "workbook-inspect.json",
+                "workbook-audit.json",
+                "recalc-report.json",
             ]
         )
     else:
