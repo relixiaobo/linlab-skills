@@ -120,7 +120,7 @@ Would QA, a developer, or an agent know what done means?
 
 Look for:
 
-- stable IDs such as `FR-*`, `STORY-*`, `AC-*`
+- stable IDs such as `FR-*`, `STORY-*`, `AC-*` where cross-references need them
 - acceptance criteria with trigger and expected result
 - measurable non-functional requirements when quality matters
 - business rules referenced from flows
@@ -175,7 +175,7 @@ Can another agent, designer, or developer continue from the artifact?
 
 Look for:
 
-- stable IDs and cross-references
+- stable IDs and cross-references when needed by downstream consumers
 - glossary / canonical terms
 - traceability from objective to constraints to selected option
 - traceability from evidence to decisions to flows to acceptance criteria

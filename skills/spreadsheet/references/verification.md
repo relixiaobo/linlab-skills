@@ -1,6 +1,10 @@
 # Spreadsheet Verification
 
 Approach verification as a calculation-integrity and workbook-feature pass.
+Select checks for the changed behavior and preservation requirements. Use the
+broader checklist for new models and structural edits; reuse still-applicable
+results for a small follow-up edit. When a selected host workflow owns delivery,
+use its verification contract without duplicating the pipeline here.
 
 ## Universal Checks
 

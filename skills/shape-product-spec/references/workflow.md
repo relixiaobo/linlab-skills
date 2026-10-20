@@ -117,7 +117,7 @@ Only then specify screens, panels, buttons, copy, and field behavior.
 
 ## 7. Draft With Stable Traceability
 
-Use stable IDs when the artifact will feed implementation or review:
+Use stable IDs when cross-references or multiple downstream consumers need them:
 
 - `OBJ-1`: objective
 - `CON-1`: constraint
@@ -154,7 +154,8 @@ Before final output:
 - Check that evidence, assumptions, and open questions are separated.
 - Check that non-goals block likely overbuild.
 - Check that UI copy matches product rules and uses user-facing terms.
-- Check that task handoff items map to stable IDs.
+- Check that task handoff items point to the relevant acceptance criteria;
+  preserve stable IDs where cross-references use them.
 - For Markdown artifacts, run `spec_check.py inspect` when a file exists.
 
 ## 9. Review Output Shape

@@ -154,7 +154,8 @@ Scale rigor by product risk:
 - **Low risk**: single flow, reversible, internal, no money or privacy impact.
   Keep one-page and action-oriented.
 - **Medium risk**: several flows, permissions, moderate data integrity or
-  support burden. Use stable IDs and explicit acceptance criteria.
+  support burden. Use explicit acceptance criteria and stable IDs where
+  cross-references or multiple downstream consumers need them.
 - **High risk**: billing, privacy, compliance, irreversible actions, enterprise
   contracts, safety, or broad rollout. Add traceability, approvals, constraints,
   non-functional requirements, and explicit risk mitigation.
@@ -163,6 +164,10 @@ Do not scale by team size alone. A solo feature touching payments still needs
 high rigor.
 
 ## Stable ID Rules
+
+Apply these rules when IDs serve the artifact's cross-references or downstream
+consumers. Preserve existing IDs when editing; do not add them to a bounded spec
+solely to satisfy a template.
 
 - Number IDs sequentially within each type: `OBJ-1`, `CON-1`, `OPT-1`,
   `TRD-1`, `FR-1`, `AC-1`, `FLOW-1`.
